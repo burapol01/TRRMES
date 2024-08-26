@@ -1,0 +1,115 @@
+import * as React from "react";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
+import { Stack, Typography, IconButton, Box } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+
+type Types = "success" | "error" | "warning" | "info";
+
+interface Massengmodal {
+  createModal: (
+    msg: React.ReactNode,
+    type: Types,
+    submit: () => void,
+    cancel?: () => void
+  ) => void;
+}
+
+let Massengmodal: Massengmodal;
+
+const MassengmodalProvider: React.FC = () => {
+  const [message, setMessage] = React.useState<React.ReactNode>("");
+  const [types, setTypes] = React.useState<Types>("info");
+  const [onSubmit, setOnSubmit] = React.useState<(() => void) | undefined>(
+    undefined
+  );
+  const [onCancel, setOnCancel] = React.useState<(() => void) | undefined>(
+    undefined
+  );
+  const [open, setOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    Massengmodal = {
+      createModal: (
+        msg: React.ReactNode,
+        type: Types,
+        submit: () => void,
+        cancel?: () => void
+      ) => {
+        setMessage(msg);
+        setTypes(type);
+        setOnSubmit(() => submit);
+        setOnCancel(cancel);
+        setOpen(true);
+      }
+    };
+  }, []);
+
+  const handleClose = () => {
+    setOnSubmit(undefined);
+    setOpen(false);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      sx={{
+        zIndex: (theme) => theme.zIndex.modal + 10,
+      }}
+    >
+      <DialogTitle>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography variant="h6">
+            {types.charAt(0).toUpperCase() + types.slice(1)}
+          </Typography>
+          {/* <IconButton onClick={handleClose}>
+            <CloseIcon />
+          </IconButton> */}
+        </Stack>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Stack direction="column" alignItems="center" spacing={3}>
+          {types === "success" && <img src="media/alertMasseng/icons8-success.gif" alt="success" />}
+          {types === "error" && <img src="media/alertMasseng/icons8-error.gif" alt="error" />}
+          {types === "warning" && <img src="media/alertMasseng/icons8-warning.gif" alt="warning" />}
+          {types === "info" && <img src="media/alertMasseng/icons8-info.gif" alt="info" />}
+          <Typography component="div">{message}</Typography> {/* เปลี่ยน Typography */}
+        </Stack>
+      </DialogContent>
+
+      <DialogActions>
+        <Box width="100%" display="flex" justifyContent="center">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              if (onSubmit) onSubmit();
+              handleClose();
+            }}
+          >
+            ตกลง
+          </Button>
+          {onCancel && (
+            <Button
+              variant="outlined"
+              sx={{ ml: 2 }}  // เพิ่มระยะห่างระหว่างปุ่ม
+              onClick={() => {
+                if (onCancel) onCancel();
+                handleClose();
+              }}
+            >
+              ยกเลิก
+            </Button>
+          )}
+        </Box>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default MassengmodalProvider;
+export { Massengmodal };

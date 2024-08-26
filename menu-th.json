@@ -1,0 +1,12 @@
+{
+    "MENUFUNC.Add":"เพิ่มข้อมูล",
+    "MENUFUNC.View":"ดูข้อมูล",
+    "MENUFUNC.Edit":"แก้ไขข้อมูล",
+    "MENUFUNC.Delete":"ลบข้อมูล",
+    "MENUFUNC.Approve":"ตรวจการอนุมัติ",
+    "MENUFUNC.RewindStatus":"ย้อนสถานะทำจ่าย",
+    "MENUFUNC.Rewind":"ทำจ่าย",
+    "MENUFUNC.Account":"ข้อมูลบัญชี, ชื่อ-นามสกุล",
+    "MENUFUNC.Waive":"ยกเว้นการเรียกเก็บ",
+    "MENUFUNC.Payment":"ชำระ"
+}
