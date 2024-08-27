@@ -128,12 +128,12 @@ export default function ServiceRequest() {
 
   //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
   useEffect(() => {
-    console.log('Call : 🟢[3] Fetch Master Data', defaultValues, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
     if (defaultValues.siteId != "") {
       fetchServiceCenters();
       fetchTechnician();
       fetchWorkHour();
-      console.log(options, 'options');
+
 
     }
     if (defaultValues.costCenterId != "") {
@@ -141,9 +141,10 @@ export default function ServiceRequest() {
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
 
     }
-    console.log('Call : 🟢defaultValues.requestId', defaultValues.requestId, moment().format('HH:mm:ss:SSS'));
+    //    console.log('Call : 🟢defaultValues.requestId', defaultValues.requestId, moment().format('HH:mm:ss:SSS'));
     if (defaultValues.requestId != "") {
       fetchRevision();
+
     }
 
 
@@ -243,7 +244,7 @@ export default function ServiceRequest() {
       ใช้สำหรับหน้า ServicesRequestBody 
   */
   const fetchServiceCenters = async () => {
-    console.log('Call : fetchServiceCenters', defaultValues.siteId, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
       "site_id": defaultValues.siteId
@@ -293,7 +294,7 @@ export default function ServiceRequest() {
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
         }));
-        console.log(budgetCodes, 'budgetCodes');
+        //console.log(budgetCodes, 'budgetCodes');
         setOptions((prevOptions) => ({
           ...prevOptions,
           budgetCode: budgetCodes,
@@ -385,7 +386,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/MasterData/Revision_Get");
 
       if (response && response.status === "success") {
-        // console.log('Revision_Get', response);
+        console.log('Revision_Get', response);
         const revision = response.data.map((revision: any) => ({
           revisionId: revision.id,
           reqId: revision.req_id,
@@ -397,6 +398,7 @@ export default function ServiceRequest() {
           updateDate: revision.update_date,
           recordStatus: revision.record_status
 
+
         }));
 
         setOptions((prevOptions) => ({
@@ -404,6 +406,7 @@ export default function ServiceRequest() {
           revision: revision,
         }));
 
+        console.log(options, 'options');
       } else {
         setError("Failed to fetch revision.");
       }
@@ -424,7 +427,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/MasterData/Technician_Get");
 
       if (response && response.status === "success") {
-        console.log('Technician_Get', response);
+        //console.log('Technician_Get', response);
         const technician = response.data.map((technician: any) => ({
           userAd: technician.user_ad || "",
           userName: technician.user_name || "",
@@ -460,11 +463,11 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
-        console.log(response, 'Success fetch Work Hour');
+        //console.log(response, 'Success fetch Work Hour');
         const workHour = response.data.map((job: any) => ({
           lov_code: job.lov_code,
         }));
-        console.log(workHour, 'Work Hour');
+        // console.log(workHour, 'Work Hour');
 
 
         setOptions((prevOptions) => ({
@@ -627,27 +630,36 @@ export default function ServiceRequest() {
         const { data: result } = response;
 
         setHeadUser(result.app_user);
-        console.log(result, 'data');
-        const newData = result.map((element: any, index: number) => {
+        const newData: any = []
+
+        Array.isArray(result) && result.forEach((el) => {
 
           setDefaultValues(prevValues => ({
             ...prevValues,
-            costCenterId: element.cost_center_id || prevValues.costCenterId,
-            siteId: element.site_id || prevValues.siteId,
-            requestId: element.id || prevValues.requestId
+            costCenterId: el.cost_center_id || prevValues.costCenterId,
+            siteId: el.site_id || prevValues.siteId,
+            requestId: el.id || prevValues.requestId
           }));
-          return {
-            ...element,
-            ACTION: (
-              <ActionManageCell
-                onViewClick={() => handleClickView(element)}
-                onAcceptJobClick={() => handleClickAcceptJob(element)}
-                onTimeSheetClick={() => handleClickTimeSheet(element)}
-                onJobDoneClick={() => handleClickJobDone(element)}
-              />
-            )
-          };
-        });
+
+          el.ACTION = null
+          el.ACTION = (
+            <ActionManageCell
+              onClick={(name) => {
+                if (name == 'View') {
+                  handleClickView(el)
+                } else if (name == 'Accept Job') {
+                  handleClickAcceptJob(el)
+                } else if (name == 'Time Sheet') {
+                  handleClickTimeSheet(el)
+                } else if (name == 'Job Done') {
+                  handleClickJobDone(el)
+                }
+              }}
+            />
+          )
+          newData.push(el)
+        })
+        console.log(newData, 'newDatanewDatanewDatanewData');
 
         setDataList(newData);
       }
@@ -668,7 +680,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Start",
-            app_user: currentUser.employee_username
+            app_user: ""
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -759,32 +771,33 @@ export default function ServiceRequest() {
   const serviceTimeSheetAdd = async () => {
     console.log('Call : serviceTimeSheetAdd', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
-  
     confirmModal.createModal("Time Sheet ?", "info", async () => {
       if (draftData) {
         const serviceTimeSheetModels = draftData.timeSheetData.map((item: any) => ({
+          id: item.subTimeSheetId,
           req_id: draftData.requestId,
           revision_id: draftData.revisionCurrent.revisionId,
-          time_sheet_no: "", // ปล่อยว่างหรือกำหนดค่า
+          time_sheet_no: String(item.no),
           work_date: moment(item.date).toISOString(), // ใช้ moment เพื่อแปลงวันที่, 
-          work_hour: item.work_hour.lov_code,
-          technician: item.technician.userAd,
+          work_hour: item.work_hour.lov_code || item.work_hour,
+          technician: item.technician.userAd || item.technician,
           description: item.description,
+          delete_flag: item.delete_flag
         }));
-  
+
         const payload = {
           serviceTimeSheetModels: serviceTimeSheetModels,
           currentAccessModel: {
             user_id: currentUser.employee_username || ""
           }
         };
-  
+
         console.log("Payload:", payload);
         try {
           const response = await _POST(payload, "/api_rab/ServiceTimeSheet/Service_Time_Sheet_Add");
-  
+
           if (response && response.status === "success") {
-            console.log('Reject successfully:', response);
+            console.log('successfully:', response);
             Massengmodal.createModal(
               <div className="text-center p-4">
                 <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
@@ -795,7 +808,7 @@ export default function ServiceRequest() {
               </div>,
               'success',
               async () => {
-                 await changeStatus(draftData, currentUser.employee_username);
+                await changeStatus(draftData, currentUser.employee_username);
                 handleClose();
               }
             );
@@ -809,8 +822,8 @@ export default function ServiceRequest() {
     });
   };
 
-   //Add Submit ไปลง Database
-   const serviceTimeSheetJobDone = async () => {
+  //Add Submit ไปลง Database
+  const serviceTimeSheetJobDone = async () => {
     console.log('Call : serviceTimeSheetJobDone', draftData, moment().format('HH:mm:ss:SSS'));
     confirmModal.createModal("Confirm JobDone Data ?", "info", async () => {
       if (draftData) {
@@ -821,7 +834,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Job Done",
-            app_user: currentUser.employee_username
+            app_user: ""
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -860,43 +873,43 @@ export default function ServiceRequest() {
       }
     });
   };
-  
 
-  const changeStatus = async (draftData : any, currentUser : any) => {
+
+  const changeStatus = async (draftData: any, currentUser: any) => {
     console.log('Call : changeStatus', draftData, moment().format('HH:mm:ss:SSS'));
-   
-      if (draftData) {
-        console.log("changeStatus Data:", draftData);
 
-        // สร้างข้อมูลที่จะส่ง
-        const payload = {
-          changeStatusModel: {
-            id: draftData.requestId,
-            new_status: "On process",
-            app_user: currentUser
-          },
-          currentAccessModel: {
-            user_id: currentUser || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
-        };
+    if (draftData) {
+      console.log("changeStatus Data:", draftData);
 
-        try {
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
-
-          if (response && response.status === "success") {
-            console.log('Change Status successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-        
-          } else {
-            console.error('Failed to Change Status:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
-          }
-        } catch (error) {
-          console.error('Error Change Status:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+      // สร้างข้อมูลที่จะส่ง
+      const payload = {
+        changeStatusModel: {
+          id: draftData.requestId,
+          new_status: "On process",
+          app_user: ""
+        },
+        currentAccessModel: {
+          user_id: currentUser || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
         }
+      };
+
+      try {
+        // ใช้ _POST เพื่อส่งข้อมูล
+        const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+
+        if (response && response.status === "success") {
+          console.log('Change Status successfully:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+
+        } else {
+          console.error('Failed to Change Status:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+        }
+      } catch (error) {
+        console.error('Error Change Status:', error);
+        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
       }
+    }
   };
 
 
@@ -1037,7 +1050,7 @@ export default function ServiceRequest() {
             />
           }
         />
-        {/* <FuncDialog
+        <FuncDialog
           open={openJobDone} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="md"
           openBottonHidden={true}
@@ -1051,11 +1064,11 @@ export default function ServiceRequest() {
               onDataChange={handleDataChange}
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceTimeSheetBody
-              actions={"JobDone"}
+              actions={"Reade"}
               disableOnly
             />
           }
-        /> */}
+        />
       </div>
       {/* Error Dialog */}
       <Dialog

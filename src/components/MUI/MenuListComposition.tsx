@@ -195,7 +195,7 @@ export default function MenuListComposition(props: MenuListComposition) {
                                     {menuFuncList.map((menuFunc: any) => (
                                         <MenuItem onClick={() => props.onClick && props.onClick(menuFunc.func_name)}>
                                             <ListItemIcon>
-                                                <ZoomInIcon />
+                                               {menuFunc.func_name == "View" && <ZoomInIcon />} 
                                             </ListItemIcon>
                                             {menuFunc.func_name}
                                         </MenuItem>

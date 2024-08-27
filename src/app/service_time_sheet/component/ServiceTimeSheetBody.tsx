@@ -115,6 +115,7 @@ export default function ServiceTimeSheetBody({
   React.useEffect(() => {
     if (actions != "Create") {
 
+
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'costCenterId')
         console.log(mapCostCenterData, 'mapCostCenterData')
@@ -169,7 +170,8 @@ export default function ServiceTimeSheetBody({
         
          const mapRevisionData = setValueMas(options?.revision, defaultValues?.requestId, 'reqId')
       console.log(mapRevisionData, 'mapRevisionData')
-      //   setRevision(mapRevisionData)
+        setRevision(mapRevisionData)
+        console.log(revisionCurrent,"revisionCurrent");
 
        }
 
@@ -337,8 +339,9 @@ export default function ServiceTimeSheetBody({
                 column="revisionNo"
                 value={revisionCurrent}
                 setvalue={setRevision}
-                disabled={disableOnly}
+                disabled={actions === "Reade" ? false : disableOnly}
                 options={options?.revision || []}
+                orchange={(value) => setRevision(value)} // แก้ไขจาก orchange เป็น onChange
               />
             </div>
 
@@ -346,6 +349,8 @@ export default function ServiceTimeSheetBody({
               <TimeSheetBody
                 onDataChange={handleDataChange}
                 options={options}
+                revisionCurrent={revisionCurrent}
+                actions={actions}
 
               />
             </div>

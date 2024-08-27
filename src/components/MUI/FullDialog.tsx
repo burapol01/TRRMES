@@ -56,15 +56,15 @@ const actionConfig = {
     mainButton: { label: "Save", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
-  }, 
+  },
   JobDone: {
-    mainButton: { label: "Complete", show: true },
+    mainButton: { label: "Job Done", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Close: {
     mainButton: { label: "Close", show: true },
-    rejectButton: { show: false },
+    rejectButton: { label: "Reject Job", show: true },
     cancelButton: { show: true },
   },
   Read: {

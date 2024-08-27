@@ -7,20 +7,21 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-interface BasicTable {
-    rows: any;
-    columns: any;
+interface BasicTableProps {
+    rows: any[];
+    columns: any[];
+    disabled?: boolean; // เพิ่ม prop นี้
 }
 
-export default function BasicTable({ rows, columns }: BasicTable) {
+export default function BasicTable({ rows, columns, disabled = false }: BasicTableProps) {
     return (
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} className={disabled ? 'disabled' : ''}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                     <TableRow>
-                        {columns?.map((headCell: any, index:number) => (
+                        {columns?.map((headCell: any, index: number) => (
                             <TableCell
-                                key={index}
+                                key={headCell.id || index}  // Ensure unique key
                                 align={"center"}
                                 className={`py-5 border`}
                                 style={{ backgroundColor: '#DCCCBD' }}
@@ -28,36 +29,33 @@ export default function BasicTable({ rows, columns }: BasicTable) {
                                 <label className={"sarabun-regular-datatable"}>
                                     {headCell.label}
                                 </label>{" "}
-
                             </TableCell>
                         ))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {rows?.map((row: any, index: number) => {
-                        // const isItemSelected = isSelected(row?.id);
-                        return (
-                            <TableRow
-                                className={`hover:bg-neutral-200 sarabun-regular`}
-                                tabIndex={-1}
-                                key={index}
-
-                            >
-                                {columns?.map((column: any, index: number) => {
-                                    const value = row[column.columnName];
-                                    return (
-                                        <>
-                                            <TableCell key={index} align={column.numeric} className='border'>
-                                                <label className="fs-6 pr-10 sarabun-regular">
-                                                    {value}
-                                                </label>
-                                            </TableCell>
-                                        </>
-                                    );
-                                })}
-                            </TableRow>
-                        );
-                    })}
+                    {rows?.map((row: any, rowIndex: number) => (
+                        <TableRow
+                            className={`hover:bg-neutral-200 sarabun-regular ${disabled ? 'disabled' : ''}`}
+                            tabIndex={-1}
+                            key={row.id || rowIndex}  // Ensure unique key for each row
+                        >
+                            {columns?.map((column: any, cellIndex: number) => {
+                                const value = row[column.columnName];
+                                return (
+                                    <TableCell
+                                        key={`${column.columnName}-${cellIndex}`}  // Ensure unique key for each cell
+                                        align={column.numeric ? "right" : "left"}
+                                        className='border'
+                                    >
+                                        <label className="fs-6 pr-10 sarabun-regular">
+                                            {value}
+                                        </label>
+                                    </TableCell>
+                                );
+                            })}
+                        </TableRow>
+                    ))}
                 </TableBody>
             </Table>
         </TableContainer>

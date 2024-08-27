@@ -15,15 +15,16 @@ import { useSelector } from "react-redux";
 
 interface ActionManageCellProps {
   disabled?: boolean;
-  onViewClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  onEditClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  onDeleteClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  onSubmitClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  onApprovedClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  onCloseClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  onAcceptJobClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  onTimeSheetClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  onJobDoneClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
+  onClick?: (name: string) => void;
+  // onViewClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+  // onEditClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+  // onDeleteClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+  // onSubmitClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+  // onApprovedClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
+  // onCloseClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
+  // onAcceptJobClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
+  // onTimeSheetClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
+  // onJobDoneClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
 }
 
 export default function ActionManageCell(props: ActionManageCellProps) {
@@ -31,6 +32,8 @@ export default function ActionManageCell(props: ActionManageCellProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
+  menuFuncList?.sort((a: any, b: any) => a.func_id.localeCompare(b.func_id));
+ 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -38,128 +41,6 @@ export default function ActionManageCell(props: ActionManageCellProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
-
-  // สร้างเมนูไอเท็มเป็นอาร์เรย์
-  const menuItems = [
-    props.onViewClick && (
-      <div  key="View" >   
-      <MenuItem onClick={props.onViewClick}>
-        <ListItemIcon>
-          <ZoomInIcon />
-        </ListItemIcon>
-        View
-      </MenuItem>
-      <Divider key="view-divider" />
-      </div>
-    ),
-    props.onEditClick && (
-      <div  key="Edit"  >   
-      <MenuItem onClick={props.onEditClick}>
-        <ListItemIcon>
-          <EditIcon />
-        </ListItemIcon>
-        Edit
-      </MenuItem>
-      <Divider key="edit-divider" />
-      </div>
-    ),
-    props.onDeleteClick && (
-      <div  key="Delete" >
-      <MenuItem  onClick={props.onDeleteClick}>
-        <ListItemIcon>
-          <DeleteIcon />
-        </ListItemIcon>
-        Delete
-      </MenuItem>
-      <Divider key="delete-divider" />
-      </div>
-    ),
-    props.onSubmitClick && (
-      <div  key="Submit" >
-      <MenuItem  onClick={props.onSubmitClick}>
-        <ListItemIcon>
-          <SendIcon />
-        </ListItemIcon>
-        Submit
-      </MenuItem>
-      <Divider key="submit-divider" />
-      </div>
-    ),
-    props.onApprovedClick && (
-      <div  key="Approved" >
-      <MenuItem  onClick={props.onApprovedClick}>
-        <ListItemIcon>
-          <CheckCircleIcon />
-        </ListItemIcon>
-        Approved
-      </MenuItem>
-      <Divider key="approved-divider" />
-      </div>
-    ),
-    props.onCloseClick && (
-      <div key="Close">
-      <MenuItem  onClick={props.onCloseClick}>
-        <ListItemIcon>
-          <DoneIcon /> {/* ใช้ไอคอน Done แทน */}
-        </ListItemIcon>
-        Close {/* เปลี่ยนข้อความให้สะท้อนถึงการจบงานสมบูรณ์ */}
-      </MenuItem>
-      <Divider key="close-divider" />
-      </div>
-    ),
-    props.onAcceptJobClick && (
-      <div key="Accept Job">
-      <MenuItem  onClick={props.onAcceptJobClick}>
-        <ListItemIcon>
-          <DoneIcon /> {/* ใช้ไอคอน Done แทน */}
-        </ListItemIcon>
-        Accept Job {/* เปลี่ยนข้อความให้สะท้อนถึงการจบงานสมบูรณ์ */}
-      </MenuItem>
-      <Divider key="acceptjob-divider" />
-      </div>
-    ),
-    props.onTimeSheetClick && (
-      <div key="Time Sheet">
-        <MenuItem onClick={props.onTimeSheetClick}>
-          <ListItemIcon>
-            <DoneIcon /> {/* ใช้ไอคอน Done แทน */}
-          </ListItemIcon>
-          Time Sheet {/* เปลี่ยนข้อความให้สะท้อนถึงการจบงานสมบูรณ์ */}
-        </MenuItem>
-        <Divider key="timesheet-divider" />
-      </div>
-    ),
-    props.onJobDoneClick && (
-      <div key="Job Done">
-      <MenuItem key="Jobdone" onClick={props.onJobDoneClick}>
-        <ListItemIcon>
-          <DoneIcon /> {/* ใช้ไอคอน Done แทน */}
-        </ListItemIcon>
-        Job Done {/* เปลี่ยนข้อความให้สะท้อนถึงการจบงานสมบูรณ์ */}
-      </MenuItem>
-      <Divider key="jobdone-divider" />
-      </div>
-    ),
-  ];
-
-  
-  const menuList = React.useMemo(() => {
-    if (menuFuncList && menuFuncList.length > 0) {
-      const newData: any = []
-      Array.isArray(menuFuncList) && menuFuncList.forEach((item) => {
-        const filterMenu = menuItems.filter((func: any) => func?.key === item?.func_name)
-        const result = filterMenu.reduce((acc: any, current: any) => {
-          return current;
-        }, {});
-        newData.push(result);
-      });
-      return newData;
-    }
-    if (menuFuncList && menuFuncList.length == 0) {
-      const filterMenu = menuItems.filter((func: any) => func?.key == "View")
-      return filterMenu
-    }
-  }, [menuFuncList]);
 
   return (
     <div>
@@ -203,7 +84,16 @@ export default function ActionManageCell(props: ActionManageCellProps) {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {menuList} {/* กรองเฉพาะเมนูที่มีการใช้งาน */}
+        {menuFuncList.map((menuFunc: any, index: number) => (
+          <MenuItem key={index} onClick={() => props.onClick && props.onClick(menuFunc.func_name)}>
+            <ListItemIcon>
+            {menuFunc.func_name == "View" && <ZoomInIcon />} 
+            {menuFunc.func_name == "Edit" && <EditIcon />} 
+            {menuFunc.func_name == "Delete" && <DeleteIcon />} 
+            </ListItemIcon>
+            {menuFunc.func_name}
+          </MenuItem>
+        ))}
       </Menu>
     </div>
   );

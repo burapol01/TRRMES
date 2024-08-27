@@ -454,7 +454,7 @@ export default function ServiceRequest() {
     setDefaultValues(defaultVal);
     readData(null);
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
-    // dataTableServiceRequest_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
+    dataTableServiceRequest_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
 
   };
 
@@ -529,37 +529,26 @@ export default function ServiceRequest() {
         const { data: result } = response;
 
         const newData: any = []
-        // const newData = result.map((element: any, index: number) => {
-        //   return {
-        //     ...element,
-        //     ACTION: (
-        //       <ActionManageCell
-        //         onViewClick={() => handleClickView(element)}
-        //         onEditClick={() => handleClickEdit(element)}
-        //         onDeleteClick={() => handleClickDelete(element)}
-        //         onSubmitClick={() => handleClickSubmit(element)}
-        //         onApprovedClick={() => handleClickApproved(element)}
-        //         onCloseClick={() => handleClickClose(element)}
-        //       />
-        //     )
-        //   };
-        // });
+
         Array.isArray(result) && result.forEach((el) => {
           el.ACTION = null
           el.ACTION = (
-            <MenuListComposition
+            <ActionManageCell
               onClick={(name) => {
                 if (name == 'View') {
                   handleClickView(el)
                 } else if (name == 'Edit') {
                   handleClickEdit(el)
+                } else if (name == 'Delete') {
+                  handleClickDelete(el)
+                } else if (name == 'Submit') {
+                  handleClickSubmit(el)
+                } else if (name == 'Approved') {
+                  handleClickApproved(el)
+                } else if (name == 'Close') {
+                  handleClickClose(el)
                 }
               }}
-            // onEditClick={() => handleClickEdit(el)}
-            // onDeleteClick={() => handleClickDelete(el)}
-            // onSubmitClick={() => handleClickSubmit(el)}
-            // onApprovedClick={() => handleClickApproved(el)}
-            // onCloseClick={() => handleClickClose(el)}
             />
           )
           newData.push(el)
@@ -686,10 +675,9 @@ export default function ServiceRequest() {
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
               </div>,
-              'success', async () => {
+              'success', () => {
 
                 handleClose();
-                await dataTableServiceRequest_GET()
               });
           } else {
             console.error('Failed to save draft:', response);
@@ -767,7 +755,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Submit",
-            app_user: draftData.reqUser
+            app_user: headUser
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -867,7 +855,8 @@ export default function ServiceRequest() {
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           rejectActionModel: {
-            id: draftData.requestId
+            id: draftData.requestId,
+            req_status: "Submit Reject"
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -969,7 +958,7 @@ export default function ServiceRequest() {
         const payload = {
           rejectActionModel: {
             id: draftData.requestId,
-            req_status: draftData.status
+            req_status: "Reject Job"
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -1213,7 +1202,7 @@ export default function ServiceRequest() {
           handlefunction={serviceRequestClose} // service
           handleRejectAction={serviceRequestRejectJob}
           colorBotton="success"
-          actions={"Reade"}
+          actions={"Close"}
           element={
             <ServiceRequestBody
               onDataChange={handleDataChange}

@@ -20,15 +20,16 @@ export interface AuthModel {
   refreshToken?: string;
 }
 export type Menu = {
-  role_id: number,
-  application_id: number,
-  menu_id: number,
-  menu_name: string,
-  menu_url: string,
-  menu_sequence: number,
-  menu_sub: number,
-  menu_icon: string
-}
+  application_id: number;
+  func_id: string;
+  func_name: string;
+  func_name_th: string;
+  funct_oth: string;
+  menu_id: number;
+  permission: string;
+  role_id: number;
+  role_menu_func_id: number;
+};
 export type MenuFunc = {
   application_id: number,
   role_id: number,
