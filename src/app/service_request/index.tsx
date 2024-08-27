@@ -13,6 +13,7 @@ import moment from 'moment';
 import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
+import MenuListComposition from "../../components/MUI/MenuListComposition";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -527,7 +528,7 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         const { data: result } = response;
 
-        const newData :any= []
+        const newData: any = []
         // const newData = result.map((element: any, index: number) => {
         //   return {
         //     ...element,
@@ -545,21 +546,25 @@ export default function ServiceRequest() {
         // });
         Array.isArray(result) && result.forEach((el) => {
           el.ACTION = null
-          el.ACTION =  (
-            <ActionManageCell
-              onViewClick={() => {handleClickView(el) 
-                console.log(el, 'ACTION');
-                
+          el.ACTION = (
+            <MenuListComposition
+              onClick={(name) => {
+                if (name == 'View') {
+                  handleClickView(el)
+                } else if (name == 'Edit') {
+                  handleClickEdit(el)
+                }
               }}
-              onEditClick={() => handleClickEdit(el)}
-              onDeleteClick={() => handleClickDelete(el)}
-              onSubmitClick={() => handleClickSubmit(el)}
-              onApprovedClick={() => handleClickApproved(el)}
-              onCloseClick={() => handleClickClose(el)}
+            // onEditClick={() => handleClickEdit(el)}
+            // onDeleteClick={() => handleClickDelete(el)}
+            // onSubmitClick={() => handleClickSubmit(el)}
+            // onApprovedClick={() => handleClickApproved(el)}
+            // onCloseClick={() => handleClickClose(el)}
             />
           )
           newData.push(el)
         })
+        console.log(newData, 'newDatanewDatanewDatanewData');
 
         setDataList(newData);
       }
@@ -681,8 +686,8 @@ export default function ServiceRequest() {
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
               </div>,
-              'success', async() => {
-     
+              'success', async () => {
+
                 handleClose();
                 await dataTableServiceRequest_GET()
               });
