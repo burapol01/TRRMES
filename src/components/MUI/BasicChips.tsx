@@ -5,6 +5,7 @@ interface BasicChips {
   label?: string;
   backgroundColor?: string;
   borderColor?: string;
+  textColor?: string;  // เพิ่ม prop ใหม่เพื่อกำหนดสีข้อความ
 }
 
 export default function BasicChips(props: BasicChips) {
@@ -16,7 +17,7 @@ export default function BasicChips(props: BasicChips) {
           variant="outlined" 
           sx={{
             backgroundColor: props.backgroundColor,
-            color: '#00000',
+            color: props.textColor || '#000000', // ใช้ค่า textColor ที่ส่งเข้ามา หากไม่มีใช้สีดำเป็นค่าเริ่มต้น
             borderColor: props.borderColor,
           }}
           />

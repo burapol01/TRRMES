@@ -666,6 +666,7 @@ export default function ServiceRequest() {
               label={`${el.req_status}`}
               backgroundColor="#1E1E1E"
               borderColor="#1E1E1E"
+              textColor="#FFFFFF"
             >
             </BasicChips>
           }
