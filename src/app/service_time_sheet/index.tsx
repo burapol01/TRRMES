@@ -37,7 +37,7 @@ const initialOptions: OptionsState = {
 
 interface SelectedData {
   reqUser: string;
-  costCenter: string;
+  costCenterCode: string;
   status: string;
   countRevision: string;
   serviceCenter: string;
@@ -55,8 +55,9 @@ const defaultVal = {
   requestId: "",
   reqUser: "",
   headUser: "",
-  costCenter: "",
   costCenterId: "",
+  costCenterCode: "",
+  costCenterName: "",
   status: "Draft",
   site: "",
   countRevision: "1",
@@ -106,49 +107,49 @@ export default function ServiceRequest() {
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
 
-//ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
-useEffect(() => {
-  console.log('Call : 🟢[1] fetch UserData&serviceTimeSheet', moment().format('HH:mm:ss:SSS'));
+  //ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
+  useEffect(() => {
+    console.log('Call : 🟢[1] fetch UserData&serviceTimeSheet', moment().format('HH:mm:ss:SSS'));
 
-  if (currentUser?.employee_username) {
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล User   
-    dataTableServiceTimeSheet_GET();
-  }
-}, [currentUser?.employee_username, siteId]);
+    if (currentUser?.employee_username) {
+      fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล User   
+      dataTableServiceTimeSheet_GET();
+    }
+  }, [currentUser?.employee_username, siteId]);
 
-//ดึงข้อมูลจาก Master Data ไว้สำหรับหน้าค้นหาข้อมูล
-useEffect(() => {
-  console.log('Call : 🟢[2] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
-  const fetchData = async () => {
-    await Promise.all([
-      searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล service centers
-      searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-      searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes      
-    ]);
-  };
-  fetchData();
-}, []);
+  //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้าค้นหาข้อมูล
+  useEffect(() => {
+    console.log('Call : 🟢[2] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
+    const fetchData = async () => {
+      await Promise.all([
+        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล service centers
+        searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
+        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes      
+      ]);
+    };
+    fetchData();
+  }, []);
 
-//ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
-useEffect(() => {
-  console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
+  //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
+  useEffect(() => {
+    console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
 
-  if (defaultValues.siteId !== "") {
-    fetchServiceCenters();
-    fetchTechnician();
-    fetchWorkHour();
-  }
+    if (defaultValues.siteId !== "") {
+      fetchServiceCenters();
+      fetchTechnician();
+      fetchWorkHour();
+    }
 
-  if (defaultValues.costCenterId !== "") {
-    fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
-    fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
-  }
+    if (defaultValues.costCenterId !== "") {
+      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+      fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+    }
 
-  if (defaultValues.requestId !== "") {
-    fetchRevision();
-  }
+    if (defaultValues.requestId !== "") {
+      fetchRevision();
+    }
 
-}, [defaultValues]);
+  }, [defaultValues]);
 
   // หน้าค้นหา Search ========================================================================================================= 
   const searchFetchServiceCenters = async () => {
@@ -242,11 +243,13 @@ useEffect(() => {
   /*
       ใช้สำหรับหน้า ServicesRequestBody 
   */
+
   const fetchServiceCenters = async () => {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId
+      "site_id": defaultValues.siteId,
+      "service_center_flag": true
     };
 
     try {
@@ -256,9 +259,10 @@ useEffect(() => {
         //console.log('Cost_Center_Get', response)
         const serviceCenters = response.data.map((center: any) => ({
 
-          costCenterId: center.id,
-          costCenterCode: center.cost_center_code,
-          costCenterName: center.cost_center_name
+          serviceCenterId: center.id,
+          serviceCenterCode: center.cost_center_code,
+          serviceCenterName: center.cost_center_name,
+          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
         }));
 
         setOptions((prevOptions) => ({
@@ -276,7 +280,7 @@ useEffect(() => {
   };
 
   const fetchBudgetCodes = async () => {
-    console.log('Call : fetchBudgetCodes', defaultValues.costCenterId, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
     try {
       const dataset = {
         "cost_center_id": defaultValues.costCenterId
@@ -385,7 +389,7 @@ useEffect(() => {
       const response = await _POST(dataset, "/api_rab/MasterData/Revision_Get");
 
       if (response && response.status === "success") {
-        console.log('Revision_Get', response);
+        //console.log('Revision_Get', response);
         const revision = response.data.map((revision: any) => ({
           revisionId: revision.id,
           reqId: revision.req_id,
@@ -405,7 +409,7 @@ useEffect(() => {
           revision: revision,
         }));
 
-        console.log(options, 'options');
+        //console.log(options, 'options');
       } else {
         setError("Failed to fetch revision.");
       }
@@ -416,7 +420,7 @@ useEffect(() => {
   };
 
   const fetchTechnician = async () => {
-    console.log('Call : fetchTechnician', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : fetchTechnician',defaultValues.siteId, moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
       "site_id": defaultValues.siteId
@@ -516,9 +520,10 @@ useEffect(() => {
       requestDate: moment(data?.req_date).format('yyyy-MM-DD') || '',
       requestId: data?.id || '',
       costCenterId: data?.cost_center_id || '',
+      costCenterName: data?.cost_center_name || '',
       reqUser: data?.req_user || '',
       headUser: data?.app_user || '',
-      costCenter: data?.cost_center_id || '',
+      costCenterCode: data?.cost_center_code || '',
       status: data?.req_status || '',
       countRevision: data?.count_revision || '',
       serviceCenterId: data?.service_center_id || '',
@@ -594,7 +599,7 @@ useEffect(() => {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {      
+          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
             setSiteId(userData.site_id);
             // setHeadUser(userData.head_user);
 
@@ -607,7 +612,7 @@ useEffect(() => {
             //   site: userData.site_code || prevValues.site,
             //   siteId: userData.site_id || prevValues.siteId
             // }));
-            console.log(response, 'UserGet');
+            //console.log(response, 'UserGet');
 
           } else {
             setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
@@ -626,17 +631,13 @@ useEffect(() => {
 
   //Get ดึงข้อมูลใส่ ตาราง
   const dataTableServiceTimeSheet_GET = async () => {
-    console.log('Call : dataTableServiceTimeSheet_GET', siteId, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : dataTableServiceTimeSheet_GET', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : siteId 🍕', siteId, moment().format('HH:mm:ss:SSS'));
 
     if (!currentUser) return;
 
     const dataset = {
-      "req_no": requestNo?.toString(),
-      "job_type": selectedJobType?.lov_code,
-      "fixed_asset_id": selectedAssetCode?.assetCodeId,
-      "req_status": status,
       "site_id": siteId
-
     };
 
     try {
@@ -726,7 +727,7 @@ useEffect(() => {
           }
           newData.push(el)
         })
-        console.log(newData, 'newDatanewDatanewDatanewData');
+        //Sconsole.log(newData, 'newDatanewDatanewDatanewData');
 
         setDataList(newData);
       }
@@ -847,7 +848,7 @@ useEffect(() => {
           time_sheet_no: String(item.no),
           work_date: moment(item.date).toISOString(), // ใช้ moment เพื่อแปลงวันที่, 
           work_hour: item.work_hour.lov_code || item.work_hour,
-          technician: item.technician.userAd || item.technician,
+          technician: item.technician.userName || item.technician,
           description: item.description,
           delete_flag: item.delete_flag
         }));

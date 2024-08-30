@@ -237,7 +237,7 @@ export default function TimeSheetBody({
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
                         labelName="Technician"
-                        column="userAd"
+                        column="userName"
                         setvalue={setTechnician}
                         options={options?.technician || []}
                         value={technician}

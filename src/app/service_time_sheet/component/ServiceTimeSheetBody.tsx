@@ -15,7 +15,8 @@ interface ServiceTimeSheetBodyProps {
     reqUser?: string;
     headUser?: string;
     costCenterId?: string;
-    costCenter?: string;
+    costCenterCode?: string;
+    costCenterName?: string;
     status?: string;
     site?: string;
     countRevision?: string;
@@ -53,7 +54,8 @@ export default function ServiceTimeSheetBody({
   const [reqUser, setEmployee] = useState(defaultValues?.reqUser || "");
   const [headUser, setheadUser] = useState(defaultValues?.headUser || "");
   const [costCenterId, setCostCenterId] = useState(defaultValues?.costCenterId || "");
-  const [costCenter, setCostCenter] = useState(defaultValues?.costCenter || "");
+  const [costCenterCode, setCostCenter] = useState(defaultValues?.costCenterCode || "");
+  const [costCenterName, setCostCenterName] = useState(defaultValues?.costCenterName || "");
   const [status, setStatus] = useState(defaultValues?.status || "Draft");
   const [serviceCenterId, setServiceCenterId] = useState(defaultValues?.serviceCenterId || "");
   const [serviceCenter, setServiceCenter] = useState<any>(null);
@@ -88,7 +90,8 @@ export default function ServiceTimeSheetBody({
       reqUser,
       headUser,
       costCenterId,
-      costCenter,
+      costCenterCode,
+      costCenterName,
       status,
       serviceCenterId,
       serviceCenter,
@@ -106,7 +109,7 @@ export default function ServiceTimeSheetBody({
     // Call debounced function
     debouncedOnDataChange(data);
   }, [
-    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenter,
+    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenterCode, costCenterName,
     status, serviceCenterId, serviceCenter, serviceName, site, jobType, budgetCode, description,
     fixedAssetCode, fixedAssetDescription,
     countRevision, revisionCurrent, timeSheetData, onDataChange,
@@ -117,11 +120,10 @@ export default function ServiceTimeSheetBody({
 
 
       if (defaultValues?.serviceCenterId != "") {
-        const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'costCenterId')
-        console.log(mapCostCenterData, 'mapCostCenterData')
+        const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
+       // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
-        setCostCenter(mapCostCenterData.costCenterName || "")
-        setServiceName(mapCostCenterData.costCenterName)
+        setServiceName(mapCostCenterData?.serviceCenterName)
       }
 
       if (defaultValues?.budgetCode != "") {
@@ -217,7 +219,7 @@ export default function ServiceTimeSheetBody({
         <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Cost center"}
-            value={costCenter}
+            value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
 
@@ -254,12 +256,12 @@ export default function ServiceTimeSheetBody({
           <AutocompleteComboBox
             // required={true}
             labelName={"Service Center"}
-            column="costCenterCode"
+            column="serviceCentersCodeAndName"
             value={serviceCenter}
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.costCenterName || ""); // Clear serviceName if data is null
+              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
             options={options?.serviceCenter || []}
           />
