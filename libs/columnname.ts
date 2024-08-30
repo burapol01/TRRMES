@@ -56,7 +56,7 @@ export const Request_headCells = [
         colWidth: 300
     },
     {
-        columnName: 'req_status',
+        columnName: 'req_status_',
         numeric: 'center',
         disablePadding: true,
         label: 'สถานะ request',

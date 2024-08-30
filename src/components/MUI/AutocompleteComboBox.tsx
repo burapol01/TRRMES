@@ -43,12 +43,12 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         disablePortal
         value={value}
         id="combo-box-demo"
-        options={options}
+        options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
         renderOption={(props, option) =>{ 
           //console.log(option); // Debugging
           return (
-          <li {...props} key={`${option[`${column}`]}-${option.id}`}>
+          <li {...props} key={`${option[`${column}`]}-${option?.id}`}>
             {option[`${column}`]} 
           </li>)
         }}
@@ -57,7 +57,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         onChange={handleOnChange}
         disabled={disabled}
         readOnly={readonly}
-        isOptionEqualToValue={(option, value) => option.id === value.id} // เปรียบเทียบ option กับ value โดยใช้ id
+        isOptionEqualToValue={(option, value) => option?.id === value?.id} // เปรียบเทียบ option กับ value โดยใช้ id
         renderInput={(params) => (
           <TextField
             {...params}

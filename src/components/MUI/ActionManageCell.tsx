@@ -16,15 +16,7 @@ import { useSelector } from "react-redux";
 interface ActionManageCellProps {
   disabled?: boolean;
   onClick?: (name: string) => void;
-  // onViewClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  // onEditClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  // onDeleteClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  // onSubmitClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  // onApprovedClick?: (event: React.MouseEvent<HTMLLIElement>) => void;
-  // onCloseClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  // onAcceptJobClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  // onTimeSheetClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
-  // onJobDoneClick?: (event: React.MouseEvent<HTMLLIElement>) => void; // เพิ่ม onCloseClick
+  reqStatus?: string;
 }
 
 export default function ActionManageCell(props: ActionManageCellProps) {
@@ -33,7 +25,7 @@ export default function ActionManageCell(props: ActionManageCellProps) {
   const open = Boolean(anchorEl);
 
   menuFuncList?.sort((a: any, b: any) => a.func_id.localeCompare(b.func_id));
- 
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -41,6 +33,8 @@ export default function ActionManageCell(props: ActionManageCellProps) {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+
 
   return (
     <div>
@@ -84,16 +78,69 @@ export default function ActionManageCell(props: ActionManageCellProps) {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {menuFuncList.map((menuFunc: any, index: number) => (
-          <MenuItem key={index} onClick={() => props.onClick && props.onClick(menuFunc.func_name)}>
-            <ListItemIcon>
-            {menuFunc.func_name == "View" && <ZoomInIcon />} 
-            {menuFunc.func_name == "Edit" && <EditIcon />} 
-            {menuFunc.func_name == "Delete" && <DeleteIcon />} 
-            </ListItemIcon>
-            {menuFunc.func_name}
-          </MenuItem>
-        ))}
+       {menuFuncList.map((menuFunc: any, index: number) => {
+          let shouldRender = false;
+          let icon = null;
+
+          // ปุ่ม "View" จะแสดงในทุกสถานะ
+          if (menuFunc.func_name === "View") {
+            shouldRender = true;
+            icon = <ZoomInIcon />;
+          }
+
+          // เงื่อนไขการแสดงผลปุ่มตาม reqStatus
+          if (
+            (props.reqStatus === "Draft" && ["Edit", "Delete", "Submit"].includes(menuFunc.func_name)) ||
+            (props.reqStatus === "Job Done" && menuFunc.func_name === "Close")
+          ) {
+            shouldRender = true;
+            icon = 
+              menuFunc.func_name === "Edit" ? <EditIcon /> :
+              menuFunc.func_name === "Delete" ? <DeleteIcon /> :
+              menuFunc.func_name === "Submit" ? <SendIcon /> :
+              menuFunc.func_name === "Close" ? <CheckCircleIcon /> : null;
+          }
+
+          switch (props.reqStatus) {
+            case "Submit":
+              if (menuFunc.func_name === "Approved") {
+                shouldRender = true;
+                icon = <CheckCircleIcon />;
+              }
+              break;
+
+            case "Approved":
+              if (menuFunc.func_name === "Accept Job") {
+                shouldRender = true;
+                icon = <DoneIcon />;
+              }
+              break;
+
+            case "Start":
+            case "On process":
+              if (menuFunc.func_name === "Time Sheet" || (props.reqStatus === "On process" && menuFunc.func_name === "Job Done")) {
+                shouldRender = true;
+                icon = menuFunc.func_name === "Time Sheet" ? <ZoomInIcon /> : <DoneIcon />;
+              }
+              break;
+
+            default:
+              // คุณสามารถเพิ่มเงื่อนไขเพิ่มเติมในกรณีอื่นๆ ได้ที่นี่
+              break;
+          }
+
+          if (shouldRender) {
+            return (
+              <MenuItem key={index} onClick={() => props.onClick && props.onClick(menuFunc.func_name)}>
+                <ListItemIcon>{icon}</ListItemIcon>
+                {menuFunc.func_name}
+              </MenuItem>
+            );
+          }
+
+          return null;
+        })}
+
       </Menu>
     </div>
   );

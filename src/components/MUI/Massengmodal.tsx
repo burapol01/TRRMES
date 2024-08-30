@@ -65,10 +65,8 @@ const MassengmodalProvider: React.FC = () => {
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
             {types.charAt(0).toUpperCase() + types.slice(1)}
-          </Typography>
-          {/* <IconButton onClick={handleClose}>
-            <CloseIcon />
-          </IconButton> */}
+          </Typography>    
+
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
@@ -90,6 +88,7 @@ const MassengmodalProvider: React.FC = () => {
               if (onSubmit) onSubmit();
               handleClose();
             }}
+            autoFocus  // ให้ปุ่มนี้ถูกโฟกัสเมื่อไดอะล็อกเปิด
           >
             ตกลง
           </Button>

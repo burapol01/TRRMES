@@ -14,7 +14,8 @@ interface ServiceRequestBodyProps {
     reqUser?: string;
     headUser?: string;
     costCenterId?: string;
-    costCenter?: string;
+    costCenterCode?: string;
+    costCenterName?: string;
     status?: string;
     site?: string;
     countRevision?: string;
@@ -48,7 +49,8 @@ export default function ServiceRequestBody({
   const [reqUser, setEmployee] = useState(defaultValues?.reqUser || "");
   const [headUser, setheadUser] = useState(defaultValues?.headUser || "");
   const [costCenterId, setCostCenterId] = useState(defaultValues?.costCenterId || "");
-  const [costCenter, setCostCenter] = useState(defaultValues?.costCenter || "");
+  const [costCenterCode, setCostCenter] = useState(defaultValues?.costCenterCode || "");
+  const [costCenterName, setCostCenterName] = useState(defaultValues?.costCenterName || "");
   const [status, setStatus] = useState(defaultValues?.status || "Draft");
   const [serviceCenterId, setServiceCenterId] = useState(defaultValues?.serviceCenterId || "");
   const [serviceCenter, setServiceCenter] = useState<any>(null);
@@ -77,7 +79,8 @@ export default function ServiceRequestBody({
       reqUser,
       headUser,
       costCenterId,
-      costCenter,
+      costCenterCode,
+      costCenterName,
       status,
       serviceCenterId,
       serviceCenter,
@@ -93,21 +96,23 @@ export default function ServiceRequestBody({
     // Call debounced function
     debouncedOnDataChange(data);
   }, [
-    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenter,
+    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenterCode, costCenterName,
     status, serviceCenterId, serviceCenter, serviceName, site, jobType, budgetCode, description,
     fixedAssetCode, fixedAssetDescription,
     countRevision, onDataChange,
   ]);
 
   React.useEffect(() => {
+    
     if (actions != "Create") {
 
+      //console.log(options, 'dd')
+      //console.log(defaultValues?.serviceCenterId, 'dsdsd')
       if (defaultValues?.serviceCenterId != "") {
-        const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'costCenterId')
-        console.log(mapCostCenterData, 'mapCostCenterData')
+        const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
+       // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
-        setCostCenter(mapCostCenterData.costCenterName || "")
-        setServiceName(mapCostCenterData.costCenterName)
+        setServiceName(mapCostCenterData?.serviceCenterName)
       }
 
       if (defaultValues?.budgetCode != "") {
@@ -139,9 +144,9 @@ export default function ServiceRequestBody({
 
       if (defaultValues?.fixedAssetId != "") {
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
-        console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
+        //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData.assetDescription)
+        setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
      
@@ -192,7 +197,7 @@ export default function ServiceRequestBody({
         <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Cost center"}
-            value={costCenter}
+            value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
 
@@ -229,12 +234,12 @@ export default function ServiceRequestBody({
           <AutocompleteComboBox
             // required={true}
             labelName={"Service Center"}
-            column="costCenterCode"
+            column="serviceCentersCodeAndName"
             value={serviceCenter}
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.costCenterName || ""); // Clear serviceName if data is null
+              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
             options={options?.serviceCenter || []}
           />

@@ -14,6 +14,7 @@ import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
 import MenuListComposition from "../../components/MUI/MenuListComposition";
+import BasicChips from "../../components/MUI/BasicChips";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -31,7 +32,7 @@ const initialOptions: OptionsState = {
 
 interface SelectedData {
   reqUser: string;
-  costCenter: string;
+  costCenterCode: string;
   status: string;
   countRevision: string;
   serviceCenter: string;
@@ -49,8 +50,9 @@ const defaultVal = {
   requestId: "",
   reqUser: "",
   headUser: "",
-  costCenter: "",
   costCenterId: "",
+  costCenterCode: "",
+  costCenterName:"",
   status: "Draft",
   site: "",
   countRevision: "1",
@@ -64,6 +66,8 @@ const defaultVal = {
 }
 
 export default function ServiceRequest() {
+  const [requestNo, setRequestNo] = useState("");
+  const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
   const [headUser, setHeadUser] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
@@ -89,6 +93,7 @@ export default function ServiceRequest() {
   const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => {
     setter(value);
   };
+  const [actionType, setActionType] = useState<string | null>(null); // Corrected type
   // State to store default values
   const [defaultValues, setDefaultValues] = useState(defaultVal);
 
@@ -129,11 +134,13 @@ export default function ServiceRequest() {
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
 
     }
+    fetchJobTypes();
 
   }, [defaultValues]);
 
 
   // หน้าค้นหา Search ========================================================================================================= 
+  
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -224,12 +231,14 @@ export default function ServiceRequest() {
   // ฟังก์ชันเรียก API Master Data Aotocomplete combobox options =================================================================
   /*
       ใช้สำหรับหน้า ServicesRequestBody 
-  */
+  */ 
+
   const fetchServiceCenters = async () => {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId
+      "site_id": defaultValues.siteId,
+      "service_center_flag" : true
     };
 
     try {
@@ -239,9 +248,10 @@ export default function ServiceRequest() {
         //console.log('Cost_Center_Get', response)
         const serviceCenters = response.data.map((center: any) => ({
 
-          costCenterId: center.id,
-          costCenterCode: center.cost_center_code,
-          costCenterName: center.cost_center_name
+          serviceCenterId: center.id,
+          serviceCenterCode: center.cost_center_code,
+          serviceCenterName: center.cost_center_name,
+          serviceCentersCodeAndName:  center.cost_center_name + ' [' + center.cost_center_code + ']'
         }));
 
         setOptions((prevOptions) => ({
@@ -283,7 +293,7 @@ export default function ServiceRequest() {
         }));
 
         // ส่ง jobType ไปยัง fetchJobTypes
-        fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
+        //fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
 
       } else {
         setError("Failed to fetch budget codes.");
@@ -294,9 +304,10 @@ export default function ServiceRequest() {
     }
   };
 
-  const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
+  const fetchJobTypes = async () => {
     console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
     try {
+
       const dataset = {
         "lov_type": "job_type"
       };
@@ -304,13 +315,11 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
-        //console.log('job_type', response);
-        const jobTypes = response.data
-          .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
-          .map((job: any) => ({
-            lov_code: job.lov_code,
-            lov_name: job.lov1,
-          }));
+        //console.log(response, 'Success fetch job');
+        const jobTypes = response.data.map((job: any) => ({
+          lov_code: job.lov_code,
+          lov_name: job.lov1,
+        }));
 
         setOptions((prevOptions) => ({
           ...prevOptions,
@@ -324,6 +333,40 @@ export default function ServiceRequest() {
       setError("An error occurred while fetching job types.");
     }
   };
+
+  //BackUp budget
+  /*-----------------------------------------------------------------------------------------------------------------
+  // const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
+  //   console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
+  //   try {
+  //     const dataset = {
+  //       "lov_type": "job_type"
+  //     };
+
+  //     const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+
+  //     if (response && response.status === "success") {
+  //       console.log('job_type', response);
+  //       const jobTypes = response.data
+  //         .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
+  //         .map((job: any) => ({
+  //           lov_code: job.lov_code,
+  //           lov_name: job.lov1,
+  //         }));
+
+  //       setOptions((prevOptions) => ({
+  //         ...prevOptions,
+  //         jobType: jobTypes,
+  //       }));
+  //     } else {
+  //       setError("Failed to fetch job types.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching job types:", error);
+  //     setError("An error occurred while fetching job types.");
+  //   }
+  // };
+  --------------------------------------------------------------------------------------------------------------------*/
 
   const fetchFixedAssetCodes = async () => {
     console.log('Call : fetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
@@ -360,7 +403,7 @@ export default function ServiceRequest() {
 
   /*หน้า ค้นหาข้อมูล*/
   const handleSearch = () => {
-    // Implement search logic here
+    setActionType('search');
   };
 
   const handleReset = () => {
@@ -369,7 +412,20 @@ export default function ServiceRequest() {
     setSelectedServiceCenter(null);
     setSelectedJobType(null);
     setSelectedAssetCode(null);
+    setRequestNo("");
+    setStatus("");
+    setActionType('reset');
   };
+
+  // Use useEffect to call dataTableServiceRequest_GET only on specific action
+  useEffect(() => {
+    if (actionType) {
+      dataTableServiceRequest_GET();
+      setActionType(null); // Reset actionType after fetching data
+    }
+  }, [actionType]);
+
+
   /*หน้า ServiceRequestBody*/
   const readData = async (data: any) => {
     console.log('Call : readData', data, moment().format('HH:mm:ss:SSS'));
@@ -379,9 +435,10 @@ export default function ServiceRequest() {
       requestDate: moment(data?.req_date).format('yyyy-MM-DD') || '',
       requestId: data?.id || '',
       costCenterId: data?.cost_center_id || '',
+      costCenterName: data?.cost_center_name || '',
       reqUser: data?.req_user || '',
       headUser: headUser || '',
-      costCenter: data?.cost_center_id || '',
+      costCenterCode: data?.cost_center_id || '',
       status: data?.req_status || '',
       countRevision: data?.count_revision || '',
       serviceCenterId: data?.service_center_id || '',
@@ -396,7 +453,7 @@ export default function ServiceRequest() {
   };
 
   const handleClickView = (data: any) => {
-    console.log(data, '555555555555555555');
+    //console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
 
     setOpenView(true);
     readData(data)
@@ -481,6 +538,8 @@ export default function ServiceRequest() {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
           if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
+            //console.log(userData,"userData");
+            
 
             setHeadUser(userData.head_user);
 
@@ -489,7 +548,8 @@ export default function ServiceRequest() {
               reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
               headUser: userData.head_user || prevValues.headUser,
               costCenterId: userData.cost_center_id || prevValues.costCenterId,
-              costCenter: userData.cost_center_code || prevValues.costCenter,
+              costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
+              costCenterName: userData.cost_center_name || prevValues.costCenterName,
               site: userData.site_code || prevValues.site,
               siteId: userData.site_id || prevValues.siteId
             }));
@@ -510,7 +570,6 @@ export default function ServiceRequest() {
     }
   };
 
-
   //Get ดึงข้อมูลใส่ ตาราง
   const dataTableServiceRequest_GET = async () => {
     console.log('Call : dataTableServiceRequest_GET', moment().format('HH:mm:ss:SSS'));
@@ -519,7 +578,12 @@ export default function ServiceRequest() {
 
     const dataset = {
       "req_user": currentUser.employee_username,
-      "app_user": currentUser.employee_username
+      "app_user": currentUser.employee_username,
+      "service_center_id": selectedServiceCenter?.costCenterId,
+      "req_no": requestNo?.toString(),
+      "job_type": selectedJobType?.lov_code,
+      "fixed_asset_id": selectedAssetCode?.assetCodeId,
+      "req_status": status
     };
 
     try {
@@ -531,6 +595,8 @@ export default function ServiceRequest() {
         const newData: any = []
 
         Array.isArray(result) && result.forEach((el) => {
+          //console.log(el, "😊😊😊");
+
           el.ACTION = null
           el.ACTION = (
             <ActionManageCell
@@ -549,11 +615,63 @@ export default function ServiceRequest() {
                   handleClickClose(el)
                 }
               }}
+              reqStatus={el.req_status}
+
             />
           )
+          if (el.req_status === "Draft") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#B3B3B3"
+              borderColor="#B3B3B3"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Submit") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#BDE3FF"
+              borderColor="#BDE3FF"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Approved") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#E4CCFF"
+              borderColor="#E4CCFF"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Start") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#FFE8A3"
+              borderColor="#FFE8A3"
+            >
+            </BasicChips>
+          } else if (el.req_status === "On process") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#FFA629"
+              borderColor="#FFA629"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Job Done") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#AFF4C6"
+              borderColor="#AFF4C6"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Close") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#1E1E1E"
+              borderColor="#1E1E1E"
+            >
+            </BasicChips>
+          }
           newData.push(el)
         })
-        console.log(newData, 'newDatanewDatanewDatanewData');
+        console.log(newData, 'ค่าที่ดึงจาก ตาราง');
 
         setDataList(newData);
       }
@@ -562,10 +680,9 @@ export default function ServiceRequest() {
     }
   };
 
-
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
-    console.log('Call : serviceRequestDraftAdd', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
     confirmModal.createModal("Confirm Save Data ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
@@ -577,18 +694,20 @@ export default function ServiceRequest() {
             req_user: draftData.reqUser || "",
             app_user: null,
             cost_center_id: draftData.costCenterId || "",
-            service_center_id: draftData.serviceCenter.costCenterId || "",
+            service_center_id: draftData.serviceCenter?.serviceCenterId || "",
             description: draftData.description || "",
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
-            fixed_asset_id: draftData.fixedAssetCode.assetCodeId || ""
+            fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
+            budget_id: draftData.budgetCode.budgetId || "",
+            job_type: draftData.jobType.lov_code || "",
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           },
           documentRunningModel: {
-            code_group: "ST",
+            code_group: draftData.site,
             code_type: "RQ",
             trans_date: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
           }
@@ -641,15 +760,16 @@ export default function ServiceRequest() {
             req_no: draftData?.requestNo || "",
             req_date: draftData.requestDate, // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
-            app_user: null,
+            app_user: "",
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
             cost_center_id: draftData.costCenterId || "",
-            service_center_id: draftData.serviceCenter.costCenterId || "",
+            service_center_id: draftData.serviceCenter.serviceCenterId || "",
             description: draftData.description || "",
             fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
-
+            budget_id: draftData.budgetCode.budgetId || "",
+            job_type: draftData.jobType.lov_code || "",
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -1008,9 +1128,9 @@ export default function ServiceRequest() {
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              value={textValue}
               labelName={"Request No."}
-              onChange={(e) => handleTextChange(e.target.value)}
+              value={requestNo}
+              onChange={(value) => setRequestNo(value)}
             />
           </div>
           <div className="col-md-3 mb-2">
@@ -1042,9 +1162,9 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              value={statusValue}
               labelName={"Status"}
-              onChange={(e) => handleStatusChange(e.target.value)}
+              value={status}
+              onChange={(value) => setStatus(value)}
             />
           </div>
           <div className="flex justify-end">

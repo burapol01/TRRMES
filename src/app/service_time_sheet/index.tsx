@@ -13,6 +13,7 @@ import ServiceTimeSheetBody from "./component/ServiceTimeSheetBody";
 import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
+import BasicChips from "../../components/MUI/BasicChips";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -69,8 +70,11 @@ const defaultVal = {
 }
 
 export default function ServiceRequest() {
+  const [requestNo, setRequestNo] = useState("");
+  const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
   const [headUser, setHeadUser] = useState<string>("");
+  const [siteId, setSiteId] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
   const [statusValue, setStatusValue] = useState<string>("");
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<any>(null);
@@ -94,6 +98,7 @@ export default function ServiceRequest() {
   const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => {
     setter(value);
   };
+  const [actionType, setActionType] = useState<string | null>(null); // Corrected type
   // State to store default values
   const [defaultValues, setDefaultValues] = useState(defaultVal);
 
@@ -101,55 +106,49 @@ export default function ServiceRequest() {
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
 
-  //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้าค้นหาข้อมูล
-  useEffect(() => {
-    console.log('Call : 🟢[1] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
-    const fetchData = async () => {
-      await Promise.all([
-        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อคอมโพเนนต์ถูกเรนเดอร์ครั้งแรก
-        searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes      
+//ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
+useEffect(() => {
+  console.log('Call : 🟢[1] fetch UserData&serviceTimeSheet', moment().format('HH:mm:ss:SSS'));
 
-      ]);
-    };
-    fetchData();
+  if (currentUser?.employee_username) {
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล User   
+    dataTableServiceTimeSheet_GET();
+  }
+}, [currentUser?.employee_username, siteId]);
 
-  }, []);
+//ดึงข้อมูลจาก Master Data ไว้สำหรับหน้าค้นหาข้อมูล
+useEffect(() => {
+  console.log('Call : 🟢[2] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
+  const fetchData = async () => {
+    await Promise.all([
+      searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล service centers
+      searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
+      searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes      
+    ]);
+  };
+  fetchData();
+}, []);
 
-  //ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
-  useEffect(() => {
-    console.log('Call : 🟢[2] fetch UserData&serviceTimeSheet', moment().format('HH:mm:ss:SSS'));
-    if (currentUser?.employee_username) {
-      //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
-      dataTableServiceTimeSheet_GET();
+//ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
+useEffect(() => {
+  console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
 
-    }
-  }, [currentUser?.employee_username]);
+  if (defaultValues.siteId !== "") {
+    fetchServiceCenters();
+    fetchTechnician();
+    fetchWorkHour();
+  }
 
-  //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
-  useEffect(() => {
-    console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
-    if (defaultValues.siteId != "") {
-      fetchServiceCenters();
-      fetchTechnician();
-      fetchWorkHour();
+  if (defaultValues.costCenterId !== "") {
+    fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+    fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+  }
 
+  if (defaultValues.requestId !== "") {
+    fetchRevision();
+  }
 
-    }
-    if (defaultValues.costCenterId != "") {
-      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
-      fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
-
-    }
-    //    console.log('Call : 🟢defaultValues.requestId', defaultValues.requestId, moment().format('HH:mm:ss:SSS'));
-    if (defaultValues.requestId != "") {
-      fetchRevision();
-
-    }
-
-
-  }, [defaultValues]);
-
+}, [defaultValues]);
 
   // หน้าค้นหา Search ========================================================================================================= 
   const searchFetchServiceCenters = async () => {
@@ -420,14 +419,14 @@ export default function ServiceRequest() {
     console.log('Call : fetchTechnician', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-
+      "site_id": defaultValues.siteId
     };
 
     try {
       const response = await _POST(dataset, "/api_rab/MasterData/Technician_Get");
 
       if (response && response.status === "success") {
-        //console.log('Technician_Get', response);
+        console.log('Technician_Get', response);
         const technician = response.data.map((technician: any) => ({
           userAd: technician.user_ad || "",
           userName: technician.user_name || "",
@@ -487,7 +486,7 @@ export default function ServiceRequest() {
 
   /*หน้า ค้นหาข้อมูล*/
   const handleSearch = () => {
-    // Implement search logic here
+    setActionType('search');
   };
 
   const handleReset = () => {
@@ -496,7 +495,18 @@ export default function ServiceRequest() {
     setSelectedServiceCenter(null);
     setSelectedJobType(null);
     setSelectedAssetCode(null);
+    setRequestNo("");
+    setStatus("");
+    setActionType('reset');
   };
+
+  // Use useEffect to call dataTableServiceTimeSheet_GET only on specific action
+  useEffect(() => {
+    if (actionType) {
+      dataTableServiceTimeSheet_GET();
+      setActionType(null); // Reset actionType after fetching data
+    }
+  }, [actionType]);
   /*หน้า ServiceTimeSheetBody*/
   const readData = (data: any) => {
     console.log('Call : readData', data, moment().format('HH:mm:ss:SSS'));
@@ -584,20 +594,20 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
-
+          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {      
+            setSiteId(userData.site_id);
             // setHeadUser(userData.head_user);
 
             // setDefaultValues(prevValues => ({
             //   ...prevValues,
-            //   reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-            //   headUser: userData.head_user || prevValues.headUser,
-            //   costCenterId: userData.cost_center_id || prevValues.costCenterId,
-            //   costCenter: userData.cost_center_code || prevValues.costCenter,
+            //   // reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
+            //   // headUser: userData.head_user || prevValues.headUser,
+            //   // costCenterId: userData.cost_center_id || prevValues.costCenterId,
+            //   // costCenter: userData.cost_center_code || prevValues.costCenter,
             //   site: userData.site_code || prevValues.site,
             //   siteId: userData.site_id || prevValues.siteId
             // }));
-            // console.log(response, 'UserGet');
+            console.log(response, 'UserGet');
 
           } else {
             setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
@@ -616,11 +626,17 @@ export default function ServiceRequest() {
 
   //Get ดึงข้อมูลใส่ ตาราง
   const dataTableServiceTimeSheet_GET = async () => {
-    console.log('Call : dataTableServiceTimeSheet_GET', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : dataTableServiceTimeSheet_GET', siteId, moment().format('HH:mm:ss:SSS'));
 
     if (!currentUser) return;
 
     const dataset = {
+      "req_no": requestNo?.toString(),
+      "job_type": selectedJobType?.lov_code,
+      "fixed_asset_id": selectedAssetCode?.assetCodeId,
+      "req_status": status,
+      "site_id": siteId
+
     };
 
     try {
@@ -655,8 +671,59 @@ export default function ServiceRequest() {
                   handleClickJobDone(el)
                 }
               }}
+              reqStatus={el.req_status}
             />
           )
+          if (el.req_status === "Draft") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#B3B3B3"
+              borderColor="#B3B3B3"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Submit") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#BDE3FF"
+              borderColor="#BDE3FF"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Approved") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#E4CCFF"
+              borderColor="#E4CCFF"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Start") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#FFE8A3"
+              borderColor="#FFE8A3"
+            >
+            </BasicChips>
+          } else if (el.req_status === "On process") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#FFA629"
+              borderColor="#FFA629"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Job Done") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#AFF4C6"
+              borderColor="#AFF4C6"
+            >
+            </BasicChips>
+          } else if (el.req_status === "Close") {
+            el.req_status_ = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#1E1E1E"
+              borderColor="#1E1E1E"
+            >
+            </BasicChips>
+          }
           newData.push(el)
         })
         console.log(newData, 'newDatanewDatanewDatanewData');
@@ -925,12 +992,12 @@ export default function ServiceRequest() {
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              value={textValue}
               labelName={"Request No."}
-              onChange={(e) => handleTextChange(e.target.value)}
+              value={requestNo}
+              onChange={(value) => setRequestNo(value)}
             />
           </div>
-          <div className="col-md-3 mb-2">
+          {/* <div className="col-md-3 mb-2">
             <AutocompleteComboBox
               value={selectedServiceCenter}
               labelName={"Service Center"}
@@ -938,7 +1005,7 @@ export default function ServiceRequest() {
               column="costCenterCode"
               setvalue={handleAutocompleteChange(setSelectedServiceCenter)}
             />
-          </div>
+          </div> */}
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
               value={selectedJobType}
@@ -959,9 +1026,9 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              value={statusValue}
               labelName={"Status"}
-              onChange={(e) => handleStatusChange(e.target.value)}
+              value={status}
+              onChange={(value) => setStatus(value)}
             />
           </div>
           <div className="flex justify-end">

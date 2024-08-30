@@ -12,7 +12,7 @@ import { _POST } from '../../../service/mas';
 import { v4 as uuidv4 } from 'uuid';
 
 interface TimeSheetBodyProps {
-    onDataChange?: (data: any[]) => void; // แก้เป็น List
+    onDataChange?: (data: any[]) => void; 
     options?: {
         technician: any[];
         workHour: any[];
@@ -108,9 +108,10 @@ export default function TimeSheetBody({
         }
     };
 
-    // Handler for deleting data
+    // Handler for deleting data 
     const handleDelete = (subTimeSheetIdToDelete: string, isNewRow: boolean) => {
         console.log(`Deleting item with ID: ${subTimeSheetIdToDelete}`);
+
         if (isNewRow) {
             setDataList((prevList) => {
                 console.log("Previous List:", prevList);
@@ -139,7 +140,7 @@ export default function TimeSheetBody({
         const filteredList = dataList.filter(row => !row.delete_flag);
 
         return filteredList.map((row, index) => {
-            console.log(`Row ID: ${row.technician}`); // ตรวจสอบค่า ID
+           // console.log(`Row ID: ${row.no}`); // ตรวจสอบค่า ID
 
             // Extract the necessary primitive values for rendering
             const technicianName = row.technician?.userName || row.technician;
@@ -148,14 +149,13 @@ export default function TimeSheetBody({
 
             return {
                 ...row,
-                no: index + 1, // ใช้ index ของ map ในการกำหนดหมายเลขลำดับ
+                no: index + 1 || row.no, // ใช้ index ของ map ในการกำหนดหมายเลขลำดับ
                 technician: technicianName, // แสดงชื่อ technician
                 work_hour: workHour, // แสดง lov_code
                 key: row.subTimeSheetId, // ใช้ subTimeSheetId เป็น key
                 delete: (
                     actions !== "Reade" && (
                         <FullWidthButton
-                            key={`delete-${index}`}
                             labelName="Delete"
                             colorname="error"
                             handleonClick={() => handleDelete(row.subTimeSheetId, isNewRow)}
@@ -168,6 +168,20 @@ export default function TimeSheetBody({
     }, [dataList, actions]);
 
 
+     // New useEffect to update `no` order whenever `dataList` changes
+     useEffect(() => {
+        setDataList(prevList => {
+            let currentIndex = 1;
+            return prevList.map(row => {
+                if (!row.delete_flag) {
+                    // Update `no` only for items that are not deleted
+                    return { ...row, no: currentIndex++ };
+                }
+                return row;
+            });
+        });
+    }, [dataList]);
+    
 
 
     // Data preparation for "Reade" mode
@@ -175,7 +189,7 @@ export default function TimeSheetBody({
         if (actions === "Reade") {
             return dataList.map((row, index) => ({
                 ...row,
-                no: index + 1,
+                no: row.no, // ใช้ค่า time_sheet_no แทน index + 1,
                 technician: row.technician,
                 work_hour: row.work_hour,
                 key: row.subTimeSheetId, // ใช้ subTimeSheetId เป็น key                

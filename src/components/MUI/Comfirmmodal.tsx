@@ -107,14 +107,16 @@ const ConfirmModalDialog: React.FC = () => {
           <Button
             variant="contained"
             color="primary"
-            sx={{ width: 120 }} // Fixed width for consistency
+            sx={{ width: 120 }}
             onClick={() => {
               if (onSubmit) onSubmit();
               handleClose();
             }}
+            autoFocus  // ให้ปุ่มนี้ถูกโฟกัสเมื่อไดอะล็อกเปิด
           >
             ยืนยัน
           </Button>
+
           {onCancel && (
             <Button
               variant="outlined"
