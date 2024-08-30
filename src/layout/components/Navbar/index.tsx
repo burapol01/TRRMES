@@ -1,39 +1,13 @@
-import React from 'react';
+
 import AnchorTemporaryDrawer from '../drawer';
 import Profile from '../profile';
-// import MenuItem from './MenuItem';
-import IconButton from '@mui/material/IconButton';
-import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
-import MenuListItem from './MenuListItem';
 
-export type Anchor = 'top' | 'left' | 'bottom' | 'right';
 
 interface NavBar {
   open: boolean
 }
 export default function NavBar({ open }: NavBar) {
-  const [state, setState] = React.useState({
-    top: false,
-    left: false,
-    bottom: false,
-    right: false,
-  });
 
-  const toggleDrawer =
-    (anchor: Anchor, open: boolean) =>
-      (event: React.KeyboardEvent | React.MouseEvent) => {
-        console.log('5555555555555555');
-        
-        if (
-          event.type === 'keydown' &&
-          ((event as React.KeyboardEvent).key === 'Tab' ||
-            (event as React.KeyboardEvent).key === 'Shift')
-        ) {
-          return;
-        }
-
-        setState({ ...state, [anchor]: open });
-      };
 
   return (
     <nav className={`w-full ${open ? `ml-0 sm:ml-72 md:ml-72 lg:ml-72` : `ml-0 sm:ml-20 md:ml-20 lg:ml-20`} border fixed top-0 py-10 select-none transition-all z-10 border-gray-200 bg-gray-200`}>
