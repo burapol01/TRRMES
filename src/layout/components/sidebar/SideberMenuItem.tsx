@@ -56,14 +56,14 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
                 }`}
                 onClick={() => handleClick(to)}
             >
-                <Stack direction={"row"} spacing={1}>
+                <Stack direction={"row"} spacing={1} justifyItems={"center"}>
                     <span className="text-2xl block float-left">
                         {/* {el.icon} */}
                         <i className={`${icon} fs-3`}></i>
                     </span>
-                    <div className={`${isOpen ? `block`:`hidden`}`}>
+                    <div className={`${isOpen ? `block`:`hidden`} mt-1`}>
                         <label
-                            className={`w-40 text-base font-medium flex-1 absolute pt-1}`}
+                            className={`w-40 text-base font-medium flex-1 absolute}`}
                         >
                             {title}
                         </label>
