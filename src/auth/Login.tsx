@@ -31,8 +31,8 @@ function Copyright() {
       sx={{ mt: 5 }}
     >
       {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
-        Rodbenz Website
+      <Link color="inherit" href="#">
+       RAB Website
       </Link>{" "}
       {new Date().getFullYear()}
       {"."}
@@ -98,7 +98,7 @@ export default function Login() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: `url(./public/media/slider/image.png)`,
+            backgroundImage: `url(./media/slider/image.png)`,
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"

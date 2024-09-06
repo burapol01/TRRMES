@@ -52,7 +52,7 @@ const defaultVal = {
   headUser: "",
   costCenterId: "",
   costCenterCode: "",
-  costCenterName:"",
+  costCenterName: "",
   status: "Draft",
   site: "",
   countRevision: "1",
@@ -98,6 +98,7 @@ export default function ServiceRequest() {
   const [defaultValues, setDefaultValues] = useState(defaultVal);
 
 
+
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
 
@@ -112,11 +113,12 @@ export default function ServiceRequest() {
       ]);
     };
     fetchData();
-  }, []);
+  }, [defaultValues]);
 
   //ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
   useEffect(() => {
     console.log('Call : 🟢[2] fetch UserData&serviceRequest', moment().format('HH:mm:ss:SSS'));
+
     if (currentUser?.employee_username) {
       fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
       dataTableServiceRequest_GET();
@@ -140,19 +142,25 @@ export default function ServiceRequest() {
 
 
   // หน้าค้นหา Search ========================================================================================================= 
-  
+
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
+    const dataset = {
+      "site_id": defaultValues.siteId,
+      "service_center_flag": true
+    };
+
     try {
-      const response = await _POST({}, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
 
-          costCenterId: center.id,
-          costCenterCode: center.cost_center_code,
-          costCenterName: center.cost_center_name
+          serviceCenterId: center.id,
+          serviceCenterCode: center.cost_center_code,
+          serviceCenterName: center.cost_center_name,
+          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
         }));
 
         // console.log(serviceCenters, 'Service Center');
@@ -203,8 +211,12 @@ export default function ServiceRequest() {
   const searchFetchFixedAssetCodes = async () => {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
+    const dataset = {
+      "cost_center_id": defaultValues.costCenterId
+    };
+
     try {
-      const response = await _POST({}, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
@@ -231,14 +243,14 @@ export default function ServiceRequest() {
   // ฟังก์ชันเรียก API Master Data Aotocomplete combobox options =================================================================
   /*
       ใช้สำหรับหน้า ServicesRequestBody 
-  */ 
+  */
 
   const fetchServiceCenters = async () => {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
       "site_id": defaultValues.siteId,
-      "service_center_flag" : true
+      "service_center_flag": true
     };
 
     try {
@@ -251,7 +263,7 @@ export default function ServiceRequest() {
           serviceCenterId: center.id,
           serviceCenterCode: center.cost_center_code,
           serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName:  center.cost_center_name + ' [' + center.cost_center_code + ']'
+          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
         }));
 
         setOptions((prevOptions) => ({
@@ -265,42 +277,6 @@ export default function ServiceRequest() {
     } catch (error) {
       console.error("Error fetching service centers:", error);
       setError("An error occurred while fetching service centers.");
-    }
-  };
-
-  const fetchBudgetCodes = async () => {
-    console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
-    try {
-      const dataset = {
-        "cost_center_id": defaultValues.costCenterId
-      };
-
-      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
-
-      if (response && response.status === "success") {
-        //console.log(response, 'Budget_Get');
-
-        // กำหนดประเภทสำหรับ budgetCodes
-        const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
-          budgetId: budget.id,
-          budgetCode: budget.budget_code,
-          jobType: budget.job_type,
-        }));
-
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          budgetCode: budgetCodes,
-        }));
-
-        // ส่ง jobType ไปยัง fetchJobTypes
-        //fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
-
-      } else {
-        setError("Failed to fetch budget codes.");
-      }
-    } catch (error) {
-      console.error("Error fetching budget codes:", error);
-      setError("An error occurred while fetching budget codes.");
     }
   };
 
@@ -331,6 +307,43 @@ export default function ServiceRequest() {
     } catch (error) {
       console.error("Error fetching job types:", error);
       setError("An error occurred while fetching job types.");
+    }
+  };
+
+  const fetchBudgetCodes = async () => {
+    console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
+    try {
+      const dataset = {
+        "cost_center_id": defaultValues.costCenterId
+      };
+
+      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
+
+      if (response && response.status === "success") {
+        console.log(response, 'Budget_Get');
+
+        // กำหนดประเภทสำหรับ budgetCodes
+        const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
+          budgetId: budget.id,
+          budgetCode: budget.budget_code,
+          jobType: budget.job_type,
+          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
+        }));
+
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          budgetCode: budgetCodes,
+        }));
+
+        // ส่ง jobType ไปยัง fetchJobTypes
+        //fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
+
+      } else {
+        setError("Failed to fetch budget codes.");
+      }
+    } catch (error) {
+      console.error("Error fetching budget codes:", error);
+      setError("An error occurred while fetching budget codes.");
     }
   };
 
@@ -539,7 +552,7 @@ export default function ServiceRequest() {
           const userData = response.data[0];
           if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
             //console.log(userData,"userData");
-            
+
 
             setHeadUser(userData.head_user);
 
@@ -800,6 +813,7 @@ export default function ServiceRequest() {
 
                 handleClose();
               });
+
           } else {
             console.error('Failed to save draft:', response);
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
@@ -1139,7 +1153,7 @@ export default function ServiceRequest() {
               value={selectedServiceCenter}
               labelName={"Service Center"}
               options={optionsSearch.serviceCenter}
-              column="costCenterCode"
+              column="serviceCentersCodeAndName"
               setvalue={handleAutocompleteChange(setSelectedServiceCenter)}
             />
           </div>
@@ -1198,6 +1212,7 @@ export default function ServiceRequest() {
             headCells={Request_headCells}
             tableName={"Service Request"}
             handleonClick_1={handleClickAdd}
+            roleName={currentUser?.role_name}
           />
         </div>
         <FuncDialog

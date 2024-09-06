@@ -6,3 +6,15 @@ export function setValueMas(dataMas: any, value: any, colname: any) {
     }
   }
 }
+
+export function setValueList(dataMas: any, value: any, colname: any) {
+
+  console.log(dataMas,"dataMas");
+  
+  if (dataMas) {
+    const valueMas = dataMas.filter((el: any) => el[`${colname}`] == value);
+    if (Array.isArray(valueMas)) {
+      return valueMas;
+    }
+  }
+}

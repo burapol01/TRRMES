@@ -225,6 +225,7 @@ interface EnhancedTable {
   headCells: any;
   rows: any;
   setDataSelect?: (val: any) => void;
+  roleName?: string;
 }
 
 export default function EnhancedTable({
@@ -241,6 +242,7 @@ export default function EnhancedTable({
   handleonClick_2,
   handleonClick_3,
   setDataSelect,
+  roleName,
 }: EnhancedTable) {
   const [order, setOrder] = React.useState<Order>("asc");
   const [orderBy, setOrderBy] = React.useState<string>("calories");
@@ -356,7 +358,7 @@ export default function EnhancedTable({
         >
           {/* {handleonClick_1 ||handleonClick_2 ||handleonClick_3 && */}
           <div className="flex pl-2 px-8">
-            {buttonLabal_1 && buttonColor_1 && handleonClick_1 && (
+            {buttonLabal_1 && buttonColor_1 && handleonClick_1 && roleName !== "Approver" && (
               <div className="">
                 <FullWidthButton
                   iconAdd={true}

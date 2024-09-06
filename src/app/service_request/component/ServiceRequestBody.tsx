@@ -3,7 +3,7 @@ import FullWidthTextField from "../../../components/MUI/FullWidthTextField";
 import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
 import debounce from 'lodash/debounce';
-import { setValueMas } from "../../../../libs/setvaluecallback"
+import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -43,6 +43,7 @@ export default function ServiceRequestBody({
   disableOnly,
   actions
 }: ServiceRequestBodyProps) {
+  const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
@@ -103,16 +104,22 @@ export default function ServiceRequestBody({
   ]);
 
   React.useEffect(() => {
-    
+
     if (actions != "Create") {
 
       //console.log(options, 'dd')
       //console.log(defaultValues?.serviceCenterId, 'dsdsd')
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
-       // console.log(mapCostCenterData, 'mapCostCenterData')
+        // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
         setServiceName(mapCostCenterData?.serviceCenterName)
+      }
+
+      if (defaultValues?.jobType != "") {
+        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
+        //console.log(mapJobTypeData, 'mapJobTypeData')
+        setJobType(mapJobTypeData)
       }
 
       if (defaultValues?.budgetCode != "") {
@@ -120,12 +127,6 @@ export default function ServiceRequestBody({
         //console.log(mapBudgetData, 'mapBudgetData')
         setBudgetCode(mapBudgetData)
 
-      }
-
-      if (defaultValues?.jobType != "") {
-        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
-        //console.log(mapJobTypeData, 'mapJobTypeData')
-        setJobType(mapJobTypeData)
 
       }
 
@@ -149,7 +150,7 @@ export default function ServiceRequestBody({
         setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
-     
+
       if (defaultValues?.headUser != "") {
         //console.log(defaultValues?.headUser, 'headUser')
         setheadUser(defaultValues?.headUser || "");
@@ -159,6 +160,16 @@ export default function ServiceRequestBody({
 
 
   }, [defaultValues])
+
+  React.useEffect(() => {
+    if (jobType) {
+      const mapBudgetData = setValueList(options?.budgetCode, jobType?.lov_code, 'jobType');
+      //console.log(budgetCode, "budgetCode");
+      setOptionBudgetCode(mapBudgetData)
+    } else {
+      setOptionBudgetCode(options?.budgetCode);
+    }
+  }, [jobType])
 
   return (
     <div>
@@ -185,7 +196,7 @@ export default function ServiceRequestBody({
         )}
       </div>
       <div className="row justify-start">
-       
+
         <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Employee"}
@@ -232,7 +243,7 @@ export default function ServiceRequestBody({
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            required={"required"}
             labelName={"Service Center"}
             column="serviceCentersCodeAndName"
             value={serviceCenter}
@@ -251,34 +262,38 @@ export default function ServiceRequestBody({
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setServiceName(value)}
           />
-        </div>  
-        <div className="col-md-3 mb-2">
-          <AutocompleteComboBox
-            // required={true}
-            labelName={"Budget Code"}
-            column="budgetCode"
-            value={budgetCode}
-            setvalue={setBudgetCode}
-            disabled={disableOnly}
-            options={options?.budgetCode || []}
-          />
         </div>
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            required={"required"}
             labelName={"Jobtype"}
             column="lov_name"
             value={jobType}
-            setvalue={setJobType}
+            setvalue={(data) => {
+              //console.log(data, "job");
+              setJobType(data)
+              setBudgetCode(null)
+            }}
             disabled={disableOnly}
             options={options?.jobType || []}
           />
         </div>
-      </div>     
+        <div className="col-md-3 mb-2">
+          <AutocompleteComboBox
+            required={"required"}
+            labelName={"Budget Code"}
+            column="budgetCodeAndJobType"
+            value={budgetCode}
+            setvalue={setBudgetCode}
+            disabled={disableOnly}
+            options={optionBudgetCode}
+          />
+        </div>
+      </div>
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCode"
             value={fixedAssetCode}
@@ -286,7 +301,7 @@ export default function ServiceRequestBody({
             setvalue={(data) => {
               // console.log(data,'data');              
               setFixedAssetCode(data);
-              setFixedAssetDescription(data?.assetDescription || ""); 
+              setFixedAssetDescription(data?.assetDescription || "");
             }}
             options={options?.fixedAssetCode || []}
           />
@@ -301,7 +316,7 @@ export default function ServiceRequestBody({
           />
         </div>
       </div>
-      <div className="row justify-start">        
+      <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <FullWidthTextareaField
             labelName={"Description"}

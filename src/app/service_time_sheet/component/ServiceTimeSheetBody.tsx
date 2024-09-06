@@ -3,7 +3,7 @@ import FullWidthTextField from "../../../components/MUI/FullWidthTextField";
 import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
 import debounce from 'lodash/debounce';
-import { setValueMas } from "../../../../libs/setvaluecallback"
+import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 import TimeSheetBody from "./TimeSheetBody";
 
 interface ServiceTimeSheetBodyProps {
@@ -48,6 +48,7 @@ export default function ServiceTimeSheetBody({
   disableOnly,
   actions
 }: ServiceTimeSheetBodyProps) {
+  const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
@@ -182,6 +183,16 @@ export default function ServiceTimeSheetBody({
 
   }, [defaultValues])
 
+  React.useEffect(() => {
+    if (jobType) {
+      const mapBudgetData = setValueList(options?.budgetCode, jobType?.lov_code, 'jobType');
+        //console.log(budgetCode, "budgetCode");
+      setOptionBudgetCode(mapBudgetData)
+      } else {
+      setOptionBudgetCode(options?.budgetCode);
+    }
+  }, [jobType])
+
   return (
     <div>
       <div className="row justify-start">
@@ -254,7 +265,7 @@ export default function ServiceTimeSheetBody({
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
+             required={"required"}
             labelName={"Service Center"}
             column="serviceCentersCodeAndName"
             value={serviceCenter}
@@ -276,31 +287,35 @@ export default function ServiceTimeSheetBody({
         </div>
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
-            labelName={"Budget Code"}
-            column="budgetCode"
-            value={budgetCode}
-            setvalue={setBudgetCode}
+            required={"required"}
+            labelName={"Jobtype"}
+            column="lov_name"
+            value={jobType}
+            setvalue={(data) => {
+              //console.log(data, "job");
+              setJobType(data)
+              setBudgetCode(null)
+            }}
             disabled={disableOnly}
-            options={options?.budgetCode || []}
+            options={options?.jobType || []}
           />
         </div>
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
-            labelName={"Jobtype"}
-            column="lov_name"
-            value={jobType}
-            setvalue={setJobType}
+            required={"required"}
+            labelName={"Budget Code"}
+            column="budgetCodeAndJobType"
+            value={budgetCode}
+            setvalue={setBudgetCode}
             disabled={disableOnly}
-            options={options?.jobType || []}
+            options={optionBudgetCode}
           />
         </div>
       </div>
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-            // required={true}
+             required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCode"
             value={fixedAssetCode}

@@ -59,17 +59,21 @@ const MassengmodalProvider: React.FC = () => {
       onClose={handleClose}
       sx={{
         zIndex: (theme) => theme.zIndex.modal + 10,
+        "& .MuiDialog-paper": {
+          width: "20%", // Make it responsive
+          maxWidth: "600px", // Max width to prevent it from growing too large
+        },
       }}
     >
       <DialogTitle>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
             {types.charAt(0).toUpperCase() + types.slice(1)}
-          </Typography>    
+          </Typography>
 
         </Stack>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ p: 4 }}>
         <Stack direction="column" alignItems="center" spacing={3}>
           {types === "success" && <img src="media/alertMasseng/icons8-success.gif" alt="success" />}
           {types === "error" && <img src="media/alertMasseng/icons8-error.gif" alt="error" />}

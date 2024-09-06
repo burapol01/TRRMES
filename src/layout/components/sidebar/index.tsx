@@ -35,14 +35,14 @@ export default function SideBar({ headleOpen, isOpen }: SideBar) {
                         <div className={`${isOpen || active ? `block` : `hidden`} `}>
                             <img
                                 alt="Logo"
-                                src="http://trr-web.trrgroup.com/storage/INTRANET/DMZ/Asset/Logo/Logo_TRR_Lin_TH.png"
+                                src={`${import.meta.env.VITE_APP_IMG_LOGO_URL}/INTRANET/DMZ/Asset/Logo/Logo_TRR_Lin_TH.png`}
                                 className="py-2 px-8"
                             />
                         </div>
                         <div className={`${isOpen || active ? `hidden` : `block`} `}>
                             <img
                                 alt="Logo"
-                                src="http://trr-web.trrgroup.com/storage/EVI/DEV/Logo/TRR.png"
+                                src={`${import.meta.env.VITE_APP_IMG_LOGO_URL}/EVI/DEV/Logo/TRR.png`}
                                 className="h-[40px] m-3"
                             />
                         </div>

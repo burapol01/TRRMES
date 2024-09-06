@@ -128,7 +128,7 @@ export default function ServiceRequest() {
       ]);
     };
     fetchData();
-  }, []);
+  }, [defaultValues]);
 
   //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
   useEffect(() => {
@@ -155,15 +155,21 @@ export default function ServiceRequest() {
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
+    const dataset = {
+      "site_id": defaultValues.siteId,
+      "service_center_flag": true
+    };
+
     try {
-      const response = await _POST({}, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
 
-          costCenterId: center.id,
-          costCenterCode: center.cost_center_code,
-          costCenterName: center.cost_center_name
+          serviceCenterId: center.id,
+          serviceCenterCode: center.cost_center_code,
+          serviceCenterName: center.cost_center_name,
+          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
         }));
 
         // console.log(serviceCenters, 'Service Center');
@@ -214,8 +220,12 @@ export default function ServiceRequest() {
   const searchFetchFixedAssetCodes = async () => {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
+    const dataset = {
+      "cost_center_id": defaultValues.costCenterId
+    };
+
     try {
-      const response = await _POST({}, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
@@ -296,6 +306,7 @@ export default function ServiceRequest() {
           budgetId: budget.id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
+          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
         }));
         //console.log(budgetCodes, 'budgetCodes');
         setOptions((prevOptions) => ({
@@ -722,12 +733,13 @@ export default function ServiceRequest() {
               label={`${el.req_status}`}
               backgroundColor="#1E1E1E"
               borderColor="#1E1E1E"
+              textColor="#FFFFFF"
             >
             </BasicChips>
           }
           newData.push(el)
         })
-        //Sconsole.log(newData, 'newDatanewDatanewDatanewData');
+        console.log(newData, 'ค่าที่ดึงจาก ตาราง');
 
         setDataList(newData);
       }
