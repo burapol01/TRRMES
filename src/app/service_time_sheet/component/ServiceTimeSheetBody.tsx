@@ -49,6 +49,7 @@ export default function ServiceTimeSheetBody({
   actions
 }: ServiceTimeSheetBodyProps) {
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
+  const [optionRevision, setOptionRevision] = useState<any>(options?.revision || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
@@ -68,7 +69,7 @@ export default function ServiceTimeSheetBody({
   const [fixedAssetCode, setFixedAssetCode] = useState<any>(null);
   const [fixedAssetDescription, setFixedAssetDescription] = useState("");
   const [countRevision, setCountRevision] = useState(defaultValues?.countRevision || "1");
-  const [revisionCurrent, setRevision] = useState<any>(null);
+  const [revisionCurrent, setRevisionCurrent] = useState<any>(null);
   const [timeSheetData, settimeSheetData] = useState<any>(null); // State to store draft data  
 
   const handleDataChange = (data: any) => {
@@ -122,7 +123,7 @@ export default function ServiceTimeSheetBody({
 
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
-       // console.log(mapCostCenterData, 'mapCostCenterData')
+        // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
         setServiceName(mapCostCenterData?.serviceCenterName)
       }
@@ -144,6 +145,7 @@ export default function ServiceTimeSheetBody({
       if (defaultValues?.status != "") {
         setStatus(defaultValues?.status || "")
       }
+
 
       if (defaultValues?.countRevision != "") {
         setCountRevision(defaultValues?.countRevision || "")
@@ -167,16 +169,25 @@ export default function ServiceTimeSheetBody({
         setheadUser(defaultValues?.headUser || "");
       }
 
-      console.log(defaultValues?.requestId, 'requestId')
-      console.log(options?.revision, 'revision')
-       if (defaultValues?.requestId != "") {
-        
-         const mapRevisionData = setValueMas(options?.revision, defaultValues?.requestId, 'reqId')
-      console.log(mapRevisionData, 'mapRevisionData')
-        setRevision(mapRevisionData)
-        console.log(revisionCurrent,"revisionCurrent");
 
-       }
+
+      if (defaultValues?.requestId != "") {
+
+        console.log(options?.revision, 'revision')
+        console.log(defaultValues?.requestId, 'requestId')
+        const mapRevisionData: any = setValueList(options?.revision, defaultValues?.requestId, 'reqId')
+        console.log(mapRevisionData, 'mapRevisionData')
+        if (mapRevisionData.length > 0) {
+
+          setOptionRevision(mapRevisionData)
+          setRevisionCurrent(mapRevisionData[0])
+          // console.log(revisionCurrent, "revisionCurrent");
+
+        } else {
+          setOptionRevision([])
+        }
+
+      }
 
     }
 
@@ -186,12 +197,20 @@ export default function ServiceTimeSheetBody({
   React.useEffect(() => {
     if (jobType) {
       const mapBudgetData = setValueList(options?.budgetCode, jobType?.lov_code, 'jobType');
-        //console.log(budgetCode, "budgetCode");
+      //console.log(budgetCode, "budgetCode");
       setOptionBudgetCode(mapBudgetData)
-      } else {
+    } else {
       setOptionBudgetCode(options?.budgetCode);
     }
   }, [jobType])
+
+
+  React.useEffect(() => {
+
+    //console.log(revisionCurrent,'revisionCurrent');
+
+
+  }, [revisionCurrent])
 
   return (
     <div>
@@ -265,7 +284,7 @@ export default function ServiceTimeSheetBody({
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-             required={"required"}
+            required={"required"}
             labelName={"Service Center"}
             column="serviceCentersCodeAndName"
             value={serviceCenter}
@@ -315,7 +334,7 @@ export default function ServiceTimeSheetBody({
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
-             required={"required"}
+            required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCode"
             value={fixedAssetCode}
@@ -355,10 +374,10 @@ export default function ServiceTimeSheetBody({
                 labelName={"Revision"}
                 column="revisionNo"
                 value={revisionCurrent}
-                setvalue={setRevision}
+                setvalue={setRevisionCurrent}
                 disabled={actions === "Reade" ? false : disableOnly}
-                options={options?.revision || []}
-                orchange={(value) => setRevision(value)} // แก้ไขจาก orchange เป็น onChange
+                options={optionRevision || []}
+                orchange={(value) => setRevisionCurrent(value)} // แก้ไขจาก orchange เป็น onChange
               />
             </div>
 

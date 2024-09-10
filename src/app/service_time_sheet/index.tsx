@@ -14,6 +14,7 @@ import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
 import BasicChips from "../../components/MUI/BasicChips";
+import { dateFormatTimeEN } from "../../../libs/datacontrol";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -76,6 +77,7 @@ export default function ServiceRequest() {
   const currentUser = useSelector((state: any) => state?.user?.user);
   const [headUser, setHeadUser] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("");
+  const [costCenterId, setCostCenterId] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
   const [statusValue, setStatusValue] = useState<string>("");
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<any>(null);
@@ -136,8 +138,10 @@ export default function ServiceRequest() {
 
     if (defaultValues.siteId !== "") {
       fetchServiceCenters();
+      fetchRevision();
       fetchTechnician();
       fetchWorkHour();
+
     }
 
     if (defaultValues.costCenterId !== "") {
@@ -146,10 +150,14 @@ export default function ServiceRequest() {
     }
 
     if (defaultValues.requestId !== "") {
+      console.log(defaultValues.requestId,"request");
       fetchRevision();
     }
 
   }, [defaultValues]);
+
+
+  
 
   // หน้าค้นหา Search ========================================================================================================= 
   const searchFetchServiceCenters = async () => {
@@ -390,17 +398,17 @@ export default function ServiceRequest() {
   };
 
   const fetchRevision = async () => {
-    console.log('Call : fetchRevision', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : fetchRevision', defaultValues.requestId, moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "req_id": defaultValues.requestId
+      // "req_id": defaultValues.requestId
     };
 
     try {
       const response = await _POST(dataset, "/api_rab/MasterData/Revision_Get");
 
       if (response && response.status === "success") {
-        //console.log('Revision_Get', response);
+        console.log('Revision_Get', response);
         const revision = response.data.map((revision: any) => ({
           revisionId: revision.id,
           reqId: revision.req_id,
@@ -431,10 +439,12 @@ export default function ServiceRequest() {
   };
 
   const fetchTechnician = async () => {
-    console.log('Call : fetchTechnician',defaultValues.siteId, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : fetchTechnician', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId
+      "user_ad": currentUser.employee_username,
+      "site_id": defaultValues.siteId,
+      "cost_center_id": costCenterId
     };
 
     try {
@@ -528,7 +538,7 @@ export default function ServiceRequest() {
     setDefaultValues({
       ...defaultValues,
       requestNo: data?.req_no || '',
-      requestDate: moment(data?.req_date).format('yyyy-MM-DD') || '',
+      requestDate: data?.req_date || '',
       requestId: data?.id || '',
       costCenterId: data?.cost_center_id || '',
       costCenterName: data?.cost_center_name || '',
@@ -601,7 +611,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       user_ad: currentUser.employee_username || null,
-      head_user: currentUser.employee_username,
+      head_user: null,
     };
 
     try {
@@ -612,6 +622,7 @@ export default function ServiceRequest() {
           const userData = response.data[0];
           if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
             setSiteId(userData.site_id);
+            setCostCenterId(userData.cost_center_id);
             // setHeadUser(userData.head_user);
 
             // setDefaultValues(prevValues => ({
@@ -648,7 +659,9 @@ export default function ServiceRequest() {
     if (!currentUser) return;
 
     const dataset = {
-      "site_id": siteId
+      "site_id": siteId,
+      "service_center_id": costCenterId
+
     };
 
     try {
@@ -661,6 +674,8 @@ export default function ServiceRequest() {
         const newData: any = []
 
         Array.isArray(result) && result.forEach((el) => {
+          el.req_date = dateFormatTimeEN(el.req_date,"DD/MM/YYYY HH:mm:ss")
+          el.status_update = dateFormatTimeEN(el.status_update,"DD/MM/YYYY HH:mm:ss")
 
           setDefaultValues(prevValues => ({
             ...prevValues,
@@ -1144,7 +1159,7 @@ export default function ServiceRequest() {
               onDataChange={handleDataChange}
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceTimeSheetBody
-              actions={"Reade"}
+              actions={"JobDone"}
               disableOnly
             />
           }

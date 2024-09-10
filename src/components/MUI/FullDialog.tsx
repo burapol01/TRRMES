@@ -33,7 +33,7 @@ interface FuncDialog {
 
 const actionConfig = {
   Draft: {
-    mainButton: { label: "Draft", show: true },
+    mainButton: { label: "Save", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },

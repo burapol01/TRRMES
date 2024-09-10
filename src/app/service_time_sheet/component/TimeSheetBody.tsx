@@ -10,6 +10,7 @@ import debounce from 'lodash/debounce';
 import moment from 'moment';
 import { _POST } from '../../../service/mas';
 import { v4 as uuidv4 } from 'uuid';
+import { dateFormatTimeEN } from '../../../../libs/datacontrol';
 
 interface TimeSheetBodyProps {
     onDataChange?: (data: any[]) => void; 
@@ -27,7 +28,7 @@ export default function TimeSheetBody({
     revisionCurrent,
     actions
 }: TimeSheetBodyProps) {
-    const [date, setDate] = useState(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+    const [date, setDate] = useState(dateFormatTimeEN(dayjs(),"DD/MM/YYYY"));
     const [technician, setTechnician] = useState<any>(null);
     const [workHour, setWorkHour] = useState<any>(null);
     const [description, setDescription] = useState('');
@@ -38,7 +39,7 @@ export default function TimeSheetBody({
     useEffect(() => {
         if (actions === "TimeSheet") {
             const intervalId = setInterval(() => {
-                setDate(dayjs().format('YYYY-MM-DD HH:mm:ss'));
+                setDate(dateFormatTimeEN(dayjs(),"DD/MM/YYYY"));
             }, 3000);
             return () => clearInterval(intervalId); // Clear the interval when component unmounts
         }
@@ -65,7 +66,7 @@ export default function TimeSheetBody({
                     const subTimeSheet = response.data.map((dataSubTimeSheet: any) => ({
                         subTimeSheetId: dataSubTimeSheet.id,
                         no: dataSubTimeSheet.time_sheet_no,
-                        date: dataSubTimeSheet.work_date,
+                        date: dateFormatTimeEN(dataSubTimeSheet.work_date,"DD/MM/YYYY"),
                         technician: dataSubTimeSheet.technician,
                         work_hour: dataSubTimeSheet.work_hour,
                         description: dataSubTimeSheet.description

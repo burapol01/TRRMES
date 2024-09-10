@@ -3,78 +3,78 @@ export const Request_headCells = [
         columnName: 'ACTION',
         numeric: 'center',
         disablePadding: true,
-        label: 'จัดการ',
-        colWidth: 300
+        label: 'Manage',
+        colWidth: 150
     },
     {
         columnName: 'req_no',
         numeric: 'center',
         disablePadding: true,
-        label: 'เลขที่เอกสาร',
-        colWidth: 300
+        label: 'Document Number',
+        colWidth: 185
     },
     {
         columnName: 'req_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่ request',
-        colWidth: 300
+        label: 'Request Date',
+        colWidth: 200
     },
     {
         columnName: 'req_user',
         numeric: 'center',
         disablePadding: true,
-        label: 'คนที่ request',
-        colWidth: 300
+        label: 'Requester',
+        colWidth: 150
     },
     {
         columnName: 'app_user',
         numeric: 'center',
         disablePadding: true,
-        label: 'คนที่ approve',
-        colWidth: 300
+        label: 'Approver',
+        colWidth: 150
     },
     {
-        columnName: 'cost_center_id',
+        columnName: 'cost_center_code',
         numeric: 'center',
         disablePadding: true,
-        label: 'Cost Center ID',
-        colWidth: 300
+        label: 'Cost Center',
+        colWidth: 150
     },
     {
-        columnName: 'service_center_id',
+        columnName: 'service_center_code',
         numeric: 'center',
         disablePadding: true,
-        label: 'Service Center ID',
-        colWidth: 300
+        label: 'Service Center',
+        colWidth: 150
     },
     {
         columnName: 'description',
         numeric: 'center',
         disablePadding: true,
-        label: 'รายละเอียด request',
+        label: 'Description',
         colWidth: 300
     },
     {
         columnName: 'req_status_',
         numeric: 'center',
         disablePadding: true,
-        label: 'สถานะ request',
-        colWidth: 300
+        label: 'Status',
+        colWidth: 150
     },
     {
         columnName: 'count_revision',
         numeric: 'center',
         disablePadding: true,
-        label: 'จำนวน revision',
-        colWidth: 300
+        label: 'Revision Count',
+        colWidth: 150
     },
     {
         columnName: 'status_update',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่อัพเดทสถานะล่าสุด',
-        colWidth: 300
+        label: 'Last Status Update',
+        colWidth: 200
     },
     // {
     //     columnName: 'create_by',

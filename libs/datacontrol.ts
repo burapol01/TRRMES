@@ -62,3 +62,43 @@ export const dateFormatSlashReturnMUI = (date: any) => {
     return null;
   }
 };
+
+type Format = "DD/MM/YYYY" | "DD/MM/YYYY HH:mm:ss" | "YYYY/MM/DD" | "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
+
+export const dateFormatTime = (date: any, format: Format) => {
+  if (date == null) {
+    return "";
+  }
+  try {
+    const newdate = dayjs(date)
+    return dayjs(newdate).format(format);
+  } catch {
+    return "";
+  }
+
+};
+export const dateFormatTimeTH = (date: any, format: Format) => {
+  if (date == null) {
+    return "";
+  }
+  try {
+    let newdate = dayjs(date)
+    newdate = newdate.add(543, 'year');
+    return dayjs(newdate).format(format);
+  } catch {
+    return "";
+  }
+
+};
+export const dateFormatTimeEN = (date: any, format: Format) => {
+  if (date == null) {
+    return "";
+  }
+  try {
+    let newdate = dayjs(date)
+    return dayjs(newdate).format(format);
+  } catch {
+    return "";
+  }
+
+};

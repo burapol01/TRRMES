@@ -17,6 +17,8 @@ interface ActionManageCellProps {
   disabled?: boolean;
   onClick?: (name: string) => void;
   reqStatus?: string;
+  appUser?: string;
+  currentUser?: string;
 }
 
 export default function ActionManageCell(props: ActionManageCellProps) {
@@ -103,31 +105,42 @@ export default function ActionManageCell(props: ActionManageCellProps) {
 
           switch (props.reqStatus) {
             case "Submit":
-              if (menuFunc.func_name === "Approved") {
+              if (
+                menuFunc.func_name === "Approved" && 
+                props.appUser && 
+                props.appUser !== "" && 
+                props.currentUser === props.appUser
+              ) {
                 shouldRender = true;
                 icon = <CheckCircleIcon />;
               }
               break;
-
+          
             case "Approved":
               if (menuFunc.func_name === "Accept Job") {
                 shouldRender = true;
                 icon = <DoneIcon />;
               }
               break;
-
+          
             case "Start":
             case "On process":
-              if (menuFunc.func_name === "Time Sheet" || (props.reqStatus === "On process" && menuFunc.func_name === "Job Done")) {
+              if (
+                menuFunc.func_name === "Time Sheet" || 
+                (props.reqStatus === "On process" && 
+                menuFunc.func_name === "Job Done") // เงื่อนไขสำหรับ Job Done
+              ) {
                 shouldRender = true;
                 icon = menuFunc.func_name === "Time Sheet" ? <ZoomInIcon /> : <DoneIcon />;
               }
               break;
-
+          
             default:
               // คุณสามารถเพิ่มเงื่อนไขเพิ่มเติมในกรณีอื่นๆ ได้ที่นี่
               break;
           }
+          
+                   
 
           if (shouldRender) {
             return (

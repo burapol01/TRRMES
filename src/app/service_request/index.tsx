@@ -15,6 +15,7 @@ import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
 import MenuListComposition from "../../components/MUI/MenuListComposition";
 import BasicChips from "../../components/MUI/BasicChips";
+import { dateFormatTimeEN, dateFormatTimeTH } from "../../../libs/datacontrol"
 
 interface OptionsState {
   serviceCenter: any[];
@@ -445,7 +446,7 @@ export default function ServiceRequest() {
     await setDefaultValues({
       ...defaultValues,
       requestNo: data?.req_no || '',
-      requestDate: moment(data?.req_date).format('yyyy-MM-DD') || '',
+      requestDate: data?.req_date || '',
       requestId: data?.id || '',
       costCenterId: data?.cost_center_id || '',
       costCenterName: data?.cost_center_name || '',
@@ -610,6 +611,9 @@ export default function ServiceRequest() {
         Array.isArray(result) && result.forEach((el) => {
           //console.log(el, "😊😊😊");
 
+          el.req_date = dateFormatTimeEN(el.req_date,"DD/MM/YYYY HH:mm:ss")
+          el.status_update = dateFormatTimeEN(el.status_update,"DD/MM/YYYY HH:mm:ss")
+
           el.ACTION = null
           el.ACTION = (
             <ActionManageCell
@@ -629,6 +633,8 @@ export default function ServiceRequest() {
                 }
               }}
               reqStatus={el.req_status}
+              appUser={el.app_user}
+              currentUser={currentUser?.employee_username}
 
             />
           )
@@ -1138,7 +1144,7 @@ export default function ServiceRequest() {
     <div>
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
-          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหา</label>
+          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Search</label>
         </div>
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
@@ -1185,7 +1191,7 @@ export default function ServiceRequest() {
           <div className="flex justify-end">
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"ค้นหา"}
+                labelName={"Search"}
                 handleonClick={handleSearch}
                 variant_text="contained"
                 colorname={"success"}
@@ -1193,7 +1199,7 @@ export default function ServiceRequest() {
             </div>
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"รีเซท"}
+                labelName={"Reset"}
                 handleonClick={handleReset}
                 variant_text="contained"
                 colorname={"inherit"}
@@ -1207,7 +1213,7 @@ export default function ServiceRequest() {
         <div>
           <EnhancedTable
             rows={dataList}
-            buttonLabal_1="Draft"
+            buttonLabal_1="Add"
             buttonColor_1="info"
             headCells={Request_headCells}
             tableName={"Service Request"}
