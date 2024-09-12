@@ -47,7 +47,7 @@ export default function PrivateRoutes() {
                 <Route element={<MasterLayout />}>
                     {/* Redirect to Dashboard after success login/registartion */}
 
-                    <Route path='auth/*' element={<Navigate to={`home`} />} />
+                    <Route path='auth/*' element={<Navigate to={`/home`} />} />
                     <Route path='home' element={<Home />} />
                     <Route path='service_request' element={<ServiceRequest />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheet />} />

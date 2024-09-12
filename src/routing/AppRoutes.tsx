@@ -37,7 +37,7 @@ const AppRoutes = () => {
           {checkLogin ? (
             <>
               <Route path="/*" element={<PrivateRoutes />} />
-              <Route index element={<Navigate to="/Home" />} />
+              <Route index element={<Navigate to="/home" />} />
             </>
           ) : (
             <>
