@@ -1139,7 +1139,7 @@ export default function ServiceRequest() {
         </div>
         <FuncDialog
           open={openView} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={"View"}
           handleClose={handleClose}
@@ -1157,7 +1157,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openAcceptJob} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={"Accept Job"}
           handleClose={handleClose}
@@ -1177,7 +1177,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openTimeSheet} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={"Time Sheet"}
           handleClose={handleClose}
@@ -1196,7 +1196,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openJobDone} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={"Job Done"}
           handleClose={handleClose}
@@ -1227,7 +1227,7 @@ export default function ServiceRequest() {
           <FullWidthTextareaField
             labelName={"Please specify reason."}
             value={rejectReason}
-            multiline={false}
+            multiline={true}
             onChange={(value) => setRejectReason(value)}
           />
 

@@ -13,8 +13,12 @@ const AutoPlaySwipeableViews = autoPlay(SwipeableViews);
 const images = [
   {
     label: "San Francisco  Oakland Bay Bridge, United States",
-    imgPath: "http://intra-tools.trrgroup.com/storage/LLS/DEV/Campaign_IMG/0AC42767-FAD9-4416-8534-72EDD68A3D6C.jpg",
+    imgPath: "media/slider/img_mes3.jpg",
   },
+  // {
+  //   label: "San Francisco  Oakland Bay Bridge, United States",
+  //   imgPath: "media/slider/img_mes2.png",
+  // },
   // Add more image objects as needed
 ];
 
@@ -42,7 +46,7 @@ function SwipeableTextMobileStepper() {
         index={activeStep}
         onChangeIndex={handleStepChange}
         enableMouseEvents
-        interval={20000} // Adjust interval timing as needed
+        // interval={1000} // Adjust interval timing as needed
       >
         {images.map((step, index) => (
           <div key={step.label}>
@@ -57,7 +61,7 @@ function SwipeableTextMobileStepper() {
           </div>
         ))}
       </AutoPlaySwipeableViews>
-      <MobileStepper
+      {/* <MobileStepper
         steps={maxSteps}
         position="static"
         activeStep={activeStep}
@@ -89,7 +93,7 @@ function SwipeableTextMobileStepper() {
             Back
           </Button>
         }
-      />
+      /> */}
     </Box>
   );
 }

@@ -1242,7 +1242,7 @@ export default function ServiceRequest() {
         </div>
         <FuncDialog
           open={openAdd} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Draft'}
           handleClose={handleClose}
@@ -1261,7 +1261,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openView} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'View'}
           handleClose={handleClose}
@@ -1278,7 +1278,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openEdit} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Edit'}
           handleClose={handleClose}
@@ -1297,7 +1297,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openDelete} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Delete'}
           handleClose={handleClose}
@@ -1317,7 +1317,7 @@ export default function ServiceRequest() {
 
         <FuncDialog
           open={openSubmit} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Submit'}
           handleClose={handleClose}
@@ -1336,7 +1336,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openApproved} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Approve'}
           handleClose={handleClose}
@@ -1356,7 +1356,7 @@ export default function ServiceRequest() {
         />
         <FuncDialog
           open={openClose} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
-          dialogWidth="md"
+          dialogWidth="xl"
           openBottonHidden={true}
           titlename={'Close'}
           handleClose={handleClose}
@@ -1387,7 +1387,7 @@ export default function ServiceRequest() {
           <FullWidthTextareaField
             labelName={"Please specify reason."}
             value={rejectReason}
-            multiline={false}
+            multiline={true}
             onChange={(value) => setRejectReason(value)}
           />
 
@@ -1405,7 +1405,7 @@ export default function ServiceRequest() {
           <FullWidthTextareaField
             labelName={"Please specify reason."}
             value={rejectJobReason}
-            multiline={false}
+            multiline={true}
             onChange={(value) => setRejectJobReason(value)}
           />
 

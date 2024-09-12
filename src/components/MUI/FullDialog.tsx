@@ -104,7 +104,7 @@ export default function FuncDialog(props: FuncDialog) {
     <React.Fragment>
       <BootstrapDialog
         fullWidth
-        maxWidth={props.dialogWidth}
+        maxWidth={props.dialogWidth} // สามารถกำหนดขนาดตรงนี้ เช่น "xs", "sm", "md", "lg", "xl"
         onClose={props.handleClose}
         // aria-labelledby="customized-dialog-title"
         open={props.open}

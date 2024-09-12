@@ -6,6 +6,7 @@ import ServiceRequest from '../app/service_request';
 import ServiceTimeSheet from '../app/service_time_sheet';
 import { useSelector } from 'react-redux';
 import React from 'react';
+import User from '../app/master/user';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
@@ -50,6 +51,7 @@ export default function PrivateRoutes() {
                     <Route path='home' element={<Home />} />
                     <Route path='service_request' element={<ServiceRequest />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheet />} />
+                    <Route path='user' element={<User />} />
                     {/* Pages */}
                     {/* <Route path='dashboard' element={<DashboardWrapper />} />
                     <Route path='builder' element={<BuilderPageWrapper />} />
@@ -61,7 +63,7 @@ export default function PrivateRoutes() {
                             <Example />
                         }
                     />
-                    <Route path='*' element={<Navigate to='/error/404' />} />
+                    {/* <Route path='*' element={<Navigate to='/error/404' />} /> */}
 
                 </Route>
             {/* )} */}
