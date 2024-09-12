@@ -14,7 +14,8 @@ import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
 import BasicChips from "../../components/MUI/BasicChips";
-import { dateFormatTimeEN } from "../../../libs/datacontrol";
+import { dateFormatTimeEN, DateToDB } from "../../../libs/datacontrol";
+import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -105,6 +106,11 @@ export default function ServiceRequest() {
   // State to store default values
   const [defaultValues, setDefaultValues] = useState(defaultVal);
 
+  //For Reject Reasons
+  const [openReject, setOpenReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState<string>("");
+
+
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -136,7 +142,7 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
 
-    if (defaultValues.siteId !== "") {
+    if (defaultValues.siteId != "") {
       fetchServiceCenters();
       fetchRevision();
       fetchTechnician();
@@ -144,20 +150,21 @@ export default function ServiceRequest() {
 
     }
 
-    if (defaultValues.costCenterId !== "") {
+    if (defaultValues.costCenterId != "") {
       fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
     }
 
-    if (defaultValues.requestId !== "") {
-      console.log(defaultValues.requestId,"request");
+    if (defaultValues.requestId != "") {
+      console.log(defaultValues.requestId, "request");
       fetchRevision();
     }
+    fetchJobTypes();
 
   }, [defaultValues]);
 
 
-  
+
 
   // หน้าค้นหา Search ========================================================================================================= 
   const searchFetchServiceCenters = async () => {
@@ -297,46 +304,10 @@ export default function ServiceRequest() {
     }
   };
 
-  const fetchBudgetCodes = async () => {
-    console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
-    try {
-      const dataset = {
-        "cost_center_id": defaultValues.costCenterId
-      };
-
-      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
-
-      if (response && response.status === "success") {
-        // console.log(response, 'Budget_Get');
-
-        // กำหนดประเภทสำหรับ budgetCodes
-        const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
-          budgetId: budget.id,
-          budgetCode: budget.budget_code,
-          jobType: budget.job_type,
-          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
-        }));
-        //console.log(budgetCodes, 'budgetCodes');
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          budgetCode: budgetCodes,
-        }));
-
-        // ส่ง jobType ไปยัง fetchJobTypes
-        fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
-
-      } else {
-        setError("Failed to fetch budget codes.");
-      }
-    } catch (error) {
-      console.error("Error fetching budget codes:", error);
-      setError("An error occurred while fetching budget codes.");
-    }
-  };
-
-  const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
+  const fetchJobTypes = async () => {
     console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
     try {
+
       const dataset = {
         "lov_type": "job_type"
       };
@@ -344,13 +315,11 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
-        //console.log('job_type', response);
-        const jobTypes = response.data
-          .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
-          .map((job: any) => ({
-            lov_code: job.lov_code,
-            lov_name: job.lov1,
-          }));
+        //console.log(response, 'Success fetch job');
+        const jobTypes = response.data.map((job: any) => ({
+          lov_code: job.lov_code,
+          lov_name: job.lov1,
+        }));
 
         setOptions((prevOptions) => ({
           ...prevOptions,
@@ -365,18 +334,89 @@ export default function ServiceRequest() {
     }
   };
 
+  const fetchBudgetCodes = async () => {
+    console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
+    try {
+      const dataset = {
+        //"cost_center_id": defaultValues.costCenterId
+      };
+
+      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
+
+      if (response && response.status === "success") {
+        console.log(response, 'Budget_Get');
+
+        // กำหนดประเภทสำหรับ budgetCodes
+        const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
+          budgetId: budget.id,
+          budgetCode: budget.budget_code,
+          jobType: budget.job_type,
+          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
+        }));
+
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          budgetCode: budgetCodes,
+        }));
+
+        // ส่ง jobType ไปยัง fetchJobTypes
+        //fetchJobTypes(budgetCodes.map((b: { jobType: string }) => b.jobType));
+
+      } else {
+        setError("Failed to fetch budget codes.");
+      }
+    } catch (error) {
+      console.error("Error fetching budget codes:", error);
+      setError("An error occurred while fetching budget codes.");
+    }
+  };
+
+  //BackUp budget
+  /*-----------------------------------------------------------------------------------------------------------------
+  // const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
+  //   console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
+  //   try {
+  //     const dataset = {
+  //       "lov_type": "job_type"
+  //     };
+
+  //     const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+
+  //     if (response && response.status === "success") {
+  //       console.log('job_type', response);
+  //       const jobTypes = response.data
+  //         .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
+  //         .map((job: any) => ({
+  //           lov_code: job.lov_code,
+  //           lov_name: job.lov1,
+  //         }));
+
+  //       setOptions((prevOptions) => ({
+  //         ...prevOptions,
+  //         jobType: jobTypes,
+  //       }));
+  //     } else {
+  //       setError("Failed to fetch job types.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching job types:", error);
+  //     setError("An error occurred while fetching job types.");
+  //   }
+  // };
+  --------------------------------------------------------------------------------------------------------------------*/
+
   const fetchFixedAssetCodes = async () => {
     console.log('Call : fetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "cost_center_id": defaultValues.costCenterId
+      //"cost_center_id": defaultValues.costCenterId
     };
 
     try {
       const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
-        //console.log('Fixed_Asset_Get', response);
+        console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
           assetCode: asset.fixed_asset_code,
@@ -408,7 +448,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/MasterData/Revision_Get");
 
       if (response && response.status === "success") {
-        console.log('Revision_Get', response);
+        //console.log('Revision_Get', response);
         const revision = response.data.map((revision: any) => ({
           revisionId: revision.id,
           reqId: revision.req_id,
@@ -451,7 +491,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_rab/MasterData/Technician_Get");
 
       if (response && response.status === "success") {
-        console.log('Technician_Get', response);
+        //console.log('Technician_Get', response);
         const technician = response.data.map((technician: any) => ({
           userAd: technician.user_ad || "",
           userName: technician.user_name || "",
@@ -565,7 +605,7 @@ export default function ServiceRequest() {
   };
 
   const handleClickAcceptJob = (data: any) => {
-    console.log('data', data);
+    //console.log('data', data);
     setOpenAcceptJob(true);
     readData(data)
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
@@ -594,8 +634,11 @@ export default function ServiceRequest() {
     setOpenTimeSheet(false)
     setOpenJobDone(false)
     setDefaultValues(defaultVal);
+    readData(null);
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
-    dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์        
+    dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
+    setOpenReject(false); //ปิด Modal Reject Reason       
+
   };
 
   const handleDataChange = (data: any) => {
@@ -674,8 +717,10 @@ export default function ServiceRequest() {
         const newData: any = []
 
         Array.isArray(result) && result.forEach((el) => {
-          el.req_date = dateFormatTimeEN(el.req_date,"DD/MM/YYYY HH:mm:ss")
-          el.status_update = dateFormatTimeEN(el.status_update,"DD/MM/YYYY HH:mm:ss")
+          el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
+          el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
+          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"         
+          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"      
 
           setDefaultValues(prevValues => ({
             ...prevValues,
@@ -702,49 +747,49 @@ export default function ServiceRequest() {
             />
           )
           if (el.req_status === "Draft") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#B3B3B3"
               borderColor="#B3B3B3"
             >
             </BasicChips>
           } else if (el.req_status === "Submit") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#BDE3FF"
               borderColor="#BDE3FF"
             >
             </BasicChips>
           } else if (el.req_status === "Approved") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#E4CCFF"
               borderColor="#E4CCFF"
             >
             </BasicChips>
           } else if (el.req_status === "Start") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#FFE8A3"
               borderColor="#FFE8A3"
             >
             </BasicChips>
           } else if (el.req_status === "On process") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#FFA629"
               borderColor="#FFA629"
             >
             </BasicChips>
           } else if (el.req_status === "Job Done") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#AFF4C6"
               borderColor="#AFF4C6"
             >
             </BasicChips>
           } else if (el.req_status === "Close") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#1E1E1E"
               borderColor="#1E1E1E"
@@ -754,6 +799,7 @@ export default function ServiceRequest() {
           }
           newData.push(el)
         })
+
         console.log(newData, 'ค่าที่ดึงจาก ตาราง');
 
         setDataList(newData);
@@ -802,11 +848,11 @@ export default function ServiceRequest() {
                 handleClose();
               });
           } else {
-            console.error('Failed to Approved:', response);
+            console.error('Failed toApprove:', response);
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
           }
         } catch (error) {
-          console.error('Error Approved:', error);
+          console.error('ErrorApprove:', error);
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
       }
@@ -816,14 +862,17 @@ export default function ServiceRequest() {
   //Reject Data ไปลง Database
   const serviceRequestReject = async () => {
     console.log('Call : serviceRequestReject', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Reject Data ?", "info", async () => {
-      if (draftData) {
+    console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
+    //confirmModal.createModal("Reject Data ?", "info", async () => {
+      if (draftData && rejectReason) {
         console.log(" Reject Data:", draftData);
 
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           rejectActionModel: {
-            id: draftData.requestId
+            req_id: draftData.requestId,
+            req_status: "Reject Approved",
+            reject_reason: rejectReason
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -859,7 +908,7 @@ export default function ServiceRequest() {
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
       }
-    });
+    //});
   };
 
   //Time Sheet Add Data ไปลง Database
@@ -873,7 +922,7 @@ export default function ServiceRequest() {
           req_id: draftData.requestId,
           revision_id: draftData.revisionCurrent.revisionId,
           time_sheet_no: String(item.no),
-          work_date: moment(item.date).toISOString(), // ใช้ moment เพื่อแปลงวันที่, 
+          work_date: DateToDB(item.date), // ใช้ moment เพื่อแปลงวันที่, 
           work_hour: item.work_hour.lov_code || item.work_hour,
           technician: item.technician.userName || item.technician,
           description: item.description,
@@ -1015,7 +1064,7 @@ export default function ServiceRequest() {
     <div>
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
-          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหา</label>
+          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Search</label>
         </div>
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
@@ -1062,7 +1111,7 @@ export default function ServiceRequest() {
           <div className="flex justify-end">
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"ค้นหา"}
+                labelName={"Search"}
                 handleonClick={handleSearch}
                 variant_text="contained"
                 colorname={"success"}
@@ -1070,7 +1119,7 @@ export default function ServiceRequest() {
             </div>
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"รีเซท"}
+                labelName={"Reset"}
                 handleonClick={handleReset}
                 variant_text="contained"
                 colorname={"inherit"}
@@ -1113,7 +1162,7 @@ export default function ServiceRequest() {
           titlename={"Accept Job"}
           handleClose={handleClose}
           handlefunction={serviceTimeSheetStart}
-          handleRejectAction={serviceRequestReject}
+          handleRejectAction={() => setOpenReject(true)}
           colorBotton="success"
           actions={"AcceptJob"}
           element={
@@ -1165,6 +1214,27 @@ export default function ServiceRequest() {
           }
         />
       </div>
+      {/*Reject Reason*/}
+      <FuncDialog
+        open={openReject}
+        dialogWidth='sm'
+        openBottonHidden={true}
+        titlename={'Reject Reason'}
+        handleClose={() => setOpenReject(false)}
+        handlefunction={serviceRequestReject}
+        actions="RejectReason"
+        element={
+          <FullWidthTextareaField
+            labelName={"Please specify reason."}
+            value={rejectReason}
+            multiline={false}
+            onChange={(value) => setRejectReason(value)}
+          />
+
+        }
+      />
+
+
       {/* Error Dialog */}
       <Dialog
         open={!!errorMessage}

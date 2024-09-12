@@ -94,7 +94,7 @@ export default function MenuListComposition(props: MenuListComposition) {
     //                 <ListItemIcon>
     //                     <CheckCircleIcon />
     //                 </ListItemIcon>
-    //                 Approved
+    //                Approve
     //             </MenuItem>
     //             <Divider key="approved-divider" />
     //         </div>

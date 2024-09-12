@@ -106,7 +106,7 @@ export default function ActionManageCell(props: ActionManageCellProps) {
           switch (props.reqStatus) {
             case "Submit":
               if (
-                menuFunc.func_name === "Approved" && 
+                menuFunc.func_name === "Approve" && //มันคือเทียบสถานะใน เมนูฟังก์ชั่น
                 props.appUser && 
                 props.appUser !== "" && 
                 props.currentUser === props.appUser
@@ -116,7 +116,7 @@ export default function ActionManageCell(props: ActionManageCellProps) {
               }
               break;
           
-            case "Approved":
+            case "Approved": //มันคือเทียบสถานะใน Data Basae
               if (menuFunc.func_name === "Accept Job") {
                 shouldRender = true;
                 icon = <DoneIcon />;

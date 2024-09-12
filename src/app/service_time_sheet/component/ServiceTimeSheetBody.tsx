@@ -118,9 +118,11 @@ export default function ServiceTimeSheetBody({
   ]);
 
   React.useEffect(() => {
+
     if (actions != "Create") {
 
-
+      //console.log(options, 'dd')
+      //console.log(defaultValues?.serviceCenterId, 'dsdsd')
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
         // console.log(mapCostCenterData, 'mapCostCenterData')
@@ -128,24 +130,23 @@ export default function ServiceTimeSheetBody({
         setServiceName(mapCostCenterData?.serviceCenterName)
       }
 
+      if (defaultValues?.jobType != "") {
+        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
+        //console.log(mapJobTypeData, 'mapJobTypeData')
+        setJobType(mapJobTypeData)
+      }
+
       if (defaultValues?.budgetCode != "") {
         const mapBudgetData = setValueMas(options?.budgetCode, defaultValues?.budgetCode, 'budgetId')
         //console.log(mapBudgetData, 'mapBudgetData')
         setBudgetCode(mapBudgetData)
 
-      }
-
-      if (defaultValues?.jobType != "") {
-        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
-        //console.log(mapJobTypeData, 'mapJobTypeData')
-        setJobType(mapJobTypeData)
 
       }
 
       if (defaultValues?.status != "") {
         setStatus(defaultValues?.status || "")
       }
-
 
       if (defaultValues?.countRevision != "") {
         setCountRevision(defaultValues?.countRevision || "")
@@ -155,12 +156,12 @@ export default function ServiceTimeSheetBody({
         setDescription(defaultValues?.description || "")
 
       }
-      console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
+
       if (defaultValues?.fixedAssetId != "") {
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
-        console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
+        //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData.assetDescription)
+        setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
 
@@ -173,10 +174,10 @@ export default function ServiceTimeSheetBody({
 
       if (defaultValues?.requestId != "") {
 
-        console.log(options?.revision, 'revision')
+        //console.log(options?.revision, 'revision')
         console.log(defaultValues?.requestId, 'requestId')
         const mapRevisionData: any = setValueList(options?.revision, defaultValues?.requestId, 'reqId')
-        console.log(mapRevisionData, 'mapRevisionData')
+        //console.log(mapRevisionData, 'mapRevisionData')
         if (mapRevisionData.length > 0) {
 
           setOptionRevision(mapRevisionData)
@@ -203,14 +204,6 @@ export default function ServiceTimeSheetBody({
       setOptionBudgetCode(options?.budgetCode);
     }
   }, [jobType])
-
-
-  React.useEffect(() => {
-
-    //console.log(revisionCurrent,'revisionCurrent');
-
-
-  }, [revisionCurrent])
 
   return (
     <div>

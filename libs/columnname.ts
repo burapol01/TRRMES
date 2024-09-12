@@ -14,6 +14,13 @@ export const Request_headCells = [
         colWidth: 185
     },
     {
+        columnName: 'req_status_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Status',
+        colWidth: 150
+    },
+    {
         columnName: 'req_date',
         numeric: 'center',
         disablePadding: true,
@@ -35,18 +42,18 @@ export const Request_headCells = [
         colWidth: 150
     },
     {
-        columnName: 'cost_center_code',
+        columnName: 'cost_center_label',
         numeric: 'center',
         disablePadding: true,
         label: 'Cost Center',
-        colWidth: 150
+        colWidth: 300
     },
     {
-        columnName: 'service_center_code',
+        columnName: 'service_center_label',
         numeric: 'center',
         disablePadding: true,
         label: 'Service Center',
-        colWidth: 150
+        colWidth: 300
     },
     {
         columnName: 'description',
@@ -54,13 +61,6 @@ export const Request_headCells = [
         disablePadding: true,
         label: 'Description',
         colWidth: 300
-    },
-    {
-        columnName: 'req_status_',
-        numeric: 'center',
-        disablePadding: true,
-        label: 'Status',
-        colWidth: 150
     },
     {
         columnName: 'count_revision',
@@ -145,7 +145,7 @@ export const Time_Sheet_headCells = [
     },
     {
         columnName: 'description',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
         label: 'Description',
         colWidth: 300

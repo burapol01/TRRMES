@@ -42,8 +42,8 @@ const actionConfig = {
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
-  Approved: {
-    mainButton: { label: "Approved", show: true },
+ Approved: {
+    mainButton: { label: "Approve", show: true },
     rejectButton: { label: "Submit Reject", show: true },
     cancelButton: { show: false },
   },
@@ -84,6 +84,11 @@ const actionConfig = {
   },
   Delete: {
     mainButton: { label: "Delete", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  RejectReason: {
+    mainButton: { label: "Save", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },

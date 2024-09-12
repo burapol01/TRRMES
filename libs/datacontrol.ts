@@ -63,7 +63,7 @@ export const dateFormatSlashReturnMUI = (date: any) => {
   }
 };
 
-type Format = "DD/MM/YYYY" | "DD/MM/YYYY HH:mm:ss" | "YYYY/MM/DD" | "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss";
+type Format = "DD/MM/YYYY" | "DD/MM/YYYY HH:mm:ss" | "YYYY/MM/DD" | "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss" | "YYYY-MM-DD HH:mm:ss:SSS";
 
 export const dateFormatTime = (date: any, format: Format) => {
   if (date == null) {
@@ -102,3 +102,22 @@ export const dateFormatTimeEN = (date: any, format: Format) => {
   }
 
 };
+
+export const DateToDB = (date: any): string => {
+  if (!date) {
+    return "";  // คืนค่าว่างถ้า date เป็น null หรือ undefined
+  }
+  try {
+    const newDate = new Date(date);
+
+    // คำนวณการเลื่อนเวลาเป็น UTC+7 (ประเทศไทย)
+    const timezoneOffset = newDate.getTimezoneOffset(); // Time zone ของระบบ (UTC) เป็นนาที
+    const adjustedDate = new Date(newDate.getTime() - timezoneOffset * 60000); // ปรับเวลาให้ตรงกับ Time Zone ที่ต้องการ
+
+    return adjustedDate.toISOString().replace("Z", "+07:00"); // เพิ่ม +07:00 แทนการใช้ Z (UTC)
+  } catch (error) {
+    console.error("Invalid date format:", error);
+    return ""; // คืนค่าว่างถ้ามีข้อผิดพลาดในการแปลง
+  }
+};
+

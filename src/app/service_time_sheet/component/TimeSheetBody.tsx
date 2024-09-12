@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { dateFormatTimeEN } from '../../../../libs/datacontrol';
 
 interface TimeSheetBodyProps {
-    onDataChange?: (data: any[]) => void; 
+    onDataChange?: (data: any[]) => void;
     options?: {
         technician: any[];
         workHour: any[];
@@ -28,7 +28,7 @@ export default function TimeSheetBody({
     revisionCurrent,
     actions
 }: TimeSheetBodyProps) {
-    const [date, setDate] = useState(dateFormatTimeEN(dayjs(),"DD/MM/YYYY"));
+    const [date, setDate] = useState(dateFormatTimeEN(dayjs(), "DD/MM/YYYY"));
     const [technician, setTechnician] = useState<any>(null);
     const [workHour, setWorkHour] = useState<any>(null);
     const [description, setDescription] = useState('');
@@ -39,7 +39,7 @@ export default function TimeSheetBody({
     useEffect(() => {
         if (actions === "TimeSheet") {
             const intervalId = setInterval(() => {
-                setDate(dateFormatTimeEN(dayjs(),"DD/MM/YYYY"));
+                setDate(dateFormatTimeEN(dayjs(), "DD/MM/YYYY"));
             }, 3000);
             return () => clearInterval(intervalId); // Clear the interval when component unmounts
         }
@@ -53,7 +53,7 @@ export default function TimeSheetBody({
                 setError("Invalid revision data");
                 return;
             }
-            console.log('Call : fetchDataForRead', revisionCurrent, moment().format('HH:mm:ss:SSS'));
+            console.log('Call : fetchDataForRead', /*revisionCurrent*/ moment().format('HH:mm:ss:SSS'));
             try {
                 const dataset = {
                     req_id: revisionCurrent.reqId,
@@ -62,18 +62,18 @@ export default function TimeSheetBody({
                 const response = await _POST(dataset, "/api_rab/ServiceTimeSheet/Sub_Time_Sheet_Get");
 
                 if (response && response.status === "success") {
-                    console.log(response, 'Success fetch SubTimeSheet Get');
+                    //console.log(response, 'Success fetch SubTimeSheet Get');
                     const subTimeSheet = response.data.map((dataSubTimeSheet: any) => ({
                         subTimeSheetId: dataSubTimeSheet.id,
                         no: dataSubTimeSheet.time_sheet_no,
-                        date: dateFormatTimeEN(dataSubTimeSheet.work_date,"DD/MM/YYYY"),
+                        date: dateFormatTimeEN(dataSubTimeSheet.work_date, "DD/MM/YYYY"),
                         technician: dataSubTimeSheet.technician,
                         work_hour: dataSubTimeSheet.work_hour,
                         description: dataSubTimeSheet.description
                     }));
 
                     setDataList(subTimeSheet);
-                    console.log(subTimeSheet, 'subTimeSheet');
+                    //console.log(subTimeSheet, 'subTimeSheet');
                 } else {
                     setError("Failed to fetch Sub Time Sheet.");
                 }
@@ -82,9 +82,10 @@ export default function TimeSheetBody({
                 setError("An error occurred while fetching Sub Time Sheet.");
             }
         };
+        console.log(actions, "actionsactionsactionsactions");
 
         // Only call fetchDataForRead if the conditions are met
-        if ((actions === "Reade" || actions === "TimeSheet") && revisionCurrent && revisionCurrent.reqId && revisionCurrent.revisionId) {
+        if ((actions === "Reade" || actions === "JobDone" || actions === "TimeSheet") && revisionCurrent && revisionCurrent.reqId && revisionCurrent.revisionId) {
             fetchDataForRead();
         }
     }, [actions, revisionCurrent]);
@@ -141,7 +142,7 @@ export default function TimeSheetBody({
         const filteredList = dataList.filter(row => !row.delete_flag);
 
         return filteredList.map((row, index) => {
-           // console.log(`Row ID: ${row.no}`); // ตรวจสอบค่า ID
+            // console.log(`Row ID: ${row.no}`); // ตรวจสอบค่า ID
 
             // Extract the necessary primitive values for rendering
             const technicianName = row.technician?.userName || row.technician;
@@ -169,8 +170,8 @@ export default function TimeSheetBody({
     }, [dataList, actions]);
 
 
-     // New useEffect to update `no` order whenever `dataList` changes
-     useEffect(() => {
+    // New useEffect to update `no` order whenever `dataList` changes
+    useEffect(() => {
         setDataList(prevList => {
             let currentIndex = 1;
             return prevList.map(row => {
@@ -182,12 +183,12 @@ export default function TimeSheetBody({
             });
         });
     }, [dataList]);
-    
+
 
 
     // Data preparation for "Reade" mode
     const readOnlyDataRow = useMemo(() => {
-        if (actions === "Reade") {
+        if (actions === "Reade" || actions === "JobDone") {
             return dataList.map((row, index) => ({
                 ...row,
                 no: row.no, // ใช้ค่า time_sheet_no แทน index + 1,
@@ -195,7 +196,7 @@ export default function TimeSheetBody({
                 work_hour: row.work_hour,
                 key: row.subTimeSheetId, // ใช้ subTimeSheetId เป็น key                
                 delete: (
-                    actions !== "Reade" && (
+                    actions !== "Reade" && actions !== "JobDone" && (
                         <FullWidthButton
                             key={`delete-${index}`}
                             labelName="Delete"
@@ -242,7 +243,7 @@ export default function TimeSheetBody({
                         setvalue={setTechnician}
                         options={options?.technician || []}
                         value={technician}
-                        disabled={actions === "Reade"}
+                        disabled={actions === "Reade" || actions === "JobDone"}
                     />
                 </div>
                 <div className="col-md-3 mb-2">
@@ -252,7 +253,7 @@ export default function TimeSheetBody({
                         setvalue={setWorkHour}
                         options={options?.workHour || []}
                         value={workHour}
-                        disabled={actions === "Reade"}
+                        disabled={actions === "Reade" || actions === "JobDone"}
                     />
                 </div>
             </div>
@@ -262,7 +263,7 @@ export default function TimeSheetBody({
                         labelName="Description"
                         onChange={(value) => setDescription(value)}
                         value={description}
-                        disabled={actions === "Reade"}
+                        disabled={actions === "Reade" || actions === "JobDone"}
                     />
                 </div>
                 <div className="col-md-1 mb-2 w-5 pt-10">
@@ -278,8 +279,9 @@ export default function TimeSheetBody({
             </div>
             <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
                 <BasicTable
-                    columns={Time_Sheet_headCells}
+                    columns={actions === "Reade" ? Time_Sheet_headCells.filter((el)=> el.columnName != "delete" ) : Time_Sheet_headCells}
                     rows={actions === "TimeSheet" ? dataRow : readOnlyDataRow}
+                    actions={actions}
                 />
             </div>
 

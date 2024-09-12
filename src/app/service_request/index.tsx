@@ -15,7 +15,8 @@ import { Massengmodal } from "../../components/MUI/Massengmodal";
 import ActionManageCell from "../../components/MUI/ActionManageCell";
 import MenuListComposition from "../../components/MUI/MenuListComposition";
 import BasicChips from "../../components/MUI/BasicChips";
-import { dateFormatTimeEN, dateFormatTimeTH } from "../../../libs/datacontrol"
+import { dateFormatTimeEN, dateFormatTimeTH, DateToDB } from "../../../libs/datacontrol"
+import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 
 interface OptionsState {
   serviceCenter: any[];
@@ -97,6 +98,12 @@ export default function ServiceRequest() {
   const [actionType, setActionType] = useState<string | null>(null); // Corrected type
   // State to store default values
   const [defaultValues, setDefaultValues] = useState(defaultVal);
+
+//For Reject Reasons
+  const [openReject, setOpenReject] = useState(false);
+  const [rejectReason, setRejectReason] = useState<string>("");
+  const [openRejectJob, setOpenRejectJob] = useState(false);
+  const [rejectJobReason, setRejectJobReason] = useState<string>("");
 
 
 
@@ -526,6 +533,8 @@ export default function ServiceRequest() {
     readData(null);
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
     dataTableServiceRequest_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
+    setOpenReject(false); //ปิด Modal Reject Reason
+    setOpenRejectJob(false); //ปิด Modal Reject Job Reason 
 
   };
 
@@ -542,7 +551,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       user_ad: currentUser.employee_username || null,
-      head_user: currentUser.employee_username,
+      head_user: null,
     };
 
     try {
@@ -611,8 +620,10 @@ export default function ServiceRequest() {
         Array.isArray(result) && result.forEach((el) => {
           //console.log(el, "😊😊😊");
 
-          el.req_date = dateFormatTimeEN(el.req_date,"DD/MM/YYYY HH:mm:ss")
-          el.status_update = dateFormatTimeEN(el.status_update,"DD/MM/YYYY HH:mm:ss")
+          el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
+          el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss") 
+          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"         
+          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"         
 
           el.ACTION = null
           el.ACTION = (
@@ -626,7 +637,7 @@ export default function ServiceRequest() {
                   handleClickDelete(el)
                 } else if (name == 'Submit') {
                   handleClickSubmit(el)
-                } else if (name == 'Approved') {
+                } else if (name == 'Approve') {
                   handleClickApproved(el)
                 } else if (name == 'Close') {
                   handleClickClose(el)
@@ -634,54 +645,54 @@ export default function ServiceRequest() {
               }}
               reqStatus={el.req_status}
               appUser={el.app_user}
-              currentUser={currentUser?.employee_username}
+              currentUser={currentUser?.employee_username}             
 
             />
           )
           if (el.req_status === "Draft") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#B3B3B3"
               borderColor="#B3B3B3"
             >
             </BasicChips>
           } else if (el.req_status === "Submit") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#BDE3FF"
               borderColor="#BDE3FF"
             >
             </BasicChips>
           } else if (el.req_status === "Approved") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#E4CCFF"
               borderColor="#E4CCFF"
             >
             </BasicChips>
           } else if (el.req_status === "Start") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#FFE8A3"
               borderColor="#FFE8A3"
             >
             </BasicChips>
           } else if (el.req_status === "On process") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#FFA629"
               borderColor="#FFA629"
             >
             </BasicChips>
           } else if (el.req_status === "Job Done") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#AFF4C6"
               borderColor="#AFF4C6"
             >
             </BasicChips>
           } else if (el.req_status === "Close") {
-            el.req_status_ = <BasicChips
+            el.req_status_label = <BasicChips
               label={`${el.req_status}`}
               backgroundColor="#1E1E1E"
               borderColor="#1E1E1E"
@@ -710,7 +721,7 @@ export default function ServiceRequest() {
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           serviceRequestModel: {
-            req_date: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
+            req_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
             app_user: null,
             cost_center_id: draftData.costCenterId || "",
@@ -718,7 +729,7 @@ export default function ServiceRequest() {
             description: draftData.description || "",
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
-            status_update: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
+            status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
             budget_id: draftData.budgetCode.budgetId || "",
             job_type: draftData.jobType.lov_code || "",
@@ -729,7 +740,7 @@ export default function ServiceRequest() {
           documentRunningModel: {
             code_group: draftData.site,
             code_type: "RQ",
-            trans_date: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
+            trans_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
           }
         };
 
@@ -778,12 +789,12 @@ export default function ServiceRequest() {
           serviceRequestModel: {
             id: draftData?.requestId || "",
             req_no: draftData?.requestNo || "",
-            req_date: draftData.requestDate, // ใช้วันที่ปัจจุบัน
+            req_date: DateToDB(draftData.requestDate), // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
             app_user: "",
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
-            status_update: new Date().toISOString(), // ใช้วันที่ปัจจุบัน
+            status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             cost_center_id: draftData.costCenterId || "",
             service_center_id: draftData.serviceCenter.serviceCenterId || "",
             description: draftData.description || "",
@@ -936,10 +947,10 @@ export default function ServiceRequest() {
     });
   };
 
-  //Add Approved ไปลง Database
+  //AddApprove ไปลง Database
   const serviceRequestApproved = async () => {
     console.log('Call : serviceRequestApproved', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm Approved Data ?", "info", async () => {
+    confirmModal.createModal("ConfirmApprove Data ?", "info", async () => {
       if (draftData) {
         console.log("Approved Data:", draftData);
 
@@ -975,11 +986,11 @@ export default function ServiceRequest() {
                 handleClose();
               });
           } else {
-            console.error('Failed to Approved:', response);
+            console.error('Failed toApprove:', response);
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
           }
         } catch (error) {
-          console.error('Error Approved:', error);
+          console.error('ErrorApprove:', error);
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
       }
@@ -989,51 +1000,56 @@ export default function ServiceRequest() {
   //Add SubmitReject ไปลง Database
   const serviceRequestSubmitReject = async () => {
     console.log('Call : serviceRequestSubmitReject', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Submit Reject Data ?", "info", async () => {
-      if (draftData) {
-        console.log("Submit Reject Data:", draftData);
+    console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
+    //confirmModal.createModal("Submit Reject Data ?", "info", async () => {
 
-        // สร้างข้อมูลที่จะส่ง
-        const payload = {
-          rejectActionModel: {
-            id: draftData.requestId,
-            req_status: "Submit Reject"
-          },
-          currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
-        };
+    if (draftData && rejectReason) {
+      console.log("Submit Reject Data:", draftData);
 
-        try {
-
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/RejectAction/Reject_Action");
-
-          if (response && response.status === "success") {
-            console.log('Submit Reject successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
-                  <span className="font-semibold text-gray-900">Request No:</span>
-                  <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-                </p> */}
-              </div>,
-              'success', () => {
-
-                handleClose();
-              });
-          } else {
-            console.error('Failed to Submit Reject:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
-          }
-        } catch (error) {
-          console.error('Error Submit Reject:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+      // สร้างข้อมูลที่จะส่ง
+      const payload = {
+        rejectActionModel: {
+          req_id: draftData.requestId,
+          req_status: "Submit Reject",
+          reject_reason: rejectReason
+        },
+        currentAccessModel: {
+          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
         }
+      };
+
+      try {
+
+        // ใช้ _POST เพื่อส่งข้อมูล
+        const response = await _POST(payload, "/api_rab/RejectAction/Reject_Action");
+
+        if (response && response.status === "success") {
+          console.log('Submit Reject successfully:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+          Massengmodal.createModal(
+            <div className="text-center p-4">
+              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+              {/* <p className="text-lg text-gray-800">
+                <span className="font-semibold text-gray-900">Request No:</span>
+                <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+              </p> */}
+            </div>,
+            'success', () => {
+
+              handleClose();
+            });
+        } else {
+          console.error('Failed to Submit Reject:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+        }
+      } catch (error) {
+        console.error('Error Submit Reject:', error);
+        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
       }
-    });
+    }
+
+
+    // });
   };
 
   //Add Close ไปลง Database
@@ -1091,15 +1107,18 @@ export default function ServiceRequest() {
   //Add RejectJob ไปลง Database
   const serviceRequestRejectJob = async () => {
     console.log('Call : serviceRequestRejectJob', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Reject Job Reject Data ?", "info", async () => {
-      if (draftData) {
+    console.log('Call : rejectJobReason', rejectJobReason, moment().format('HH:mm:ss:SSS'));
+    //confirmModal.createModal("Reject Job Reject Data ?", "info", async () => {
+      if (draftData && rejectJobReason) {
         console.log("Reject Job Reject Data:", draftData);
 
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           rejectActionModel: {
-            id: draftData.requestId,
-            req_status: "Reject Job"
+            req_id: draftData.requestId,
+            req_status: "Reject Job",
+            reject_reason: rejectJobReason,
+            revision_no: String(draftData.countRevision)
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -1135,7 +1154,7 @@ export default function ServiceRequest() {
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
       }
-    });
+   // });
   };
 
   //================================================================================================
@@ -1319,10 +1338,10 @@ export default function ServiceRequest() {
           open={openApproved} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="md"
           openBottonHidden={true}
-          titlename={'Approved'}
+          titlename={'Approve'}
           handleClose={handleClose}
           handlefunction={serviceRequestApproved} // service
-          handleRejectAction={serviceRequestSubmitReject}
+          handleRejectAction={() => setOpenReject(true)}
           colorBotton="success"
           actions={"Approved"}
           element={
@@ -1342,7 +1361,7 @@ export default function ServiceRequest() {
           titlename={'Close'}
           handleClose={handleClose}
           handlefunction={serviceRequestClose} // service
-          handleRejectAction={serviceRequestRejectJob}
+          handleRejectAction={() => setOpenRejectJob(true)}
           colorBotton="success"
           actions={"Close"}
           element={
@@ -1355,6 +1374,45 @@ export default function ServiceRequest() {
           }
         />
       </div>
+      {/*Reject Reason*/}
+      <FuncDialog
+        open={openReject}
+        dialogWidth='sm'
+        openBottonHidden={true}
+        titlename={'Reject Reason'}
+        handleClose={() => setOpenReject(false)}
+        handlefunction={serviceRequestSubmitReject}
+        actions="RejectReason"
+        element={
+          <FullWidthTextareaField
+            labelName={"Please specify reason."}
+            value={rejectReason}
+            multiline={false}
+            onChange={(value) => setRejectReason(value)}
+          />
+
+        }
+      />
+      <FuncDialog
+        open={openRejectJob}
+        dialogWidth='sm'
+        openBottonHidden={true}
+        titlename={'Reject Reason'}
+        handleClose={() => setOpenRejectJob(false)}
+        handlefunction={serviceRequestRejectJob}
+        actions="RejectReason"
+        element={
+          <FullWidthTextareaField
+            labelName={"Please specify reason."}
+            value={rejectJobReason}
+            multiline={false}
+            onChange={(value) => setRejectJobReason(value)}
+          />
+
+        }
+      />
+
+
       {/* Error Dialog */}
       <Dialog
         open={!!errorMessage}

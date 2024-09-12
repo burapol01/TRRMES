@@ -11,15 +11,16 @@ interface BasicTableProps {
     rows: any[];
     columns: any[];
     disabled?: boolean; // เพิ่ม prop นี้
+    actions?: string;
 }
 
-export default function BasicTable({ rows, columns, disabled = false }: BasicTableProps) {
+export default function BasicTable({ rows, columns, disabled = false ,actions}: BasicTableProps) { 
     return (
         <TableContainer component={Paper} className={disabled ? 'disabled' : ''}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                     <TableRow>
-                        {columns?.map((headCell: any, index: number) => (
+                        {columns?.map((headCell: any, index: number)  => (
                             <TableCell
                                 key={headCell.id || index}  // Ensure unique key
                                 align={"center"}
@@ -45,7 +46,7 @@ export default function BasicTable({ rows, columns, disabled = false }: BasicTab
                                 return (
                                     <TableCell
                                         key={`${column.columnName}-${cellIndex}`}  // Ensure unique key for each cell
-                                        align={column.numeric ? "right" : "left"}
+                                        align={column.numeric}
                                         className='border'
                                     >
                                         <label className="fs-6 pr-10 sarabun-regular">
