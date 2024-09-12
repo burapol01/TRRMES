@@ -25,6 +25,8 @@ interface ServiceRequestBodyProps {
     description?: string;
     fixedAssetId?: string;
     fixedAssetDescription?: string;
+    rejectSubmitReason?: string,
+    rejectStartReason?: string,
   };
   options?: {
     serviceCenter: any[];
@@ -64,6 +66,10 @@ export default function ServiceRequestBody({
   const [fixedAssetDescription, setFixedAssetDescription] = useState("");
   const [countRevision, setCountRevision] = useState(defaultValues?.countRevision || "1");
 
+  const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
+  const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
+
+  
   // Function to handle data change with debounce
   const debouncedOnDataChange = debounce((data: any) => {
     if (typeof onDataChange === 'function') {
@@ -327,6 +333,33 @@ export default function ServiceRequestBody({
           />
         </div>
       </div>
+      {rejectSubmitReason !== "" && (
+      <div className="row justify-start">
+        <div className="col-md-12 mb-2">
+          <FullWidthTextareaField
+            labelName={"Reject Submit Reason"}
+            value={rejectSubmitReason}
+            disabled={disableOnly}
+            multiline={true}
+            onChange={(value) => setRejectSubmitReason(value)}
+          />
+        </div>
+      </div>
+      )}
+      {rejectStartReason !== "" && (
+      <div className="row justify-start">
+        <div className="col-md-12 mb-2">
+          <FullWidthTextareaField
+            labelName={"Reject Start Reason"}
+            value={rejectStartReason}
+            disabled={disableOnly}
+            multiline={true}
+            onChange={(value) => setRejectStartReason(value)}
+          />
+        </div>
+      </div>
+      )}
     </div>
+
   );
 }

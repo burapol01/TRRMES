@@ -10,10 +10,10 @@ import User from '../app/master/user';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
-    //     if (!localStorage) {
+    //     if (!sessionStorage) {
     //         return
     //     }
-    //     const lsValue = await localStorage.getItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY)
+    //     const lsValue = await sessionStorage.getItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY)
     //     if (!lsValue) {
     //         return
     //     }

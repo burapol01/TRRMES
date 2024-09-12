@@ -70,6 +70,8 @@ const defaultVal = {
   fixedAssetId: "",
   fixedAssetDescription: "",
   siteId: "",
+  rejectSubmitReason: "",
+  rejectStartReason: "",
 }
 
 export default function ServiceRequest() {
@@ -593,7 +595,9 @@ export default function ServiceRequest() {
       budgetCode: data?.budget_id || '',
       description: data?.description || '',
       fixedAssetId: data?.fixed_asset_id || '',
-      fixedAssetDescription: data?.fixed_asset_description || ''
+      fixedAssetDescription: data?.fixed_asset_description || '',
+      rejectSubmitReason: data?.reject_submit_reason || '',
+      rejectStartReason: data?.reject_start_reason || '',
 
     })
   };
@@ -1134,7 +1138,7 @@ export default function ServiceRequest() {
           <EnhancedTable
             rows={dataList}
             headCells={Request_headCells}
-            tableName={"Service Times Sheet"}
+            tableName={"บันทึกชั่วโมงการทำงาน"}
           />
         </div>
         <FuncDialog

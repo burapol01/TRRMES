@@ -29,7 +29,7 @@ export default function Profile({ isOpen }: Profile) {
   const logout = () => {
     console.log(currentUser);
     dispatch(addCurrentUser(null));
-    localStorage.removeItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY);
+    sessionStorage.removeItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY);
     handleClose();
   };
   return (

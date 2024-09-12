@@ -30,12 +30,7 @@ function Copyright() {
       align="center"
       sx={{ mt: 5 }}
     >
-      {"Copyright © "}
-      <Link color="inherit" href="#">
-       RAB Website
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
+      {import.meta.env.VITE_COPYRIGHT}
     </Typography>
   );
 }
@@ -71,7 +66,7 @@ export default function Login() {
           dispatch(addUserRoleMenu(reponse?.data?.auth_role_menu));
           dispatch(addUserRoleMenuFunc(reponse?.data?.auth_role_menu_func));
           const lsValue = JSON.stringify(reponse);
-          localStorage.setItem(
+          sessionStorage.setItem(
             import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY,
             lsValue
           );
@@ -165,7 +160,7 @@ export default function Login() {
               >
                 Sign In
               </Button>
-              <Grid container>
+              {/* <Grid container>
                 <Grid item xs>
                   <Link href="#" variant="body2">
                     Forgot password?
@@ -176,7 +171,7 @@ export default function Login() {
                     {"Don't have an account? Sign Up"}
                   </Link>
                 </Grid>
-              </Grid>
+              </Grid> */}
               <Copyright />
             </Box>
           </Box>

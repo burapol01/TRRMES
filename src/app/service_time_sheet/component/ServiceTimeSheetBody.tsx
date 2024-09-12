@@ -26,6 +26,8 @@ interface ServiceTimeSheetBodyProps {
     description?: string;
     fixedAssetId?: string;
     fixedAssetDescription?: string;
+    rejectSubmitReason?: string,
+    rejectStartReason?: string,
   };
   options?: {
     serviceCenter: any[];
@@ -71,6 +73,9 @@ export default function ServiceTimeSheetBody({
   const [countRevision, setCountRevision] = useState(defaultValues?.countRevision || "1");
   const [revisionCurrent, setRevisionCurrent] = useState<any>(null);
   const [timeSheetData, settimeSheetData] = useState<any>(null); // State to store draft data  
+
+  const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
+  const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
 
   const handleDataChange = (data: any) => {
     settimeSheetData(data); // Store draft data
@@ -360,6 +365,35 @@ export default function ServiceTimeSheetBody({
             onChange={(value) => setDescription(value)}
           />
         </div>
+       {/* ช่อง เหตุผล Reject ================================================ */}
+        {rejectSubmitReason !== "" && (
+      <div className="row justify-start">
+        <div className="col-md-12 mb-2">
+          <FullWidthTextareaField
+            labelName={"Reject Submit Reason"}
+            value={rejectSubmitReason}
+            disabled={disableOnly}
+            multiline={true}
+            onChange={(value) => setRejectSubmitReason(value)}
+          />
+        </div>
+      </div>
+      )}
+      {rejectStartReason !== "" && (
+      <div className="row justify-start">
+        <div className="col-md-12 mb-2">
+          <FullWidthTextareaField
+            labelName={"Reject Start Reason"}
+            value={rejectStartReason}
+            disabled={disableOnly}
+            multiline={true}
+            onChange={(value) => setRejectStartReason(value)}
+          />
+        </div>
+      </div>
+      )}
+
+       {/* ช่อง เหตุผล Reject ==================================================*/}
         {actions != "AcceptJob" && (
           <>
             <div className="col-md-3 mb-2">

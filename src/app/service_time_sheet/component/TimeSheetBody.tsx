@@ -34,6 +34,7 @@ export default function TimeSheetBody({
     const [description, setDescription] = useState('');
     const [dataList, setDataList] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด
+    const [rejectJobReason, setRejectJobReason] = useState("");
 
     // Effect for handling real-time updates in "TimeSheet" mode
     useEffect(() => {
@@ -69,11 +70,19 @@ export default function TimeSheetBody({
                         date: dateFormatTimeEN(dataSubTimeSheet.work_date, "DD/MM/YYYY"),
                         technician: dataSubTimeSheet.technician,
                         work_hour: dataSubTimeSheet.work_hour,
-                        description: dataSubTimeSheet.description
+                        description: dataSubTimeSheet.description,
+                        rejectJobReason: dataSubTimeSheet.reject_job_reason
                     }));
 
                     setDataList(subTimeSheet);
                     //console.log(subTimeSheet, 'subTimeSheet');
+
+                    // ตั้งค่า rejectJobReason จากข้อมูลที่ได้มา
+                    const firstRejectReason = Array.isArray(subTimeSheet) ? subTimeSheet.find(item => item.rejectJobReason)?.rejectJobReason || "" : "";
+                    setRejectJobReason(firstRejectReason);
+
+
+
                 } else {
                     setError("Failed to fetch Sub Time Sheet.");
                 }
@@ -279,11 +288,26 @@ export default function TimeSheetBody({
             </div>
             <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
                 <BasicTable
-                    columns={actions === "Reade" ? Time_Sheet_headCells.filter((el)=> el.columnName != "delete" ) : Time_Sheet_headCells}
+                    columns={actions === "Reade" ? Time_Sheet_headCells.filter((el) => el.columnName != "delete") : Time_Sheet_headCells}
                     rows={actions === "TimeSheet" ? dataRow : readOnlyDataRow}
                     actions={actions}
                 />
             </div>
+
+            {dataList.some(row => row.rejectJobReason && row.rejectJobReason !== "") && (
+                <div className="row justify-start">
+                    <div className="col-md-12 mb-2">
+                        <FullWidthTextareaField
+                            labelName={"Reject Start Reason"}
+                            value={rejectJobReason}
+                            disabled={true}
+                            multiline={true}
+                            onChange={(value) => setRejectJobReason(value)}
+                        />
+                    </div>
+                </div>
+            )}
+
 
         </div>
     );
