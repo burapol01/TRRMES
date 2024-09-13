@@ -25,7 +25,7 @@ export default function BasicTable({ rows, columns, disabled = false ,actions}: 
                                 key={headCell.id || index}  // Ensure unique key
                                 align={"center"}
                                 className={`py-5 border`}
-                                style={{ backgroundColor: '#DCCCBD' }}
+                                style={{ backgroundColor: '#DCCCBD' ,minWidth: headCell.colWidth}}
                             >
                                 <label className={"sarabun-regular-datatable"}>
                                     {headCell.label}

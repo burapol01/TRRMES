@@ -30,23 +30,14 @@ export default function TimeSheetBody({
     revisionCurrent,
     actions
 }: TimeSheetBodyProps) {
-    const [date, setDate] = useState(dateFormatTimeEN(dayjs(), "DD/MM/YYYY"));
+    const [date, setDate] = useState(null);
     const [technician, setTechnician] = useState<any>(null);
     const [workHour, setWorkHour] = useState<any>(null);
     const [description, setDescription] = useState('');
     const [dataList, setDataList] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด
     const [rejectJobReason, setRejectJobReason] = useState("");
-
-    // Effect for handling real-time updates in "TimeSheet" mode
-    useEffect(() => {
-        if (actions === "TimeSheet") {
-            const intervalId = setInterval(() => {
-                setDate(dateFormatTimeEN(dayjs(), "DD/MM/YYYY"));
-            }, 3000);
-            return () => clearInterval(intervalId); // Clear the interval when component unmounts
-        }
-    }, [actions]);
+ 
 
     // Effect for fetching data in "Reade" mode
     useEffect(() => {
@@ -108,7 +99,7 @@ export default function TimeSheetBody({
             const newData = {
                 subTimeSheetId: uuidv4(), // กำหนด uuid สำหรับแต่ละแถวใหม่
                 no: dataList.length + 1, // เพิ่มหมายเลขลำดับที่
-                date,
+                date: dateFormatTimeEN(date,"DD/MM/YYYY"),
                 technician,
                 work_hour: workHour,
                 description,
@@ -241,16 +232,18 @@ export default function TimeSheetBody({
         <div className="border rounded-xl px-2 py-2">
             <div className="row justify-start">
                 <div className="col-md-3 mb-2">
-                    <FullWidthTextField
+                    {/* <FullWidthTextField
                         labelName="Date"
                         value={date}
                         disabled
-                    />
-                    {/* <DatePickerBasic
-                        labelname={"Date"}
-                        onchangeStart={() => { }}
-                        disableFuture
                     /> */}
+                    <DatePickerBasic
+                        labelname={"Date"}
+                        valueStart={date}
+                        onchangeStart={setDate} 
+                        disableFuture
+                        disabled={actions === "Reade" || actions === "JobDone"}
+                    />
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
