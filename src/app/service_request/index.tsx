@@ -101,7 +101,7 @@ export default function ServiceRequest() {
   // State to store default values
   const [defaultValues, setDefaultValues] = useState(defaultVal);
 
-//For Reject Reasons
+  //For Reject Reasons
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState<string>("");
   const [openRejectJob, setOpenRejectJob] = useState(false);
@@ -162,7 +162,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
@@ -196,7 +196,7 @@ export default function ServiceRequest() {
         "lov_type": "job_type"
       };
 
-      const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
         //console.log(response, 'Success fetch job');
@@ -226,7 +226,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
@@ -264,7 +264,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         //console.log('Cost_Center_Get', response)
@@ -298,7 +298,7 @@ export default function ServiceRequest() {
         "lov_type": "job_type"
       };
 
-      const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
         //console.log(response, 'Success fetch job');
@@ -327,10 +327,10 @@ export default function ServiceRequest() {
         "cost_center_id": defaultValues.costCenterId
       };
 
-      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Budget_Get");
 
       if (response && response.status === "success") {
-        console.log(response, 'Budget_Get');
+        //console.log(response, 'Budget_Get');
 
         // กำหนดประเภทสำหรับ budgetCodes
         const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
@@ -366,7 +366,7 @@ export default function ServiceRequest() {
   //       "lov_type": "job_type"
   //     };
 
-  //     const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+  //     const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
   //     if (response && response.status === "success") {
   //       console.log('job_type', response);
@@ -399,7 +399,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
@@ -559,7 +559,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/User_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
 
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
@@ -614,7 +614,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/ServiceRequest/Service_Request_Get");
+      const response = await _POST(dataset, "/api_trr_mes/ServiceRequest/Service_Request_Get");
 
       if (response && response.status === "success") {
         const { data: result } = response;
@@ -625,9 +625,9 @@ export default function ServiceRequest() {
           //console.log(el, "😊😊😊");
 
           el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
-          el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss") 
-          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"         
-          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"         
+          el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
+          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"
+          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"
 
           el.ACTION = null
           el.ACTION = (
@@ -649,7 +649,7 @@ export default function ServiceRequest() {
               }}
               reqStatus={el.req_status}
               appUser={el.app_user}
-              currentUser={currentUser?.employee_username}             
+              currentUser={currentUser?.employee_username}
 
             />
           )
@@ -752,7 +752,7 @@ export default function ServiceRequest() {
           console.log('Running model', payload);
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ServiceRequest/Service_Request_Draft_Add");
+          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Add");
 
           if (response && response.status === "success") {
             console.log('Draft saved successfully:', response);
@@ -817,7 +817,7 @@ export default function ServiceRequest() {
         try {
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ServiceRequest/Service_Request_Draft_Edit");
+          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Edit");
 
           if (response && response.status === "success") {
             console.log('Draft saved successfully:', response);
@@ -869,7 +869,7 @@ export default function ServiceRequest() {
         try {
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ServiceRequest/Service_Request_Draft_Delete");
+          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Delete");
 
           if (response && response.status === "success") {
             console.log('Draft delete successfully:', response);
@@ -919,10 +919,10 @@ export default function ServiceRequest() {
         };
 
         try {
-          console.log('Running model', payload);
+          console.log('payload', payload);
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
           if (response && response.status === "success") {
             console.log('Submit successfully:', response);
@@ -972,7 +972,7 @@ export default function ServiceRequest() {
 
         try {
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
           if (response && response.status === "success") {
             console.log('Submit successfully:', response);
@@ -1025,7 +1025,7 @@ export default function ServiceRequest() {
       try {
 
         // ใช้ _POST เพื่อส่งข้อมูล
-        const response = await _POST(payload, "/api_rab/RejectAction/Reject_Action");
+        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
         if (response && response.status === "success") {
           console.log('Submit Reject successfully:', response);
@@ -1079,7 +1079,7 @@ export default function ServiceRequest() {
           console.log('Running model', payload);
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
           if (response && response.status === "success") {
             console.log('Close successfully:', response);
@@ -1113,52 +1113,52 @@ export default function ServiceRequest() {
     console.log('Call : serviceRequestRejectJob', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectJobReason', rejectJobReason, moment().format('HH:mm:ss:SSS'));
     //confirmModal.createModal("Reject Job Reject Data ?", "info", async () => {
-      if (draftData && rejectJobReason) {
-        console.log("Reject Job Reject Data:", draftData);
+    if (draftData && rejectJobReason) {
+      console.log("Reject Job Reject Data:", draftData);
 
-        // สร้างข้อมูลที่จะส่ง
-        const payload = {
-          rejectActionModel: {
-            req_id: draftData.requestId,
-            req_status: "Reject Job",
-            reject_reason: rejectJobReason,
-            revision_no: String(draftData.countRevision)
-          },
-          currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
-        };
+      // สร้างข้อมูลที่จะส่ง
+      const payload = {
+        rejectActionModel: {
+          req_id: draftData.requestId,
+          req_status: "Reject Job",
+          reject_reason: rejectJobReason,
+          revision_no: String(draftData.countRevision)
+        },
+        currentAccessModel: {
+          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+        }
+      };
 
-        try {
+      try {
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/RejectAction/Reject_Action");
+        // ใช้ _POST เพื่อส่งข้อมูล
+        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
-          if (response && response.status === "success") {
-            console.log('Reject Job Reject successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+        if (response && response.status === "success") {
+          console.log('Reject Job Reject successfully:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+          Massengmodal.createModal(
+            <div className="text-center p-4">
+              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+              {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
+            </div>,
+            'success', () => {
 
-                handleClose();
-              });
-          } else {
-            console.error('Failed to Reject Job Reject:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
-          }
-        } catch (error) {
-          console.error('Error Reject Job Reject:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+              handleClose();
+            });
+        } else {
+          console.error('Failed to Reject Job Reject:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
         }
+      } catch (error) {
+        console.error('Error Reject Job Reject:', error);
+        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
       }
-   // });
+    }
+    // });
   };
 
   //================================================================================================

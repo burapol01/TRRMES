@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import moment from "moment";
 
 export function _formatNumber(input: any) {
   const value = String(input).replace(/[^0-9.-]/g, "");
@@ -105,19 +106,27 @@ export const dateFormatTimeEN = (date: any, format: Format) => {
 
 export const DateToDB = (date: any): string => {
   if (!date) {
-    return "";  // คืนค่าว่างถ้า date เป็น null หรือ undefined
+    return "";  // Return an empty string if the date is null or undefined
   }
   try {
-    const newDate = new Date(date);
+    // Parse the date using moment, assuming the input is in "DD/MM/YYYY HH:mm:ss" format
+    const newDate = moment(date, "DD/MM/YYYY HH:mm:ss");
 
-    // คำนวณการเลื่อนเวลาเป็น UTC+7 (ประเทศไทย)
-    const timezoneOffset = newDate.getTimezoneOffset(); // Time zone ของระบบ (UTC) เป็นนาที
-    const adjustedDate = new Date(newDate.getTime() - timezoneOffset * 60000); // ปรับเวลาให้ตรงกับ Time Zone ที่ต้องการ
+    // Check if the date is valid
+    if (!newDate.isValid()) {
+      throw new Error("Invalid date");
+    }
 
-    return adjustedDate.toISOString().replace("Z", "+07:00"); // เพิ่ม +07:00 แทนการใช้ Z (UTC)
+    // Adjust the time to UTC+7 (Thailand)
+    const adjustedDate = newDate.utcOffset(7);
+
+    // Return the adjusted date in ISO 8601 format with the +07:00 timezone
+    return adjustedDate.format("YYYY-MM-DDTHH:mm:ss.SSS") + "+07:00";
   } catch (error) {
     console.error("Invalid date format:", error);
-    return ""; // คืนค่าว่างถ้ามีข้อผิดพลาดในการแปลง
+    return ""; // Return an empty string if there is an error during conversion
   }
 };
+
+
 

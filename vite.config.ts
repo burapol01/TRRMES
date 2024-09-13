@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: "/RAB/",
+    base: "/trr-mes/",
     build: {
       chunkSizeWarningLimit: 3000,      
       outDir, // Set the output directory dynamically

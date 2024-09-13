@@ -11,6 +11,8 @@ import moment from 'moment';
 import { _POST } from '../../../service/mas';
 import { v4 as uuidv4 } from 'uuid';
 import { dateFormatTimeEN } from '../../../../libs/datacontrol';
+import DetePickerBasic from '../../../components/MUI/DetePickerBasic';
+import DatePickerBasic from '../../../components/MUI/DetePickerBasic';
 
 interface TimeSheetBodyProps {
     onDataChange?: (data: any[]) => void;
@@ -60,7 +62,7 @@ export default function TimeSheetBody({
                     req_id: revisionCurrent.reqId,
                     revision_id: revisionCurrent.revisionId,
                 };
-                const response = await _POST(dataset, "/api_rab/ServiceTimeSheet/Sub_Time_Sheet_Get");
+                const response = await _POST(dataset, "/api_trr_mes/ServiceTimeSheet/Sub_Time_Sheet_Get");
 
                 if (response && response.status === "success") {
                     //console.log(response, 'Success fetch SubTimeSheet Get');
@@ -244,6 +246,11 @@ export default function TimeSheetBody({
                         value={date}
                         disabled
                     />
+                    {/* <DatePickerBasic
+                        labelname={"Date"}
+                        onchangeStart={() => { }}
+                        disableFuture
+                    /> */}
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
@@ -288,17 +295,17 @@ export default function TimeSheetBody({
             </div>
             <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
                 <BasicTable
-                    columns={actions === "Reade" ? Time_Sheet_headCells.filter((el) => el.columnName != "delete") : Time_Sheet_headCells}
+                    columns={actions === "Reade" || actions === "JobDone" ? Time_Sheet_headCells.filter((el) => el.columnName != "delete") : Time_Sheet_headCells}
                     rows={actions === "TimeSheet" ? dataRow : readOnlyDataRow}
                     actions={actions}
                 />
             </div>
 
             {dataList.some(row => row.rejectJobReason && row.rejectJobReason !== "") && (
-                <div className="row justify-start">
+                <div className="row justify-start pt-5">
                     <div className="col-md-12 mb-2">
                         <FullWidthTextareaField
-                            labelName={"Reject Start Reason"}
+                            labelName={"Reject Job Reason"}
                             value={rejectJobReason}
                             disabled={true}
                             multiline={true}

@@ -178,7 +178,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
@@ -212,7 +212,7 @@ export default function ServiceRequest() {
         "lov_type": "job_type"
       };
 
-      const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
         //console.log(response, 'Success fetch job');
@@ -242,7 +242,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
@@ -280,7 +280,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
         //console.log('Cost_Center_Get', response)
@@ -314,7 +314,7 @@ export default function ServiceRequest() {
         "lov_type": "job_type"
       };
 
-      const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
         //console.log(response, 'Success fetch job');
@@ -343,7 +343,7 @@ export default function ServiceRequest() {
         //"cost_center_id": defaultValues.costCenterId
       };
 
-      const response = await _POST(dataset, "/api_rab/MasterData/Budget_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Budget_Get");
 
       if (response && response.status === "success") {
         console.log(response, 'Budget_Get');
@@ -382,7 +382,7 @@ export default function ServiceRequest() {
   //       "lov_type": "job_type"
   //     };
 
-  //     const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+  //     const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
   //     if (response && response.status === "success") {
   //       console.log('job_type', response);
@@ -415,7 +415,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Fixed_Asset_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         console.log('Fixed_Asset_Get', response);
@@ -447,7 +447,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Revision_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Revision_Get");
 
       if (response && response.status === "success") {
         //console.log('Revision_Get', response);
@@ -485,15 +485,15 @@ export default function ServiceRequest() {
 
     const dataset = {
       "user_ad": currentUser.employee_username,
-      "site_id": defaultValues.siteId,
+      "site_id": siteId,
       "cost_center_id": costCenterId
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/Technician_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Technician_Get");
 
       if (response && response.status === "success") {
-        //console.log('Technician_Get', response);
+        console.log('Technician_Get', response);
         const technician = response.data.map((technician: any) => ({
           userAd: technician.user_ad || "",
           userName: technician.user_name || "",
@@ -526,7 +526,7 @@ export default function ServiceRequest() {
         "lov_type": "work_hour"
       };
 
-      const response = await _POST(dataset, "/api_rab/LovData/Lov_Data_Get");
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
         //console.log(response, 'Success fetch Work Hour');
@@ -662,7 +662,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/MasterData/User_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
 
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
@@ -712,7 +712,7 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_rab/ServiceTimeSheet/Service_Time_Sheet_Get");
+      const response = await _POST(dataset, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Get");
 
       if (response && response.status === "success") {
         const { data: result } = response;
@@ -834,7 +834,7 @@ export default function ServiceRequest() {
 
         try {
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
           if (response && response.status === "success") {
             console.log('Submit successfully:', response);
@@ -886,7 +886,7 @@ export default function ServiceRequest() {
         try {
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/RejectAction/Reject_Action");
+          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
           if (response && response.status === "success") {
             console.log('Reject successfully:', response);
@@ -942,7 +942,7 @@ export default function ServiceRequest() {
 
         console.log("Payload:", payload);
         try {
-          const response = await _POST(payload, "/api_rab/ServiceTimeSheet/Service_Time_Sheet_Add");
+          const response = await _POST(payload, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Add");
 
           if (response && response.status === "success") {
             console.log('successfully:', response);
@@ -993,7 +993,7 @@ export default function ServiceRequest() {
           console.log('JobDone model', payload);
 
           // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
           if (response && response.status === "success") {
             console.log('JobDone successfully:', response);
@@ -1043,7 +1043,7 @@ export default function ServiceRequest() {
 
       try {
         // ใช้ _POST เพื่อส่งข้อมูล
-        const response = await _POST(payload, "/api_rab/ChangeStatus/Change_Status");
+        const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
         if (response && response.status === "success") {
           console.log('Change Status successfully:', response);

@@ -339,7 +339,7 @@ export default function ServiceRequestBody({
           <FullWidthTextareaField
             labelName={"Reject Submit Reason"}
             value={rejectSubmitReason}
-            disabled={disableOnly}
+            disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             multiline={true}
             onChange={(value) => setRejectSubmitReason(value)}
           />
@@ -352,7 +352,7 @@ export default function ServiceRequestBody({
           <FullWidthTextareaField
             labelName={"Reject Start Reason"}
             value={rejectStartReason}
-            disabled={disableOnly}
+            disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             multiline={true}
             onChange={(value) => setRejectStartReason(value)}
           />
