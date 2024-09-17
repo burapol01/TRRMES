@@ -4,8 +4,9 @@ import Drawer from '@mui/material/Drawer';
 import SideberMenuMain from '../sidebar/SideberMenuMain';
 import { IconButton } from '@mui/material';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import DrawerMenuMain from './DrawerMenuMain';
 
-type Anchor = 'top' | 'left' | 'bottom' | 'right';
+export type Anchor = 'top' | 'left' | 'bottom' | 'right';
 
 export default function AnchorTemporaryDrawer() {
     const [state, setState] = React.useState({
@@ -33,11 +34,11 @@ export default function AnchorTemporaryDrawer() {
         <Box
             sx={{ width: anchor === 'top' || anchor === 'bottom' ? 'auto' : 250 }}
             role="presentation"
-            onClick={toggleDrawer(anchor, false)}
+            // onClick={toggleDrawer(anchor, false)}
             onKeyDown={toggleDrawer(anchor, false)}
         >
             <div className='mt-5'>
-                <SideberMenuMain isOpen />
+                <DrawerMenuMain isOpen toggleDrawer={toggleDrawer(anchor, false)} />
             </div>
         </Box>
     );

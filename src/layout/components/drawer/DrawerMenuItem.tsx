@@ -1,7 +1,7 @@
 import { Stack } from '@mui/material';
 import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { checkIsActive, checkIsMunuPermis, checkMenuPermisction, checkMenuPermisctionList } from './helpers/RouterHelpers';
+import { checkIsActive, checkIsMunuPermis, checkMenuPermisction, checkMenuPermisctionList } from '../sidebar/helpers/RouterHelpers';
 import { useDispatch, useSelector } from 'react-redux';
 import { Menu } from '../../../../types/user';
 import { addRoleMenuFuncList, addRoleMenuFunction } from '../../../../redux/actions/roleAction';
@@ -14,11 +14,12 @@ interface SideberMenuItem {
     icon?: string;
     dataMenu?: Menu[];
     index: number;
+    toggleDrawer: (event: React.KeyboardEvent | React.MouseEvent) => void
 }
 type Btnclick = {
     menu_url: string;
 };
-export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dataMenu, index }: SideberMenuItem) {
+export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dataMenu, index, toggleDrawer }: SideberMenuItem) {
     const dispatch = useDispatch();
     const { pathname } = useLocation();
     const user_menu_func = useSelector((state: any) => state?.user_menu_func);
@@ -41,8 +42,8 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
             const menu = await checkMenuPermisction(isMenuPermis)
             dispatch(addRoleMenuFunction(null));
             dispatch(addRoleMenuFunction(menu));
-            console.log(menu,'isMenuPermis');
-            
+            console.log(menu, 'isMenuPermis');
+
         }
     }
 
@@ -52,7 +53,13 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
 
     if (typeMenu == "main") {
         return (
-            <div onClick={() => handleClick(to)} className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 hover:scale-110 rounded-md ${isActive && `bg-blue-200`}`}>
+            <div
+                onClick={(e) => {
+                    handleClick(to)
+                    toggleDrawer(e)
+                }}
+                className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 hover:scale-110 rounded-md ${isActive && `bg-blue-200`}`}
+            >
                 <div><i className={`${icon} fs-2`} /></div>
                 <label
                     style={{ transitionDelay: `${index + 1}00ms` }}
@@ -65,7 +72,13 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
     }
     if (typeMenu == "sub") {
         return (
-            <div onClick={() => handleClick(to)} className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 rounded-md ${isActive && `bg-blue-200`}`}>
+            <div
+                onClick={(e) => {
+                    handleClick(to)
+                    toggleDrawer(e)
+                }}
+                className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 rounded-md ${isActive && `bg-blue-200`}`}
+            >
                 <div><i className={`${icon} fs-2`} /></div>
                 <label className="text-lg">
                     {title}

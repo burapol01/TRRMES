@@ -32,22 +32,24 @@ export default function Profile({ isOpen }: Profile) {
     sessionStorage.removeItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY);
     handleClose();
   };
+  console.log(currentUser);
+  
   return (
-    <div
-      className={`absolute duration-300 ${
-        isOpen ? `right-0 sm:right-72` : `right-0 sm:right-24`
-      }`}
-    >
-      {/* < div className={"hidden sm:ml-6 sm:block"}> */}
-      <img
-        className={
-          " w-14 h-14 md:w-20 md:h-20 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500 cursor-pointer hover:scale-110"
-        }
-        onClick={handleClick}
-        src={currentUser?.employee_image}
-        alt="Bordered avatar"
-      />
-      {/* </div> */}
+    <div className={`absolute duration-300 ${isOpen ? `right-0 sm:right-72` : `right-0 sm:right-24`}`}>
+      <div className="flex items-center gap-5">
+        <div className="flex flex-col">
+          <label  className="text-xl max-sm:text-lg font-bold">{`${currentUser?.employee_fname_en} ${currentUser?.employee_lname_en}`}</label>
+          <label  className="text-lg max-sm:text-md font-medium">{`${currentUser?.role_name}`}</label>
+        </div>
+        <img
+          className={
+            " w-14 h-14 md:w-20 md:h-20 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500 cursor-pointer hover:scale-110"
+          }
+          onClick={handleClick}
+          src={currentUser?.employee_image}
+          alt="Bordered avatar"
+        />
+      </div>
       <Menu
         id="basic-menu"
         anchorEl={anchorEl}
@@ -83,9 +85,18 @@ export default function Profile({ isOpen }: Profile) {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem onClick={handleClose}>
-          <Avatar /> Profile
+          <div className="flex w-32 items-center gap-4">
+            <img
+              className={
+                " w-10 h-10 p-1 rounded-full ring-2 ring-gray-300 dark:ring-gray-500"
+              }
+              onClick={handleClick}
+              src={currentUser?.employee_image}
+              alt="Bordered avatar"
+            /> Profile
+          </div>
         </MenuItem>
-        <MenuItem onClick={handleClose}>
+        {/* <MenuItem onClick={handleClose}>
           <Avatar /> My account
         </MenuItem>
         <Divider />
@@ -100,12 +111,14 @@ export default function Profile({ isOpen }: Profile) {
             <Settings fontSize="small" />
           </ListItemIcon>
           Settings
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={logout}>
-          <ListItemIcon>
-            <Logout fontSize="small" />
-          </ListItemIcon>
-          Logout
+          <div className="flex items-center gap-3">
+            <ListItemIcon >
+              <Logout fontSize="large" />
+            </ListItemIcon>
+            Logout
+          </div>
         </MenuItem>
       </Menu>
     </div>
