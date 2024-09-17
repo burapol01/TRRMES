@@ -123,10 +123,17 @@ export const Time_Sheet_headCells = [
         colWidth: 100
     },
     {
-        columnName: 'date',
+        columnName: 'work_start_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'Date',
+        label: 'วันเริ่มต้น',
+        colWidth: 150
+    },
+    {
+        columnName: 'work_end_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันสิ้นสุด',
         colWidth: 150
     },
     {

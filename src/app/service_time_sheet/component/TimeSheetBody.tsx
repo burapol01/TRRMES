@@ -10,7 +10,7 @@ import debounce from 'lodash/debounce';
 import moment from 'moment';
 import { _POST } from '../../../service/mas';
 import { v4 as uuidv4 } from 'uuid';
-import { dateFormatTimeEN } from '../../../../libs/datacontrol';
+import { dateFormatTimeEN, stringWithCommas } from '../../../../libs/datacontrol';
 import DetePickerBasic from '../../../components/MUI/DetePickerBasic';
 import DatePickerBasic from '../../../components/MUI/DetePickerBasic';
 
@@ -30,14 +30,16 @@ export default function TimeSheetBody({
     revisionCurrent,
     actions
 }: TimeSheetBodyProps) {
-    const [date, setDate] = useState(null);
+    const [workStartDate, setWorkStartDate] = useState(null);
+    const [workEndDate, setWorkEndDate] = useState(null);
     const [technician, setTechnician] = useState<any>(null);
-    const [workHour, setWorkHour] = useState<any>(null);
+    // const [workHour, setWorkHour] = useState<any>(null); //ใช้สำหรับ Drop Down 
+    const [workHour, setWorkHour] = useState<any>("");
     const [description, setDescription] = useState('');
     const [dataList, setDataList] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด
     const [rejectJobReason, setRejectJobReason] = useState("");
- 
+
 
     // Effect for fetching data in "Reade" mode
     useEffect(() => {
@@ -60,7 +62,8 @@ export default function TimeSheetBody({
                     const subTimeSheet = response.data.map((dataSubTimeSheet: any) => ({
                         subTimeSheetId: dataSubTimeSheet.id,
                         no: dataSubTimeSheet.time_sheet_no,
-                        date: dateFormatTimeEN(dataSubTimeSheet.work_date, "DD/MM/YYYY"),
+                        work_start_date: dateFormatTimeEN(dataSubTimeSheet.work_start_date, "DD/MM/YYYY"),
+                        work_end_date: dateFormatTimeEN(dataSubTimeSheet.work_end_date, "DD/MM/YYYY"),
                         technician: dataSubTimeSheet.technician,
                         work_hour: dataSubTimeSheet.work_hour,
                         description: dataSubTimeSheet.description,
@@ -99,15 +102,19 @@ export default function TimeSheetBody({
             const newData = {
                 subTimeSheetId: uuidv4(), // กำหนด uuid สำหรับแต่ละแถวใหม่
                 no: dataList.length + 1, // เพิ่มหมายเลขลำดับที่
-                date: dateFormatTimeEN(date,"DD/MM/YYYY"),
+                work_start_date: dateFormatTimeEN(workStartDate, "DD/MM/YYYY"),
+                work_end_date: dateFormatTimeEN(workEndDate, "DD/MM/YYYY"),
                 technician,
                 work_hour: workHour,
                 description,
                 newRowDataFlag: true, // ระบุว่าเป็นข้อมูลใหม่                
             };
+
+            console.log(newData, "newDatanewDatanewDatanewData");
+
             setDataList((prevList) => [...prevList, newData]);
             setTechnician(null);
-            setWorkHour(null);
+            setWorkHour("");
             setDescription('');
         }
     };
@@ -118,7 +125,7 @@ export default function TimeSheetBody({
 
         if (isNewRow) {
             setDataList((prevList) => {
-                console.log("Previous List:", prevList);
+                //console.log("Previous List:", prevList);
                 const newList = prevList.filter(({ subTimeSheetId }) => subTimeSheetId !== subTimeSheetIdToDelete);
                 console.log("New List after deletion:", newList);
                 return newList;
@@ -147,7 +154,7 @@ export default function TimeSheetBody({
             // console.log(`Row ID: ${row.no}`); // ตรวจสอบค่า ID
 
             // Extract the necessary primitive values for rendering
-            const technicianName = row.technician?.userName || row.technician;
+            const technicianName = row.technician?.tecEmpName || row.technician;
             const workHour = row.work_hour?.lov_code || row.work_hour;
             const isNewRow = row.newRowDataFlag;
 
@@ -228,27 +235,45 @@ export default function TimeSheetBody({
         }
     }, [dataList, debouncedOnDataChange, actions]);
 
+    // const isCheckHour = useMemo(() => {
+    //     if(workHour != ""){
+    //         console.log(workHour);
+    //         if(workHour > 100){
+    //             return true
+    //         }
+    //     }
+    // }, [workHour]);
+
     return (
         <div className="border rounded-xl px-2 py-2">
             <div className="row justify-start">
-                <div className="col-md-3 mb-2">
-                    {/* <FullWidthTextField
-                        labelName="Date"
-                        value={date}
-                        disabled
-                    /> */}
-                    <DatePickerBasic
-                        labelname={"Date"}
-                        valueStart={date}
-                        onchangeStart={setDate} 
-                        disableFuture
-                        disabled={actions === "Reade" || actions === "JobDone"}
-                    />
+                <div className="col-12 col-md-6 mb-2">
+                    <div className="flex items-center space-x-2">
+                        <div className="w-full md:w-1/2">
+                            <DatePickerBasic
+                                labelname="วันเริ่มต้น"
+                                valueStart={workStartDate}
+                                onchangeStart={setWorkStartDate}
+                                disableFuture
+                                disabled={actions === "Reade" || actions === "JobDone"}
+                            />
+                        </div>
+                        <label className="pt-5 mt-5 ">ถึง</label>
+                        <div className="w-full md:w-1/2">
+                            <DatePickerBasic
+                                labelname="วันสิ้นสุด"
+                                valueStart={workEndDate}
+                                onchangeStart={setWorkEndDate}
+                                disableFuture
+                                disabled={actions === "Reade" || actions === "JobDone"}
+                            />
+                        </div>
+                    </div>
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
                         labelName="Technician"
-                        column="userName"
+                        column="tecEmpName"
                         setvalue={setTechnician}
                         options={options?.technician || []}
                         value={technician}
@@ -256,14 +281,22 @@ export default function TimeSheetBody({
                     />
                 </div>
                 <div className="col-md-3 mb-2">
-                    <AutocompleteComboBox
+                    <FullWidthTextField
+                        labelName={"Work Hour"}
+                        value={workHour ?? ""}
+                        onChange={(value: any) => setWorkHour(stringWithCommas(value))}
+                        disabled={actions === "Reade" || actions === "JobDone"}
+                    //Validate={isCheckHour}
+                    />
+                    {/* ปิดไว้ก่อนเผื่อกลับมาใช้ */}
+                    {/* <AutocompleteComboBox
                         labelName="Work Hour"
                         column="lov_code"
                         setvalue={setWorkHour}
                         options={options?.workHour || []}
                         value={workHour}
                         disabled={actions === "Reade" || actions === "JobDone"}
-                    />
+                    /> */}
                 </div>
             </div>
             <div className="row justify-start">

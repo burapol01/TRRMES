@@ -19,6 +19,7 @@ import { dateFormatTimeEN, dateFormatTimeTH, DateToDB } from "../../../libs/data
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 
 interface OptionsState {
+  costCenter: any[];
   serviceCenter: any[];
   jobType: any[];
   budgetCode: any[];
@@ -26,6 +27,7 @@ interface OptionsState {
 }
 
 const initialOptions: OptionsState = {
+  costCenter: [],
   serviceCenter: [],
   jobType: [],
   budgetCode: [],
@@ -51,7 +53,7 @@ const defaultVal = {
   requestDate: "",
   requestId: "",
   reqUser: "",
-  headUser: "",
+  appReqUser: "",
   costCenterId: "",
   costCenterCode: "",
   costCenterName: "",
@@ -73,7 +75,7 @@ export default function ServiceRequest() {
   const [requestNo, setRequestNo] = useState("");
   const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
-  const [headUser, setHeadUser] = useState<string>("");
+  const [appReqUser, setAppReqUser] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
   const [statusValue, setStatusValue] = useState<string>("");
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<any>(null);
@@ -140,7 +142,8 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
     if (defaultValues.siteId != "")
-      fetchServiceCenters();
+      fetchCostCenters();
+    fetchServiceCenters();
     if (defaultValues.costCenterId != "") {
       fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
@@ -231,7 +234,7 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
-          assetCodeId: asset.id,
+          assetCodeId: asset.id,        
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description
         }));
@@ -254,6 +257,40 @@ export default function ServiceRequest() {
   /*
       ใช้สำหรับหน้า ServicesRequestBody 
   */
+
+  const fetchCostCenters = async () => {
+    console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
+
+    const dataset = {
+      "site_id": defaultValues.siteId
+    };
+
+    try {
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+
+      if (response && response.status === "success") {
+        console.log('Cost_Center_Get', response)
+        const costCenters = response.data.map((costCenter: any) => ({
+          costCenterId: costCenter.id,
+          appReqUser: costCenter.app_req_user,
+          costCenterCode: costCenter.cost_center_code,
+          costCenterName: costCenter.cost_center_name,
+          costCentersCodeAndName: costCenter.cost_center_name + ' [' + costCenter.cost_center_code + ']'
+        }));
+
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          costCenter: costCenters,
+        }));
+
+      } else {
+        setError("Failed to fetch Cost Centers.");
+      }
+    } catch (error) {
+      console.error("Error fetching Cost Centers:", error);
+      setError("An error occurred while fetching Cost Centers.");
+    }
+  };
 
   const fetchServiceCenters = async () => {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
@@ -324,17 +361,18 @@ export default function ServiceRequest() {
     console.log('Call : fetchBudgetCodes', moment().format('HH:mm:ss:SSS'));
     try {
       const dataset = {
-        "cost_center_id": defaultValues.costCenterId
+        //"cost_center_id": costCenterId
       };
 
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Budget_Get");
 
       if (response && response.status === "success") {
-        //console.log(response, 'Budget_Get');
+        console.log(response, 'Budget_Get');
 
         // กำหนดประเภทสำหรับ budgetCodes
         const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
           budgetId: budget.id,
+          costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
           budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
@@ -395,7 +433,7 @@ export default function ServiceRequest() {
     console.log('Call : fetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "cost_center_id": defaultValues.costCenterId
+      //"cost_center_id": costCenterId
     };
 
     try {
@@ -405,6 +443,7 @@ export default function ServiceRequest() {
         //console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
+          costCenterId: asset.cost_center_id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description
 
@@ -460,7 +499,7 @@ export default function ServiceRequest() {
       costCenterId: data?.cost_center_id || '',
       costCenterName: data?.cost_center_name || '',
       reqUser: data?.req_user || '',
-      headUser: headUser || '',
+      appReqUser: appReqUser || '',
       costCenterCode: data?.cost_center_id || '',
       status: data?.req_status || '',
       countRevision: data?.count_revision || '',
@@ -502,18 +541,15 @@ export default function ServiceRequest() {
 
   };
 
-  const handleClickSubmit = (data: any) => {
-    console.log('defaultValues', defaultValues);
+  const handleClickSubmit = (data: any) => {       
     setOpenSubmit(true);
-    readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
+    readData(data) 
 
   };
 
   const handleClickApproved = (data: any) => {
     setOpenApproved(true);
-    readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
+    readData(data)  
 
   };
 
@@ -555,7 +591,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       user_ad: currentUser.employee_username || null,
-      head_user: null,
+      app_req_user: null,
     };
 
     try {
@@ -564,16 +600,16 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
+          if (userData.user_ad === currentUser.employee_username || userData.app_req_user === currentUser.employee_username) {
             //console.log(userData,"userData");
 
 
-            setHeadUser(userData.head_user);
+            setAppReqUser(userData.app_req_user);
 
             setDefaultValues(prevValues => ({
               ...prevValues,
               reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-              headUser: userData.head_user || prevValues.headUser,
+              appReqUser: userData.app_req_user || prevValues.appReqUser,
               costCenterId: userData.cost_center_id || prevValues.costCenterId,
               costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
               costCenterName: userData.cost_center_name || prevValues.costCenterName,
@@ -728,7 +764,7 @@ export default function ServiceRequest() {
             req_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
             app_user: null,
-            cost_center_id: draftData.costCenterId || "",
+            cost_center_id: draftData.costCenter.costCenterId || "",
             service_center_id: draftData.serviceCenter?.serviceCenterId || "",
             description: draftData.description || "",
             req_status: draftData.status || "",
@@ -799,7 +835,7 @@ export default function ServiceRequest() {
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
-            cost_center_id: draftData.costCenterId || "",
+            cost_center_id: draftData.costCenter.costCenterId || "",
             service_center_id: draftData.serviceCenter.serviceCenterId || "",
             description: draftData.description || "",
             fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
@@ -911,7 +947,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Submit",
-            app_user: headUser
+            app_user: draftData.costCenter.appReqUser
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -963,7 +999,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Approved",
-            app_user: draftData.headUser
+            app_user: draftData.appReqUser
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -1068,7 +1104,7 @@ export default function ServiceRequest() {
           changeStatusModel: {
             id: draftData.requestId,
             new_status: "Close",
-            app_user: draftData.headUser
+            app_user: draftData.appReqUser
           },
           currentAccessModel: {
             user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น

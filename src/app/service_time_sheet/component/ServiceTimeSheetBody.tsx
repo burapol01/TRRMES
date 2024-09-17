@@ -13,7 +13,7 @@ interface ServiceTimeSheetBodyProps {
     requestDate: string;
     requestId?: string;
     reqUser?: string;
-    headUser?: string;
+    appReqUser?: string;
     costCenterId?: string;
     costCenterCode?: string;
     costCenterName?: string;
@@ -30,6 +30,7 @@ interface ServiceTimeSheetBodyProps {
     rejectStartReason?: string,
   };
   options?: {
+    costCenter: any[];
     serviceCenter: any[];
     jobType: any[];
     budgetCode: any[];
@@ -51,17 +52,19 @@ export default function ServiceTimeSheetBody({
   actions
 }: ServiceTimeSheetBodyProps) {
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
+  const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
   const [optionRevision, setOptionRevision] = useState<any>(options?.revision || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
   const [reqUser, setEmployee] = useState(defaultValues?.reqUser || "");
-  const [headUser, setheadUser] = useState(defaultValues?.headUser || "");
+  const [appReqUser, setheadUser] = useState(defaultValues?.appReqUser || "");
   const [costCenterId, setCostCenterId] = useState(defaultValues?.costCenterId || "");
-  const [costCenterCode, setCostCenter] = useState(defaultValues?.costCenterCode || "");
+  const [costCenterCode, setCostCenterCode] = useState(defaultValues?.costCenterCode || "");
   const [costCenterName, setCostCenterName] = useState(defaultValues?.costCenterName || "");
   const [status, setStatus] = useState(defaultValues?.status || "Draft");
   const [serviceCenterId, setServiceCenterId] = useState(defaultValues?.serviceCenterId || "");
+  const [costCenter, setCostCenter] = useState<any>(null);
   const [serviceCenter, setServiceCenter] = useState<any>(null);
   const [serviceName, setServiceName] = useState("");
   const [site, setSite] = useState(defaultValues?.site || "");
@@ -95,12 +98,13 @@ export default function ServiceTimeSheetBody({
       requestNo,
       requestDate,
       reqUser,
-      headUser,
+      appReqUser,
       costCenterId,
       costCenterCode,
       costCenterName,
       status,
       serviceCenterId,
+      costCenter,
       serviceCenter,
       serviceName,
       site,
@@ -116,8 +120,8 @@ export default function ServiceTimeSheetBody({
     // Call debounced function
     debouncedOnDataChange(data);
   }, [
-    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenterCode, costCenterName,
-    status, serviceCenterId, serviceCenter, serviceName, site, jobType, budgetCode, description,
+    requestId, requestNo, requestDate, reqUser, appReqUser, costCenterId, costCenterCode, costCenterName,
+    status, serviceCenterId, costCenter, serviceCenter, serviceName, site, jobType, budgetCode, description,
     fixedAssetCode, fixedAssetDescription,
     countRevision, revisionCurrent, timeSheetData, onDataChange,
   ]);
@@ -126,8 +130,15 @@ export default function ServiceTimeSheetBody({
 
     if (actions != "Create") {
 
-      //console.log(options, 'dd')
-      //console.log(defaultValues?.serviceCenterId, 'dsdsd')
+      console.log(options?.costCenter, 'dd')
+      console.log(defaultValues?.costCenterId, 'costCenterId')
+
+      if (defaultValues?.costCenterId != "") {
+        const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
+        //console.log(mapCostCenterData, 'mapCostCenterData')
+        setCostCenter(mapCostCenterData)
+      }
+
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
         // console.log(mapCostCenterData, 'mapCostCenterData')
@@ -170,9 +181,9 @@ export default function ServiceTimeSheetBody({
 
       }
 
-      if (defaultValues?.headUser != "") {
-        //console.log(defaultValues?.headUser, 'headUser')
-        setheadUser(defaultValues?.headUser || "");
+      if (defaultValues?.appReqUser != "") {
+        //console.log(defaultValues?.appReqUser, 'appReqUser')
+        setheadUser(defaultValues?.appReqUser || "");
       }
 
 
@@ -200,15 +211,34 @@ export default function ServiceTimeSheetBody({
 
   }, [defaultValues])
 
+
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
   React.useEffect(() => {
-    if (jobType) {
-      const mapBudgetData = setValueList(options?.budgetCode, jobType?.lov_code, 'jobType');
-      //console.log(budgetCode, "budgetCode");
-      setOptionBudgetCode(mapBudgetData)
-    } else {
-      setOptionBudgetCode(options?.budgetCode);
-    }
-  }, [jobType])
+    const filteredData = options?.budgetCode.filter((item: any) =>
+      (!costCenter?.costCenterId || item.costCenterId
+        .toString()
+        .includes(costCenter?.costCenterId)) &&
+      (!jobType?.lov_code || item.jobType
+        .toString()
+        .includes(jobType?.lov_code))
+
+    );
+
+    //ใส่ useState ใหม่ 
+    setOptionBudgetCode(filteredData);
+
+    const filterFixedAssetCode = options?.fixedAssetCode.filter((item: any) =>
+    (!costCenter?.costCenterId || item.costCenterId
+      .toString()
+      .includes(costCenter?.costCenterId || costCenter))
+    );
+
+    //ใส่ useState ใหม่ 
+    setOptionFixedAssetCode(filterFixedAssetCode)
+    //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
+  }, [costCenter, jobType])
+
+
 
   return (
     <div>
@@ -245,13 +275,27 @@ export default function ServiceTimeSheetBody({
           />
         </div>
         <div className="col-md-3 mb-2">
-          <FullWidthTextField
+          <AutocompleteComboBox
+            required={"required"}
+            labelName={"Cost center"}
+            column="costCentersCodeAndName"
+            value={costCenter}
+            disabled={disableOnly}
+            setvalue={(data) => {
+              setCostCenter(data);
+              setJobType(null)
+              setBudgetCode(null)
+              setFixedAssetCode(null)
+            }}
+            options={options?.costCenter || []}
+          />
+          {/* <FullWidthTextField
             labelName={"Cost center"}
             value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
 
-          />
+          /> */}
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
@@ -342,7 +386,7 @@ export default function ServiceTimeSheetBody({
               setFixedAssetCode(data);
               setFixedAssetDescription(data?.assetDescription || "");
             }}
-            options={options?.fixedAssetCode || []}
+            options={optionFixedAssetCode || []}
           />
         </div>
         <div className="col-md-9 mb-2">
@@ -365,35 +409,35 @@ export default function ServiceTimeSheetBody({
             onChange={(value) => setDescription(value)}
           />
         </div>
-       {/* ช่อง เหตุผล Reject ================================================ */}
+        {/* ช่อง เหตุผล Reject ================================================ */}
         {rejectSubmitReason !== "" && (
-      <div className="row justify-start">
-        <div className="col-md-12 mb-2">
-          <FullWidthTextareaField
-            labelName={"Reject Submit Reason"}
-            value={rejectSubmitReason}
-            disabled={disableOnly}
-            multiline={true}
-            onChange={(value) => setRejectSubmitReason(value)}
-          />
-        </div>
-      </div>
-      )}
-      {rejectStartReason !== "" && (
-      <div className="row justify-start">
-        <div className="col-md-12 mb-2">
-          <FullWidthTextareaField
-            labelName={"Reject Start Reason"}
-            value={rejectStartReason}
-            disabled={disableOnly}
-            multiline={true}
-            onChange={(value) => setRejectStartReason(value)}
-          />
-        </div>
-      </div>
-      )}
+          <div className="row justify-start">
+            <div className="col-md-12 mb-2">
+              <FullWidthTextareaField
+                labelName={"Reject Submit Reason"}
+                value={rejectSubmitReason}
+                disabled={disableOnly}
+                multiline={true}
+                onChange={(value) => setRejectSubmitReason(value)}
+              />
+            </div>
+          </div>
+        )}
+        {rejectStartReason !== "" && (
+          <div className="row justify-start">
+            <div className="col-md-12 mb-2">
+              <FullWidthTextareaField
+                labelName={"Reject Start Reason"}
+                value={rejectStartReason}
+                disabled={disableOnly}
+                multiline={true}
+                onChange={(value) => setRejectStartReason(value)}
+              />
+            </div>
+          </div>
+        )}
 
-       {/* ช่อง เหตุผล Reject ==================================================*/}
+        {/* ช่อง เหตุผล Reject ==================================================*/}
         {actions != "AcceptJob" && (
           <>
             <div className="col-md-3 mb-2">

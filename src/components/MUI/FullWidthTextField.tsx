@@ -50,8 +50,8 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
         }}
         InputProps={{
           readOnly: props.readonly,
-          endAdornment: props.endAdornment ? <InputAdornment position="end">%</InputAdornment> : null,
-          inputProps: {
+          endAdornment: props.endAdornment ? <InputAdornment position="end">%</InputAdornment> : null,         
+          inputProps: {          
             style: { textAlign: props.textAlignTextField },
           },
         }}
@@ -61,6 +61,7 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
         disabled={props.disabled}
         onChange={hedelonChange}
         value={props.value}
+        // helperText={props.Validate ? "5555555555":""}
       />
       {props.validateTextLable ? (
         <label htmlFor="" className={`fs-7 py-1 sarabun-regular-lable-validate`}>

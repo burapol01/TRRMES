@@ -18,6 +18,7 @@ import { dateFormatTimeEN, DateToDB } from "../../../libs/datacontrol";
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 
 interface OptionsState {
+  costCenter: any[];
   serviceCenter: any[];
   jobType: any[];
   budgetCode: any[];
@@ -28,6 +29,7 @@ interface OptionsState {
 }
 
 const initialOptions: OptionsState = {
+  costCenter: [],
   serviceCenter: [],
   jobType: [],
   budgetCode: [],
@@ -56,7 +58,7 @@ const defaultVal = {
   requestDate: "",
   requestId: "",
   reqUser: "",
-  headUser: "",
+  appReqUser: "",
   costCenterId: "",
   costCenterCode: "",
   costCenterName: "",
@@ -78,7 +80,7 @@ export default function ServiceRequest() {
   const [requestNo, setRequestNo] = useState("");
   const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
-  const [headUser, setHeadUser] = useState<string>("");
+  const [appReqUser, setAppReqUser] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("");
   const [costCenterId, setCostCenterId] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
@@ -145,10 +147,12 @@ export default function ServiceRequest() {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
 
     if (defaultValues.siteId != "") {
+      fetchCostCenters();
       fetchServiceCenters();
       fetchRevision();
-      fetchTechnician();
-      fetchWorkHour();
+      // fetchTechnician();
+      fetchServiceStaff();
+      //fetchWorkHour();  //ปิดไว้ก่อนเผื่อกลับมาใช้
 
     }
 
@@ -271,6 +275,40 @@ export default function ServiceRequest() {
       ใช้สำหรับหน้า ServicesRequestBody 
   */
 
+  const fetchCostCenters = async () => {
+    console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
+
+    const dataset = {
+      "site_id": defaultValues.siteId
+    };
+
+    try {
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+
+      if (response && response.status === "success") {
+        console.log('Cost_Center_Get', response)
+        const costCenters = response.data.map((costCenter: any) => ({
+          costCenterId: costCenter.id,
+          appReqUser: costCenter.app_req_user,
+          costCenterCode: costCenter.cost_center_code,
+          costCenterName: costCenter.cost_center_name,
+          costCentersCodeAndName: costCenter.cost_center_name + ' [' + costCenter.cost_center_code + ']'
+        }));
+
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          costCenter: costCenters,
+        }));
+
+      } else {
+        setError("Failed to fetch Cost Centers.");
+      }
+    } catch (error) {
+      console.error("Error fetching Cost Centers:", error);
+      setError("An error occurred while fetching Cost Centers.");
+    }
+  };
+
   const fetchServiceCenters = async () => {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -351,6 +389,7 @@ export default function ServiceRequest() {
         // กำหนดประเภทสำหรับ budgetCodes
         const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
           budgetId: budget.id,
+          costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
           budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
@@ -418,9 +457,10 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
-        console.log('Fixed_Asset_Get', response);
+        //console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
+          costCenterId: asset.cost_center_id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description
 
@@ -480,8 +520,8 @@ export default function ServiceRequest() {
     }
   };
 
-  const fetchTechnician = async () => {
-    console.log('Call : fetchTechnician', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
+  const fetchServiceStaff = async () => {
+    console.log('Call : fetchServiceStaff', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
       //"user_ad": currentUser.employee_username,
@@ -490,13 +530,13 @@ export default function ServiceRequest() {
     };
 
     try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Technician_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Staff_Get");
 
       if (response && response.status === "success") {
-        console.log('Technician_Get', response);
+        console.log('Service_Staff_Get', response);
         const technician = response.data.map((technician: any) => ({
           userAd: technician.user_ad || "",
-          userName: technician.user_name || "",
+          tecEmpName: technician.tec_emp_name || "",
           costCenterName: technician.cost_center_name || "",
           siteCode: technician.site_code || "",
           siteId: technician.site_id || "",
@@ -556,36 +596,36 @@ export default function ServiceRequest() {
   //   }
   // };
 
-  const fetchWorkHour = async () => {
-    console.log('Call : fetchWorkHour', moment().format('HH:mm:ss:SSS'));
-    try {
+  // const fetchWorkHour = async () => {
+  //   console.log('Call : fetchWorkHour', moment().format('HH:mm:ss:SSS'));
+  //   try {
 
-      const dataset = {
-        "lov_type": "work_hour"
-      };
+  //     const dataset = {
+  //       "lov_type": "work_hour"
+  //     };
 
-      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+  //     const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
-      if (response && response.status === "success") {
-        //console.log(response, 'Success fetch Work Hour');
-        const workHour = response.data.map((job: any) => ({
-          lov_code: job.lov_code,
-        }));
-        // console.log(workHour, 'Work Hour');
+  //     if (response && response.status === "success") {
+  //       //console.log(response, 'Success fetch Work Hour');
+  //       const workHour = response.data.map((job: any) => ({
+  //         lov_code: job.lov_code,
+  //       }));
+  //       // console.log(workHour, 'Work Hour');
 
 
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          workHour: workHour,
-        }));
-      } else {
-        setError("Failed to fetch Work Hour.");
-      }
-    } catch (error) {
-      console.error("Error fetch Work Hour:", error);
-      setError("An error occurred while fetch Work Hour.");
-    }
-  };
+  //       setOptions((prevOptions) => ({
+  //         ...prevOptions,
+  //         workHour: workHour,
+  //       }));
+  //     } else {
+  //       setError("Failed to fetch Work Hour.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetch Work Hour:", error);
+  //     setError("An error occurred while fetch Work Hour.");
+  //   }
+  // };
 
   // สำหรับ handle กับเหตุการณ์หรือสถานะต่าง ๆ ในโค้ด ==============================================================================
 
@@ -623,7 +663,7 @@ export default function ServiceRequest() {
       costCenterId: data?.cost_center_id || '',
       costCenterName: data?.cost_center_name || '',
       reqUser: data?.req_user || '',
-      headUser: data?.app_user || '',
+      appReqUser: data?.app_user || '',
       costCenterCode: data?.cost_center_code || '',
       status: data?.req_status || '',
       countRevision: data?.count_revision || '',
@@ -696,7 +736,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       user_ad: currentUser.employee_username || null,
-      head_user: null,
+      app_req_user: null,
     };
 
     try {
@@ -705,15 +745,15 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.head_user === currentUser.employee_username) {
+          if (userData.user_ad === currentUser.employee_username || userData.app_req_user === currentUser.employee_username) {
             setSiteId(userData.site_id);
             setCostCenterId(userData.cost_center_id);
-            // setHeadUser(userData.head_user);
+            // setAppReqUser(userData.app_req_user);
 
             // setDefaultValues(prevValues => ({
             //   ...prevValues,
             //   // reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-            //   // headUser: userData.head_user || prevValues.headUser,
+            //   // appReqUser: userData.app_req_user || prevValues.appReqUser,
             //   // costCenterId: userData.cost_center_id || prevValues.costCenterId,
             //   // costCenter: userData.cost_center_code || prevValues.costCenter,
             //   site: userData.site_code || prevValues.site,
@@ -755,7 +795,7 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         const { data: result } = response;
 
-        setHeadUser(result.app_user);
+        setAppReqUser(result.app_user);
         const newData: any = []
 
         Array.isArray(result) && result.forEach((el) => {
@@ -964,9 +1004,10 @@ export default function ServiceRequest() {
           req_id: draftData.requestId,
           revision_id: draftData.revisionCurrent.revisionId,
           time_sheet_no: String(item.no),
-          work_date: DateToDB(item.date), // ใช้ moment เพื่อแปลงวันที่, 
-          work_hour: item.work_hour.lov_code || item.work_hour,
-          technician: item.technician.userName || item.technician,
+          work_start_date: DateToDB(item.work_start_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
+          work_end_date: DateToDB(item.work_end_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
+          work_hour: String(item.work_hour),
+          technician: item.technician.tecEmpName || item.technician,
           description: item.description,
           delete_flag: item.delete_flag
         }));
