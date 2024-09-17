@@ -484,7 +484,7 @@ export default function ServiceRequest() {
     console.log('Call : fetchTechnician', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "user_ad": currentUser.employee_username,
+      //"user_ad": currentUser.employee_username,
       "site_id": siteId,
       "cost_center_id": costCenterId
     };
@@ -517,6 +517,44 @@ export default function ServiceRequest() {
       setError("An error occurred while fetching technician.");
     }
   };
+  
+  // const fetchTechnician = async () => {
+  //   console.log('Call : fetchTechnician', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
+
+  //   const dataset = {
+  //     //"user_ad": currentUser.employee_username,
+  //     "site_id": siteId,
+  //     "cost_center_id": costCenterId
+  //   };
+
+  //   try {
+  //     const response = await _POST(dataset, "/api_trr_mes/MasterData/Technician_Get");
+
+  //     if (response && response.status === "success") {
+  //       console.log('Technician_Get', response);
+  //       const technician = response.data.map((technician: any) => ({
+  //         userAd: technician.user_ad || "",
+  //         userName: technician.user_name || "",
+  //         costCenterName: technician.cost_center_name || "",
+  //         siteCode: technician.site_code || "",
+  //         siteId: technician.site_id || "",
+  //         serviceCenterFlag: technician.service_center_flag || ""
+
+  //       }));
+
+  //       setOptions((prevOptions) => ({
+  //         ...prevOptions,
+  //         technician: technician,
+  //       }));
+
+  //     } else {
+  //       setError("Failed to fetch technician.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching technician:", error);
+  //     setError("An error occurred while fetching technician.");
+  //   }
+  // };
 
   const fetchWorkHour = async () => {
     console.log('Call : fetchWorkHour', moment().format('HH:mm:ss:SSS'));

@@ -120,18 +120,18 @@ export const Time_Sheet_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'No.',
-        colWidth: 300
+        colWidth: 100
     },
     {
         columnName: 'date',
         numeric: 'center',
         disablePadding: true,
         label: 'Date',
-        colWidth: 300
+        colWidth: 150
     },
     {
         columnName: 'technician',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
         label: 'Technician',
         colWidth: 300
@@ -141,7 +141,7 @@ export const Time_Sheet_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'Work Hour',
-        colWidth: 300
+        colWidth: 100
     },
     {
         columnName: 'description',
@@ -156,7 +156,7 @@ export const Time_Sheet_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'Delete',
-        colWidth: 300
+        colWidth: 100
     },
 
 
