@@ -41,7 +41,7 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
             const menu = await checkMenuPermisction(isMenuPermis)
             dispatch(addRoleMenuFunction(null));
             dispatch(addRoleMenuFunction(menu));
-            console.log(menu,'isMenuPermis');
+            // console.log(menu,'isMenuPermis');
             
         }
     }

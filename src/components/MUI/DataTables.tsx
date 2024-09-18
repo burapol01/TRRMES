@@ -396,7 +396,7 @@ export default function EnhancedTable({
           {/* } */}
           <div className={`flex mr-2 py-5 px-8`}>
             <TextField
-              placeholder="Search"
+              placeholder="ค้นหา"
               variant="outlined"
               size="small"
               onChange={(e) => {

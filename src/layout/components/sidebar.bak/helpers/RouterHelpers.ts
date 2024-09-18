@@ -1,5 +1,4 @@
 import { MenuFunc } from "../../../../../types/user"
-import menuFunction from "../../../../../menu-th.json";
 
 export function getCurrentUrl(pathname:string) {
   return pathname.split(/[?#]/)[0]
@@ -43,7 +42,7 @@ export function checkIsMunuPermis(pathname: string, url: string, dataMenu:any, d
 
 
 export function checkMenuPermisctionList(menuFunc: MenuFunc[]) {
-  const menu_th: any = menuFunction
+
 
   const menu = menuFunc?.filter(
     (el: any) => el.funct_oth == "LIST"
@@ -67,11 +66,11 @@ interface JsonObject {
 interface JsonArray extends Array<JsonValue> { }
 // Function to update a value in a JSON file
 export async function checkMenuPermisction(newValue: JsonValue): Promise<void> {
-  const menu_th: any = menuFunction
+
   const newObject: any = new Object();
   Array.isArray(newValue) && newValue.forEach((item: any) => {
     if (item.funct_oth == "#") {
-      newObject[`${item.func_name}`] = menu_th[`MENUFUNC.${item.func_name}`];
+      newObject[`${item.func_name}`] = item.display_name
     }
   })
   console.log(newObject,'newObjectnewObject');

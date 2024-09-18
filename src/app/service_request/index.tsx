@@ -109,6 +109,9 @@ export default function ServiceRequest() {
   const [openRejectJob, setOpenRejectJob] = useState(false);
   const [rejectJobReason, setRejectJobReason] = useState<string>("");
 
+  //ตัวแปร ใช้ทุกที่
+  const employeeUsername = currentUser?.employee_username.toLowerCase()
+  const roleName = currentUser?.role_name;
 
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
@@ -131,25 +134,25 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[2] fetch UserData&serviceRequest', moment().format('HH:mm:ss:SSS'));
 
-    if (currentUser?.employee_username) {
+    if (employeeUsername) {
       fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
       dataTableServiceRequest_GET();
 
     }
-  }, [currentUser?.employee_username]);
+  }, [employeeUsername]);
 
   //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceRequestBody
   useEffect(() => {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
-    if (defaultValues.siteId != "")
+    if (defaultValues?.reqUser)
       fetchCostCenters();
     fetchServiceCenters();
-    if (defaultValues.costCenterId != "") {
-      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+    if (defaultValues) {
+      fetchJobTypes();
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
 
     }
-    fetchJobTypes();
 
   }, [defaultValues]);
 
@@ -160,12 +163,11 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId,
-      "service_center_flag": true
+      
     };
 
     try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
@@ -225,7 +227,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "cost_center_id": defaultValues.costCenterId
+     
     };
 
     try {
@@ -234,7 +236,7 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         //console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
-          assetCodeId: asset.id,        
+          assetCodeId: asset.id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description
         }));
@@ -262,20 +264,21 @@ export default function ServiceRequest() {
     console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId
+      user_ad: employeeUsername
     };
 
     try {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
-        console.log('Cost_Center_Get', response)
+        //console.log('Cost_Center_Get', response)
         const costCenters = response.data.map((costCenter: any) => ({
           costCenterId: costCenter.id,
           appReqUser: costCenter.app_req_user,
           costCenterCode: costCenter.cost_center_code,
           costCenterName: costCenter.cost_center_name,
-          costCentersCodeAndName: costCenter.cost_center_name + ' [' + costCenter.cost_center_code + ']'
+          costCentersCodeAndName: '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
+          siteCode: costCenter.site_code
         }));
 
         setOptions((prevOptions) => ({
@@ -296,21 +299,21 @@ export default function ServiceRequest() {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId,
-      "service_center_flag": true
+
     };
 
     try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
 
       if (response && response.status === "success") {
-        //console.log('Cost_Center_Get', response)
+        //console.log('ServiceCenters', response)
         const serviceCenters = response.data.map((center: any) => ({
 
           serviceCenterId: center.id,
           serviceCenterCode: center.cost_center_code,
           serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
+          serviceCentersCodeAndName: '[' + center.cost_center_code + ']' + ' | ' + center.cost_center_name,
+          siteCode: center.site_code
         }));
 
         setOptions((prevOptions) => ({
@@ -367,7 +370,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Budget_Get");
 
       if (response && response.status === "success") {
-        console.log(response, 'Budget_Get');
+        //console.log(response, 'Budget_Get');
 
         // กำหนดประเภทสำหรับ budgetCodes
         const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
@@ -375,7 +378,7 @@ export default function ServiceRequest() {
           costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
-          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
+          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description + ' (' + budget.job_type + ')'
         }));
 
         setOptions((prevOptions) => ({
@@ -440,12 +443,13 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
-        //console.log('Fixed_Asset_Get', response);
+        // console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
           costCenterId: asset.cost_center_id,
           assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description
+          assetDescription: asset.description,
+          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
 
         }));
 
@@ -521,6 +525,7 @@ export default function ServiceRequest() {
 
     setOpenView(true);
     readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
@@ -529,27 +534,30 @@ export default function ServiceRequest() {
   };
 
   const handleClickEdit = (data: any) => {
-    setOpenEdit(true);
-    console.log(data, 'datadatadatadatadata');
+    setOpenEdit(true);;
     readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
 
   };
 
   const handleClickDelete = (data: any) => {
     setOpenDelete(true);
     readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
-  const handleClickSubmit = (data: any) => {       
+  const handleClickSubmit = (data: any) => {
     setOpenSubmit(true);
-    readData(data) 
+    readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
   const handleClickApproved = (data: any) => {
     setOpenApproved(true);
-    readData(data)  
+    readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
@@ -585,13 +593,12 @@ export default function ServiceRequest() {
   //================================================================================================
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
-    console.log('Call : fetchUserData', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
 
-    if (!currentUser?.employee_username) return;
+    if (!employeeUsername) return;
 
     const dataset = {
-      user_ad: currentUser.employee_username || null,
-      app_req_user: null,
+      user_ad: employeeUsername || null
     };
 
     try {
@@ -600,21 +607,20 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.app_req_user === currentUser.employee_username) {
+          if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
             //console.log(userData,"userData");
 
 
-            setAppReqUser(userData.app_req_user);
-
+            //setAppReqUser(userData.app_req_user);
             setDefaultValues(prevValues => ({
               ...prevValues,
-              reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-              appReqUser: userData.app_req_user || prevValues.appReqUser,
-              costCenterId: userData.cost_center_id || prevValues.costCenterId,
-              costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
-              costCenterName: userData.cost_center_name || prevValues.costCenterName,
-              site: userData.site_code || prevValues.site,
-              siteId: userData.site_id || prevValues.siteId
+              reqUser: employeeUsername || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
+              // appReqUser: userData.app_req_user || prevValues.appReqUser,
+              // costCenterId: userData.cost_center_id || prevValues.costCenterId,
+              // costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
+              // costCenterName: userData.cost_center_name || prevValues.costCenterName,
+              // site: userData.site_code || prevValues.site,
+              // siteId: userData.site_id || prevValues.siteId
             }));
             //console.log(response, 'UserGet');
 
@@ -640,9 +646,8 @@ export default function ServiceRequest() {
     if (!currentUser) return;
 
     const dataset = {
-      "req_user": currentUser.employee_username,
-      "app_user": currentUser.employee_username,
-      "service_center_id": selectedServiceCenter?.costCenterId,
+      "req_user": employeeUsername,
+      "service_center_id": selectedServiceCenter?.serviceCenterId,
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
       "fixed_asset_id": selectedAssetCode?.assetCodeId,
@@ -685,7 +690,8 @@ export default function ServiceRequest() {
               }}
               reqStatus={el.req_status}
               appUser={el.app_user}
-              currentUser={currentUser?.employee_username}
+              currentUser={employeeUsername}
+              roleName={roleName}
 
             />
           )
@@ -775,7 +781,7 @@ export default function ServiceRequest() {
             job_type: draftData.jobType.lov_code || "",
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           },
           documentRunningModel: {
             code_group: draftData.site,
@@ -843,7 +849,7 @@ export default function ServiceRequest() {
             job_type: draftData.jobType.lov_code || "",
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           }
         };
 
@@ -898,7 +904,7 @@ export default function ServiceRequest() {
             id: draftData.requestId
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           }
         };
 
@@ -950,7 +956,7 @@ export default function ServiceRequest() {
             app_user: draftData.costCenter.appReqUser
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           }
         };
 
@@ -1002,7 +1008,7 @@ export default function ServiceRequest() {
             app_user: draftData.appReqUser
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           }
         };
 
@@ -1054,7 +1060,7 @@ export default function ServiceRequest() {
           reject_reason: rejectReason
         },
         currentAccessModel: {
-          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+          user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
         }
       };
 
@@ -1107,7 +1113,7 @@ export default function ServiceRequest() {
             app_user: draftData.appReqUser
           },
           currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
           }
         };
 
@@ -1161,7 +1167,7 @@ export default function ServiceRequest() {
           revision_no: String(draftData.countRevision)
         },
         currentAccessModel: {
-          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+          user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
         }
       };
 
@@ -1203,12 +1209,12 @@ export default function ServiceRequest() {
     <div>
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
-          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Search</label>
+          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหาข้อมูล</label>
         </div>
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Request No."}
+              labelName={"เลขที่ใบคำขอ"}
               value={requestNo}
               onChange={(value) => setRequestNo(value)}
             />
@@ -1225,7 +1231,7 @@ export default function ServiceRequest() {
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
               value={selectedJobType}
-              labelName={"Jobtype"}
+              labelName={"ประเภทงาน"}
               options={optionsSearch.jobType}
               column="lov_name"
               setvalue={handleAutocompleteChange(setSelectedJobType)}
@@ -1242,15 +1248,15 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Status"}
+              labelName={"สถานะ"}
               value={status}
               onChange={(value) => setStatus(value)}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"Search"}
+                labelName={"ค้นหา"}
                 handleonClick={handleSearch}
                 variant_text="contained"
                 colorname={"success"}
@@ -1258,7 +1264,7 @@ export default function ServiceRequest() {
             </div>
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"Reset"}
+                labelName={"รีเซ็ต"}
                 handleonClick={handleReset}
                 variant_text="contained"
                 colorname={"inherit"}
@@ -1272,7 +1278,7 @@ export default function ServiceRequest() {
         <div>
           <EnhancedTable
             rows={dataList}
-            buttonLabal_1="Add"
+            buttonLabal_1="เพิ่มข้อมูล"
             buttonColor_1="info"
             headCells={Request_headCells}
             tableName={"บันทึกขอใช้บริการ"}
@@ -1284,7 +1290,7 @@ export default function ServiceRequest() {
           open={openAdd} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Draft'}
+          titlename={'เพิ่มข้อมูล'}
           handleClose={handleClose}
           handlefunction={serviceRequestDraftAdd}
           colorBotton="success"
@@ -1303,7 +1309,7 @@ export default function ServiceRequest() {
           open={openView} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'View'}
+          titlename={'ดูข้อมูล'}
           handleClose={handleClose}
           colorBotton="success"
           actions={"Reade"}
@@ -1320,7 +1326,7 @@ export default function ServiceRequest() {
           open={openEdit} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Edit'}
+          titlename={'แก้ไขข้อมูล'}
           handleClose={handleClose}
           handlefunction={serviceRequestDraftEdit}
           colorBotton="success"
@@ -1339,7 +1345,7 @@ export default function ServiceRequest() {
           open={openDelete} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Delete'}
+          titlename={'ลบข้อมูล'}
           handleClose={handleClose}
           handlefunction={serviceRequestDraftDelete} // service
           colorBotton="success"
@@ -1359,7 +1365,7 @@ export default function ServiceRequest() {
           open={openSubmit} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Submit'}
+          titlename={'ส่งข้อมูล'}
           handleClose={handleClose}
           handlefunction={serviceRequestDraftSubmit} // service
           colorBotton="success"
@@ -1378,7 +1384,7 @@ export default function ServiceRequest() {
           open={openApproved} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Approve'}
+          titlename={'อนุมัติ'}
           handleClose={handleClose}
           handlefunction={serviceRequestApproved} // service
           handleRejectAction={() => setOpenReject(true)}
@@ -1398,7 +1404,7 @@ export default function ServiceRequest() {
           open={openClose} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={'Close'}
+          titlename={'ปิดงาน'}
           handleClose={handleClose}
           handlefunction={serviceRequestClose} // service
           handleRejectAction={() => setOpenRejectJob(true)}
@@ -1419,13 +1425,14 @@ export default function ServiceRequest() {
         open={openReject}
         dialogWidth='sm'
         openBottonHidden={true}
-        titlename={'Reject Reason'}
+        titlename={'ไม่อนุมัติ'}
         handleClose={() => setOpenReject(false)}
         handlefunction={serviceRequestSubmitReject}
         actions="RejectReason"
         element={
           <FullWidthTextareaField
-            labelName={"Please specify reason."}
+            required="*"
+            labelName={"โปรดระบุเหตุผล"}
             value={rejectReason}
             multiline={true}
             onChange={(value) => setRejectReason(value)}
@@ -1437,13 +1444,14 @@ export default function ServiceRequest() {
         open={openRejectJob}
         dialogWidth='sm'
         openBottonHidden={true}
-        titlename={'Reject Reason'}
+        titlename={'ปฏิเสธงาน'}
         handleClose={() => setOpenRejectJob(false)}
         handlefunction={serviceRequestRejectJob}
         actions="RejectReason"
         element={
           <FullWidthTextareaField
-            labelName={"Please specify reason."}
+          required="*"
+            labelName={"โปรดระบุเหตุผลในการปฏิเสธงาน"}
             value={rejectJobReason}
             multiline={true}
             onChange={(value) => setRejectJobReason(value)}

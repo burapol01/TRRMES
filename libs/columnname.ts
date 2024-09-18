@@ -3,42 +3,42 @@ export const Request_headCells = [
         columnName: 'ACTION',
         numeric: 'center',
         disablePadding: true,
-        label: 'Manage',
+        label: 'จัดการ',
         colWidth: 150
     },
     {
         columnName: 'req_no',
         numeric: 'center',
         disablePadding: true,
-        label: 'Document Number',
+        label: 'เลขที่ใบคำขอ',
         colWidth: 185
     },
     {
         columnName: 'req_status_label',
         numeric: 'center',
         disablePadding: true,
-        label: 'Status',
+        label: 'สถานะ',
         colWidth: 150
     },
     {
         columnName: 'req_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'Request Date',
+        label: 'วันที่สร้างใบคำขอ',
         colWidth: 200
     },
     {
         columnName: 'req_user',
         numeric: 'center',
         disablePadding: true,
-        label: 'Requester',
+        label: 'คนที่สร้างคำขอ',
         colWidth: 150
     },
     {
         columnName: 'app_user',
         numeric: 'center',
         disablePadding: true,
-        label: 'Approver',
+        label: 'คนที่อนุมัติ',
         colWidth: 150
     },
     {
@@ -59,7 +59,7 @@ export const Request_headCells = [
         columnName: 'description',
         numeric: 'center',
         disablePadding: true,
-        label: 'Description',
+        label: 'รายละเอียด',
         colWidth: 300
     },
     {
@@ -73,7 +73,7 @@ export const Request_headCells = [
         columnName: 'status_update',
         numeric: 'center',
         disablePadding: true,
-        label: 'Last Status Update',
+        label: 'วันที่อัพเดทสถานะล่าสุด',
         colWidth: 200
     },
     // {
@@ -119,7 +119,7 @@ export const Time_Sheet_headCells = [
         columnName: 'no',
         numeric: 'center',
         disablePadding: true,
-        label: 'No.',
+        label: 'ลำดับ',
         colWidth: 100
     },
     {
@@ -140,21 +140,21 @@ export const Time_Sheet_headCells = [
         columnName: 'technician',
         numeric: 'left',
         disablePadding: true,
-        label: 'Technician',
+        label: 'ช่าง',
         colWidth: 300
     },
     {
         columnName: 'work_hour',
         numeric: 'center',
         disablePadding: true,
-        label: 'Work Hour',
+        label: 'ชั่วโมงทำงาน',
         colWidth: 100
     },
     {
         columnName: 'description',
         numeric: 'left',
         disablePadding: true,
-        label: 'Description',
+        label: 'รายละเอียด',
         colWidth: 300
     },
 
@@ -162,7 +162,7 @@ export const Time_Sheet_headCells = [
         columnName: 'delete',
         numeric: 'center',
         disablePadding: true,
-        label: 'Delete',
+        label: 'จัดการ',
         colWidth: 100
     },
 

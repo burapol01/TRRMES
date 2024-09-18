@@ -20,6 +20,7 @@ interface TimeSheetBodyProps {
         technician: any[];
         workHour: any[];
     };
+    costCenter: any;
     revisionCurrent: any;
     actions?: string;
 }
@@ -28,7 +29,8 @@ export default function TimeSheetBody({
     onDataChange,
     options,
     revisionCurrent,
-    actions
+    actions,
+    costCenter
 }: TimeSheetBodyProps) {
     const [workStartDate, setWorkStartDate] = useState(null);
     const [workEndDate, setWorkEndDate] = useState(null);
@@ -39,6 +41,7 @@ export default function TimeSheetBody({
     const [dataList, setDataList] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด
     const [rejectJobReason, setRejectJobReason] = useState("");
+    const [optionTechnician, setOptionTechnician] = useState<any>(options?.technician || []);
 
 
     // Effect for fetching data in "Reade" mode
@@ -193,7 +196,19 @@ export default function TimeSheetBody({
         });
     }, [dataList]);
 
+//วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
+React.useEffect(() => {
+   
+    
+        const filterTechnician = options?.technician.filter((item: any) =>
+      (!costCenter?.siteId || item.siteId
+        .toString()
+        .includes(costCenter?.siteId || costCenter))
+      );
+      //console.log(filterTechnician,'sssssssssssssssssssssssss');
+      setOptionTechnician(filterTechnician);
 
+  }, [costCenter]);
 
     // Data preparation for "Reade" mode
     const readOnlyDataRow = useMemo(() => {
@@ -272,17 +287,17 @@ export default function TimeSheetBody({
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
-                        labelName="Technician"
+                        labelName="ช่าง"
                         column="tecEmpName"
                         setvalue={setTechnician}
-                        options={options?.technician || []}
+                        options={optionTechnician || []}
                         value={technician}
                         disabled={actions === "Reade" || actions === "JobDone"}
                     />
                 </div>
                 <div className="col-md-3 mb-2">
                     <FullWidthTextField
-                        labelName={"Work Hour"}
+                        labelName={"ชั่วโมงทำงาน"}
                         value={workHour ?? ""}
                         onChange={(value: any) => setWorkHour(stringWithCommas(value))}
                         disabled={actions === "Reade" || actions === "JobDone"}
@@ -302,7 +317,7 @@ export default function TimeSheetBody({
             <div className="row justify-start">
                 <div className="col-md-9 mb-2">
                     <FullWidthTextareaField
-                        labelName="Description"
+                        labelName="รายละเอียด"
                         onChange={(value) => setDescription(value)}
                         value={description}
                         disabled={actions === "Reade" || actions === "JobDone"}
@@ -331,7 +346,7 @@ export default function TimeSheetBody({
                 <div className="row justify-start pt-5">
                     <div className="col-md-12 mb-2">
                         <FullWidthTextareaField
-                            labelName={"Reject Job Reason"}
+                            labelName={"เหตุผลปฏิเสธงาน"}
                             value={rejectJobReason}
                             disabled={true}
                             multiline={true}

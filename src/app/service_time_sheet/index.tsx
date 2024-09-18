@@ -114,7 +114,8 @@ export default function ServiceRequest() {
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState<string>("");
 
-
+ //ตัวแปร ใช้ทุกที่
+ const employeeUsername = currentUser?.employee_username.toLowerCase()
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -123,11 +124,11 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[1] fetch UserData&serviceTimeSheet', moment().format('HH:mm:ss:SSS'));
 
-    if (currentUser?.employee_username) {
+    if (employeeUsername) {
       fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล User   
       dataTableServiceTimeSheet_GET();
     }
-  }, [currentUser?.employee_username, siteId]);
+  }, [employeeUsername]);
 
   //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้าค้นหาข้อมูล
   useEffect(() => {
@@ -146,7 +147,7 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
 
-    if (defaultValues.siteId != "") {
+    if (defaultValues) {
       fetchCostCenters();
       fetchServiceCenters();
       fetchRevision();
@@ -177,12 +178,11 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId,
-      "service_center_flag": true
+     
     };
 
     try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
 
       if (response && response.status === "success") {
         const serviceCenters = response.data.map((center: any) => ({
@@ -242,7 +242,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "cost_center_id": defaultValues.costCenterId
+     
     };
 
     try {
@@ -279,7 +279,7 @@ export default function ServiceRequest() {
     console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId
+    
     };
 
     try {
@@ -292,7 +292,10 @@ export default function ServiceRequest() {
           appReqUser: costCenter.app_req_user,
           costCenterCode: costCenter.cost_center_code,
           costCenterName: costCenter.cost_center_name,
-          costCentersCodeAndName: costCenter.cost_center_name + ' [' + costCenter.cost_center_code + ']'
+          costCentersCodeAndName: '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
+          siteCode: costCenter.site_code,
+          siteId: costCenter.site_id
+          
         }));
 
         setOptions((prevOptions) => ({
@@ -313,21 +316,22 @@ export default function ServiceRequest() {
     console.log('Call : fetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      "site_id": defaultValues.siteId,
-      "service_center_flag": true
+
     };
 
     try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
 
       if (response && response.status === "success") {
-        //console.log('Cost_Center_Get', response)
+        //console.log('ServiceCenters', response)
         const serviceCenters = response.data.map((center: any) => ({
 
           serviceCenterId: center.id,
           serviceCenterCode: center.cost_center_code,
           serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
+          serviceCentersCodeAndName: '[' + center.cost_center_code + ']' + ' | ' + center.cost_center_name,
+          siteCode: center.site_code,
+          siteId: center.site_id
         }));
 
         setOptions((prevOptions) => ({
@@ -384,7 +388,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Budget_Get");
 
       if (response && response.status === "success") {
-        console.log(response, 'Budget_Get');
+        //console.log(response, 'Budget_Get');
 
         // กำหนดประเภทสำหรับ budgetCodes
         const budgetCodes: { budgetId: string; budgetCode: string; jobType: string }[] = response.data.map((budget: any) => ({
@@ -392,7 +396,7 @@ export default function ServiceRequest() {
           costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
-          budgetCodeAndJobType: budget.budget_code + ' [' + budget.job_type + ']'
+          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description + ' (' + budget.job_type + ')' 
         }));
 
         setOptions((prevOptions) => ({
@@ -457,12 +461,13 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
 
       if (response && response.status === "success") {
-        //console.log('Fixed_Asset_Get', response);
+        console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
-          costCenterId: asset.cost_center_id,
+          costCenterId: asset.cost_center_id,          
           assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description
+          assetDescription: asset.description,
+          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
 
         }));
 
@@ -525,8 +530,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       //"user_ad": currentUser.employee_username,
-      "site_id": siteId,
-      "cost_center_id": costCenterId
+     
     };
 
     try {
@@ -540,6 +544,7 @@ export default function ServiceRequest() {
           costCenterName: technician.cost_center_name || "",
           siteCode: technician.site_code || "",
           siteId: technician.site_id || "",
+          costCenterId: technician.cost_center_id || "",
           serviceCenterFlag: technician.service_center_flag || ""
 
         }));
@@ -681,6 +686,8 @@ export default function ServiceRequest() {
   };
 
   const handleClickView = (data: any) => {
+    //console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
+
     setOpenView(true);
     readData(data)
 
@@ -732,11 +739,10 @@ export default function ServiceRequest() {
   const fetchUserData = async () => {
     console.log('Call : fetchUserData', moment().format('HH:mm:ss:SSS'));
 
-    if (!currentUser?.employee_username) return;
+    if (!employeeUsername) return;
 
     const dataset = {
-      user_ad: currentUser.employee_username || null,
-      app_req_user: null,
+      user_ad: employeeUsername || null
     };
 
     try {
@@ -745,21 +751,9 @@ export default function ServiceRequest() {
       if (response && response.status === "success") {
         if (response.data && Array.isArray(response.data) && response.data.length > 0) {
           const userData = response.data[0];
-          if (userData.user_ad === currentUser.employee_username || userData.app_req_user === currentUser.employee_username) {
+          if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
             setSiteId(userData.site_id);
-            setCostCenterId(userData.cost_center_id);
-            // setAppReqUser(userData.app_req_user);
-
-            // setDefaultValues(prevValues => ({
-            //   ...prevValues,
-            //   // reqUser: userData.user_ad || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-            //   // appReqUser: userData.app_req_user || prevValues.appReqUser,
-            //   // costCenterId: userData.cost_center_id || prevValues.costCenterId,
-            //   // costCenter: userData.cost_center_code || prevValues.costCenter,
-            //   site: userData.site_code || prevValues.site,
-            //   siteId: userData.site_id || prevValues.siteId
-            // }));
-            //console.log(response, 'UserGet');
+            setCostCenterId(userData.cost_center_id);           
 
           } else {
             setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
@@ -779,16 +773,17 @@ export default function ServiceRequest() {
   //Get ดึงข้อมูลใส่ ตาราง
   const dataTableServiceTimeSheet_GET = async () => {
     console.log('Call : dataTableServiceTimeSheet_GET', moment().format('HH:mm:ss:SSS'));
-    console.log('Call : siteId 🍕', siteId, moment().format('HH:mm:ss:SSS'));
 
     if (!currentUser) return;
 
     const dataset = {
-      "site_id": siteId,
-      "service_center_id": costCenterId
-
+      "user_ad" : employeeUsername,
+      "service_center_id": selectedServiceCenter?.serviceCenterId,
+      "req_no": requestNo?.toString(),
+      "job_type": selectedJobType?.lov_code,
+      "fixed_asset_id": selectedAssetCode?.assetCodeId,
+      "req_status": status
     };
-
     try {
       const response = await _POST(dataset, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Get");
 
@@ -1147,12 +1142,12 @@ export default function ServiceRequest() {
     <div>
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
-          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Search</label>
+          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหาข้อมูล</label>
         </div>
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Request No."}
+              labelName={"เลขที่ใบคำขอ"}
               value={requestNo}
               onChange={(value) => setRequestNo(value)}
             />
@@ -1169,7 +1164,7 @@ export default function ServiceRequest() {
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
               value={selectedJobType}
-              labelName={"Jobtype"}
+              labelName={"ประเภทงาน"}
               options={optionsSearch.jobType}
               column="lov_name"
               setvalue={handleAutocompleteChange(setSelectedJobType)}
@@ -1186,15 +1181,15 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Status"}
+              labelName={"สถานะ"}
               value={status}
               onChange={(value) => setStatus(value)}
             />
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"Search"}
+                labelName={"ค้นหา"}
                 handleonClick={handleSearch}
                 variant_text="contained"
                 colorname={"success"}
@@ -1202,7 +1197,7 @@ export default function ServiceRequest() {
             </div>
             <div className="col-md-1 px-1">
               <FullWidthButton
-                labelName={"Reset"}
+                labelName={"รีเซ็ต"}
                 handleonClick={handleReset}
                 variant_text="contained"
                 colorname={"inherit"}
@@ -1224,7 +1219,7 @@ export default function ServiceRequest() {
           open={openView} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={"View"}
+          titlename={'ดูข้อมูล'}
           handleClose={handleClose}
           colorBotton="success"
           actions={"Reade"}
@@ -1242,7 +1237,7 @@ export default function ServiceRequest() {
           open={openAcceptJob} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={"Accept Job"}
+          titlename={"รับงาน"}
           handleClose={handleClose}
           handlefunction={serviceTimeSheetStart}
           handleRejectAction={() => setOpenReject(true)}
@@ -1262,7 +1257,7 @@ export default function ServiceRequest() {
           open={openTimeSheet} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={"Time Sheet"}
+          titlename={"บันทึกชั่วโมงการทำงาน"}
           handleClose={handleClose}
           handlefunction={serviceTimeSheetAdd}
           colorBotton="success"
@@ -1281,7 +1276,7 @@ export default function ServiceRequest() {
           open={openJobDone} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
-          titlename={"Job Done"}
+          titlename={"เสร็จงาน"}
           handleClose={handleClose}
           handlefunction={serviceTimeSheetJobDone}
           colorBotton="success"
@@ -1302,13 +1297,14 @@ export default function ServiceRequest() {
         open={openReject}
         dialogWidth='sm'
         openBottonHidden={true}
-        titlename={'Reject Reason'}
+        titlename={'ไม่รับงาน'}
         handleClose={() => setOpenReject(false)}
         handlefunction={serviceRequestReject}
         actions="RejectReason"
         element={
           <FullWidthTextareaField
-            labelName={"Please specify reason."}
+            required="*"
+            labelName={"โปรดระบุเหตุผลที่ไม่รับงาน"}
             value={rejectReason}
             multiline={true}
             onChange={(value) => setRejectReason(value)}

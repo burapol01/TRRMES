@@ -51,6 +51,7 @@ export default function ServiceTimeSheetBody({
   disableOnly,
   actions
 }: ServiceTimeSheetBodyProps) {
+  const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
   const [optionRevision, setOptionRevision] = useState<any>(options?.revision || []);
@@ -177,7 +178,7 @@ export default function ServiceTimeSheetBody({
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
         //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData?.assetDescription)
+        //setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
 
@@ -223,7 +224,7 @@ export default function ServiceTimeSheetBody({
         .includes(jobType?.lov_code))
 
     );
-
+//console.log(filteredData, 'filteredData');
     //ใส่ useState ใหม่ 
     setOptionBudgetCode(filteredData);
 
@@ -236,6 +237,15 @@ export default function ServiceTimeSheetBody({
     //ใส่ useState ใหม่ 
     setOptionFixedAssetCode(filterFixedAssetCode)
     //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
+
+    const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
+      (!costCenter?.siteCode || item.siteCode
+        .toString()
+        .includes(costCenter?.siteCode || costCenter))
+      );
+
+      setOptionServiceCenter(filterServiceCenter);
+
   }, [costCenter, jobType])
 
 
@@ -245,7 +255,7 @@ export default function ServiceTimeSheetBody({
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Request No."}
+            labelName={"เลขที่ใบคำขอ"}
             value={requestNo}
             onChange={(value) => setRequestNo(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -255,7 +265,7 @@ export default function ServiceTimeSheetBody({
         {actions !== "Create" && (
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Date"}
+              labelName={"วันที่สร้างใบคำขอ"}
               value={requestDate}
               onChange={(value) => setRequestDate(value)}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -268,7 +278,7 @@ export default function ServiceTimeSheetBody({
 
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Employee"}
+            labelName={"พนักงาน"}
             value={reqUser}
             onChange={(value) => setEmployee(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -283,9 +293,14 @@ export default function ServiceTimeSheetBody({
             disabled={disableOnly}
             setvalue={(data) => {
               setCostCenter(data);
+              setSite(data?.siteCode || "");
+
+              setServiceCenter(null)
+              setServiceName("")
               setJobType(null)
               setBudgetCode(null)
               setFixedAssetCode(null)
+              //setFixedAssetDescription("")
             }}
             options={options?.costCenter || []}
           />
@@ -307,7 +322,7 @@ export default function ServiceTimeSheetBody({
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Status"}
+            labelName={"สถานะ"}
             value={status}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setStatus(value)}
@@ -324,7 +339,7 @@ export default function ServiceTimeSheetBody({
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Service Center"}
@@ -333,23 +348,23 @@ export default function ServiceTimeSheetBody({
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
+              //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
-            options={options?.serviceCenter || []}
+            options={optionServiceCenter || []}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        {/* <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Service Name"}
             value={serviceName}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setServiceName(value)}
           />
-        </div>
-        <div className="col-md-3 mb-2">
+        </div> */}
+        <div className="col-md-2 mb-2">
           <AutocompleteComboBox
             required={"required"}
-            labelName={"Jobtype"}
+            labelName={"ประเภทงาน"}
             column="lov_name"
             value={jobType}
             setvalue={(data) => {
@@ -361,7 +376,7 @@ export default function ServiceTimeSheetBody({
             options={options?.jobType || []}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        <div className="col-md-10 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Budget Code"}
@@ -374,22 +389,22 @@ export default function ServiceTimeSheetBody({
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Fixed Asset Code"}
-            column="assetCode"
+            column="assetCodeAndDescription"
             value={fixedAssetCode}
             disabled={disableOnly}
             setvalue={(data) => {
               // console.log(data,'data');              
               setFixedAssetCode(data);
-              setFixedAssetDescription(data?.assetDescription || "");
+              //setFixedAssetDescription(data?.assetDescription || "");
             }}
             options={optionFixedAssetCode || []}
           />
         </div>
-        <div className="col-md-9 mb-2">
+        {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}
             value={fixedAssetDescription}
@@ -397,12 +412,12 @@ export default function ServiceTimeSheetBody({
             multiline={false}
             onChange={(value) => setFixedAssetDescription(value)}
           />
-        </div>
+        </div> */}
       </div>
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <FullWidthTextareaField
-            labelName={"Description"}
+            labelName={"รายละเอียด"}
             value={description}
             disabled={disableOnly}
             multiline={true}
@@ -414,7 +429,7 @@ export default function ServiceTimeSheetBody({
           <div className="row justify-start">
             <div className="col-md-12 mb-2">
               <FullWidthTextareaField
-                labelName={"Reject Submit Reason"}
+                labelName={"เหตุผลปฎิเสธการส่งข้อมูล"}
                 value={rejectSubmitReason}
                 disabled={disableOnly}
                 multiline={true}
@@ -427,7 +442,7 @@ export default function ServiceTimeSheetBody({
           <div className="row justify-start">
             <div className="col-md-12 mb-2">
               <FullWidthTextareaField
-                labelName={"Reject Start Reason"}
+                labelName={"เหตุผลในการปฎิเสธเริ่มงาน"}
                 value={rejectStartReason}
                 disabled={disableOnly}
                 multiline={true}
@@ -456,6 +471,7 @@ export default function ServiceTimeSheetBody({
               <TimeSheetBody
                 onDataChange={handleDataChange}
                 options={options}
+                costCenter={costCenter}
                 revisionCurrent={revisionCurrent}
                 actions={actions}
 

@@ -27,12 +27,12 @@ export default function Profile({ isOpen }: Profile) {
   };
 
   const logout = () => {
-    console.log(currentUser);
+    // console.log(currentUser);
     dispatch(addCurrentUser(null));
     sessionStorage.removeItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY);
     handleClose();
   };
-  console.log(currentUser);
+  // console.log(currentUser);
   
   return (
     <div className={`absolute duration-300 ${isOpen ? `right-0 sm:right-72` : `right-0 sm:right-24`}`}>

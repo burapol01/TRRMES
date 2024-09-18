@@ -46,6 +46,7 @@ export default function ServiceRequestBody({
   disableOnly,
   actions
 }: ServiceRequestBodyProps) {
+  const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
@@ -164,7 +165,7 @@ export default function ServiceRequestBody({
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
         //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData?.assetDescription)
+        //setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
 
@@ -190,7 +191,7 @@ export default function ServiceRequestBody({
         .includes(jobType?.lov_code))
 
     );
-console.log(filteredData, 'filteredData');
+    //console.log(filteredData, 'filteredData');
     //ใส่ useState ใหม่ 
     setOptionBudgetCode(filteredData);
 
@@ -203,6 +204,15 @@ console.log(filteredData, 'filteredData');
     //ใส่ useState ใหม่ 
     setOptionFixedAssetCode(filterFixedAssetCode)
     //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
+
+    const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
+      (!costCenter?.siteCode || item.siteCode
+        .toString()
+        .includes(costCenter?.siteCode || costCenter))
+      );
+
+      setOptionServiceCenter(filterServiceCenter);
+
   }, [costCenter, jobType])
 
 
@@ -212,7 +222,7 @@ console.log(filteredData, 'filteredData');
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Request No."}
+            labelName={"เลขที่ใบคำขอ"}
             value={requestNo}
             onChange={(value) => setRequestNo(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -222,7 +232,7 @@ console.log(filteredData, 'filteredData');
         {actions !== "Create" && (
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Date"}
+              labelName={"วันที่สร้างใบคำขอ"}
               value={requestDate}
               onChange={(value) => setRequestDate(value)}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -235,7 +245,7 @@ console.log(filteredData, 'filteredData');
 
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Employee"}
+            labelName={"พนักงาน"}
             value={reqUser}
             onChange={(value) => setEmployee(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -250,9 +260,14 @@ console.log(filteredData, 'filteredData');
             disabled={disableOnly}
             setvalue={(data) => {
               setCostCenter(data);
+              setSite(data?.siteCode || "");
+
+              setServiceCenter(null)
+              setServiceName("")
               setJobType(null)
               setBudgetCode(null)
               setFixedAssetCode(null)
+              //setFixedAssetDescription("")
             }}
             options={options?.costCenter || []}
           />
@@ -274,7 +289,7 @@ console.log(filteredData, 'filteredData');
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Status"}
+            labelName={"สถานะ"}
             value={status}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setStatus(value)}
@@ -291,7 +306,7 @@ console.log(filteredData, 'filteredData');
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Service Center"}
@@ -300,23 +315,23 @@ console.log(filteredData, 'filteredData');
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
+              //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
-            options={options?.serviceCenter || []}
+            options={optionServiceCenter || []}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        {/* <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Service Name"}
             value={serviceName}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setServiceName(value)}
           />
-        </div>
-        <div className="col-md-3 mb-2">
+        </div> */}
+        <div className="col-md-2 mb-2">
           <AutocompleteComboBox
             required={"required"}
-            labelName={"Jobtype"}
+            labelName={"ประเภทงาน"}
             column="lov_name"
             value={jobType}
             setvalue={(data) => {
@@ -328,7 +343,7 @@ console.log(filteredData, 'filteredData');
             options={options?.jobType || []}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        <div className="col-md-10 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Budget Code"}
@@ -341,22 +356,22 @@ console.log(filteredData, 'filteredData');
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
             required={"required"}
             labelName={"Fixed Asset Code"}
-            column="assetCode"
+            column="assetCodeAndDescription"
             value={fixedAssetCode}
             disabled={disableOnly}
             setvalue={(data) => {
               // console.log(data,'data');
               setFixedAssetCode(data);
-              setFixedAssetDescription(data?.assetDescription || "");
+              //setFixedAssetDescription(data?.assetDescription || "");
             }}
             options={optionFixedAssetCode || []}
           />
         </div>
-        <div className="col-md-9 mb-2">
+        {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}
             value={fixedAssetDescription}
@@ -364,12 +379,12 @@ console.log(filteredData, 'filteredData');
             multiline={false}
             onChange={(value) => setFixedAssetDescription(value)}
           />
-        </div>
+        </div> */}
       </div>
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <FullWidthTextareaField
-            labelName={"Description"}
+            labelName={"รายละเอียด"}
             value={description}
             disabled={disableOnly}
             multiline={true}
@@ -382,7 +397,7 @@ console.log(filteredData, 'filteredData');
         <div className="row justify-start">
           <div className="col-md-12 mb-2">
             <FullWidthTextareaField
-              labelName={"Reject Submit Reason"}
+              labelName={"เหตุผลปฎิเสธการส่งข้อมูล"}
               value={rejectSubmitReason}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
               multiline={true}
@@ -395,7 +410,7 @@ console.log(filteredData, 'filteredData');
         <div className="row justify-start">
           <div className="col-md-12 mb-2">
             <FullWidthTextareaField
-              labelName={"Reject Start Reason"}
+              labelName={"เหตุผลปฎิเสธเริ่มงาน"}
               value={rejectStartReason}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
               multiline={true}
