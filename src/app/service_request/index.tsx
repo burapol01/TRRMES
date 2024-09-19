@@ -73,6 +73,7 @@ const defaultVal = {
 
 export default function ServiceRequest() {
   const [requestNo, setRequestNo] = useState("");
+  const menuFuncList = useSelector((state: any) => state?.menuFuncList);
   const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
   const [appReqUser, setAppReqUser] = useState<string>("");
@@ -112,7 +113,9 @@ export default function ServiceRequest() {
   //ตัวแปร ใช้ทุกที่
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const roleName = currentUser?.role_name;
-
+  const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
+  //console.log(showButton,'showButton');
+  
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -1278,7 +1281,7 @@ export default function ServiceRequest() {
         <div>
           <EnhancedTable
             rows={dataList}
-            buttonLabal_1="เพิ่มข้อมูล"
+            buttonLabal_1={showButton ? "เพิ่มข้อมูล" : ""} // Show button label only if "Add" is found
             buttonColor_1="info"
             headCells={Request_headCells}
             tableName={"บันทึกขอใช้บริการ"}

@@ -358,7 +358,7 @@ export default function ServiceRequestBody({
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <AutocompleteComboBox
-            required={"required"}
+            //required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCodeAndDescription"
             value={fixedAssetCode}

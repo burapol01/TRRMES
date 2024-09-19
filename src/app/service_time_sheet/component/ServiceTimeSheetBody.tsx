@@ -471,7 +471,7 @@ export default function ServiceTimeSheetBody({
               <TimeSheetBody
                 onDataChange={handleDataChange}
                 options={options}
-                costCenter={costCenter}
+                serviceCenter={serviceCenter}
                 revisionCurrent={revisionCurrent}
                 actions={actions}
 

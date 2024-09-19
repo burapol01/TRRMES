@@ -20,7 +20,7 @@ interface TimeSheetBodyProps {
         technician: any[];
         workHour: any[];
     };
-    costCenter: any;
+    serviceCenter: any;
     revisionCurrent: any;
     actions?: string;
 }
@@ -30,7 +30,7 @@ export default function TimeSheetBody({
     options,
     revisionCurrent,
     actions,
-    costCenter
+    serviceCenter
 }: TimeSheetBodyProps) {
     const [workStartDate, setWorkStartDate] = useState(null);
     const [workEndDate, setWorkEndDate] = useState(null);
@@ -201,14 +201,14 @@ React.useEffect(() => {
    
     
         const filterTechnician = options?.technician.filter((item: any) =>
-      (!costCenter?.siteId || item.siteId
+      (!serviceCenter?.serviceCenterId || item.costCenterId
         .toString()
-        .includes(costCenter?.siteId || costCenter))
+        .includes(serviceCenter?.serviceCenterId || serviceCenter))
       );
       //console.log(filterTechnician,'sssssssssssssssssssssssss');
       setOptionTechnician(filterTechnician);
 
-  }, [costCenter]);
+  }, [serviceCenter]);
 
     // Data preparation for "Reade" mode
     const readOnlyDataRow = useMemo(() => {
