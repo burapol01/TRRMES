@@ -796,8 +796,8 @@ export default function ServiceRequest() {
         Array.isArray(result) && result.forEach((el) => {
           el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
           el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
-          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"         
-          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"      
+          el.cost_center_label = "[" + el.cost_center_code + "]" + " | " + el.cost_center_name        
+          el.service_center_label = "[" + el.service_center_code + "]" + " | " + el.service_center_name    
 
           setDefaultValues(prevValues => ({
             ...prevValues,
@@ -889,7 +889,7 @@ export default function ServiceRequest() {
   //Start Data ไปลง Database
   const serviceTimeSheetStart = async () => {
     console.log('Call : serviceTimeSheetStart', moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Start Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
       if (draftData) {
         console.log("Start Data:", draftData);
 
@@ -992,7 +992,7 @@ export default function ServiceRequest() {
   const serviceTimeSheetAdd = async () => {
     console.log('Call : serviceTimeSheetAdd', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
-    confirmModal.createModal("Time Sheet ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
       if (draftData) {
         const serviceTimeSheetModels = draftData.timeSheetData.map((item: any) => ({
           id: item.subTimeSheetId,
@@ -1047,7 +1047,7 @@ export default function ServiceRequest() {
   //Add Submit ไปลง Database
   const serviceTimeSheetJobDone = async () => {
     console.log('Call : serviceTimeSheetJobDone', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm JobDone Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("JobDone Data:", draftData);
 

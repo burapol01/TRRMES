@@ -115,7 +115,7 @@ export default function ServiceRequest() {
   const roleName = currentUser?.role_name;
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
   //console.log(showButton,'showButton');
-  
+
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -166,7 +166,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-      
+
     };
 
     try {
@@ -230,7 +230,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-     
+
     };
 
     try {
@@ -670,8 +670,8 @@ export default function ServiceRequest() {
 
           el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
           el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
-          el.cost_center_label = el.cost_center_name + " [" + el.cost_center_code + "]"
-          el.service_center_label = el.service_center_name + " [" + el.service_center_code + "]"
+          el.cost_center_label = "[" + el.cost_center_code + "]" + " | " + el.cost_center_name
+          el.service_center_label = "[" + el.service_center_code + "]" + " | " + el.service_center_name
 
           el.ACTION = null
           el.ACTION = (
@@ -763,7 +763,7 @@ export default function ServiceRequest() {
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
     console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm Save Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
 
@@ -779,7 +779,7 @@ export default function ServiceRequest() {
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
-            fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
+            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode.budgetId || "",
             job_type: draftData.jobType.lov_code || "",
           },
@@ -804,9 +804,9 @@ export default function ServiceRequest() {
             // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
             Massengmodal.createModal(
               <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Save Draft</p>
+                <p className="text-xl font-semibold mb-2 text-green-600">บันทึก</p>
                 <p className="text-lg text-gray-800">
-                  <span className="font-semibold text-gray-900">Request No:</span>
+                  <span className="font-semibold text-gray-900">เลขที่ใบคำขอ :</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p>
               </div>,
@@ -829,7 +829,7 @@ export default function ServiceRequest() {
   const serviceRequestDraftEdit = async () => {
     console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));
 
-    confirmModal.createModal("Confirm Save Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
 
@@ -847,7 +847,7 @@ export default function ServiceRequest() {
             cost_center_id: draftData.costCenter.costCenterId || "",
             service_center_id: draftData.serviceCenter.serviceCenterId || "",
             description: draftData.description || "",
-            fixed_asset_id: draftData.fixedAssetCode.assetCodeId || "",
+            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode.budgetId || "",
             job_type: draftData.jobType.lov_code || "",
           },
@@ -897,7 +897,7 @@ export default function ServiceRequest() {
   //Add Delete ไปลง Database
   const serviceRequestDraftDelete = async () => {
     console.log('Call : serviceRequestDraftDelete', draftData.requestId, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm Submit Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
 
@@ -947,7 +947,7 @@ export default function ServiceRequest() {
   //Add Submit ไปลง Database
   const serviceRequestDraftSubmit = async () => {
     console.log('Call : serviceRequestDraftSubmit', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm Submit Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Submit Data:", draftData);
 
@@ -1104,7 +1104,7 @@ export default function ServiceRequest() {
   //Add Close ไปลง Database
   const serviceRequestClose = async () => {
     console.log('Call : serviceRequestClose', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("Confirm Close Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Close Data:", draftData);
 
@@ -1453,7 +1453,7 @@ export default function ServiceRequest() {
         actions="RejectReason"
         element={
           <FullWidthTextareaField
-          required="*"
+            required="*"
             labelName={"โปรดระบุเหตุผลในการปฏิเสธงาน"}
             value={rejectJobReason}
             multiline={true}

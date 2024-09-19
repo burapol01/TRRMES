@@ -20,7 +20,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
   const { value, labelName, required, setvalue, options = [], column, disabled, readonly } = props;
 
   const handleOnChange = (e: any, newValue: any) => {
-    console.log(newValue);
+    //console.log(newValue);
     if (newValue === null) {
       // ถ้าค่าที่เลือกเป็น null (เมื่อกดปุ่มเคลียร์)
       setvalue && setvalue(null);
