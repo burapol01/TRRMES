@@ -59,7 +59,7 @@ export default function Login() {
 
   const Login = async (datasend: any) => {
     try {
-      setTimeout(async () => {
+       setTimeout(async () => {
         const reponse = await login_auth_emp_get(datasend);
         if (reponse && reponse.status == "Success") {
           dispatch(addCurrentUser(reponse?.data?.auth_role_profile[0]));
@@ -77,7 +77,7 @@ export default function Login() {
           dispatch(EndLoadScreen());
           await setErrorMessage(reponse?.error_message);
         }
-      }, 4000);
+       }, 2000);
     } catch (e) {
       dispatch(EndLoadScreen());
       console.log(e);

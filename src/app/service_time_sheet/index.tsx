@@ -16,6 +16,8 @@ import ActionManageCell from "../../components/MUI/ActionManageCell";
 import BasicChips from "../../components/MUI/BasicChips";
 import { dateFormatTimeEN, DateToDB } from "../../../libs/datacontrol";
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
+import { useListServiceTimeSheet } from "./core/service_time_sheet_provider";
+import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 
 interface OptionsState {
   costCenter: any[];
@@ -76,7 +78,9 @@ const defaultVal = {
   rejectStartReason: "",
 }
 
-export default function ServiceRequest() {
+export default function ServiceTimeSheet() {
+
+  const { isValidate, setIsValidate } = useListServiceTimeSheet()
   const [requestNo, setRequestNo] = useState("");
   const [status, setStatus] = useState("");
   const currentUser = useSelector((state: any) => state?.user?.user);
@@ -114,8 +118,9 @@ export default function ServiceRequest() {
   const [openReject, setOpenReject] = useState(false);
   const [rejectReason, setRejectReason] = useState<string>("");
 
- //ตัวแปร ใช้ทุกที่
- const employeeUsername = currentUser?.employee_username.toLowerCase()
+  //ตัวแปร ใช้ทุกที่
+  const employeeUsername = currentUser?.employee_username.toLowerCase()
+  const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -178,7 +183,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-     
+
     };
 
     try {
@@ -242,7 +247,7 @@ export default function ServiceRequest() {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-     
+
     };
 
     try {
@@ -279,7 +284,7 @@ export default function ServiceRequest() {
     console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-    
+
     };
 
     try {
@@ -295,7 +300,7 @@ export default function ServiceRequest() {
           costCentersCodeAndName: '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
           siteCode: costCenter.site_code,
           siteId: costCenter.site_id
-          
+
         }));
 
         setOptions((prevOptions) => ({
@@ -396,7 +401,7 @@ export default function ServiceRequest() {
           costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
-          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description + ' (' + budget.job_type + ')' 
+          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description
         }));
 
         setOptions((prevOptions) => ({
@@ -464,7 +469,7 @@ export default function ServiceRequest() {
         console.log('Fixed_Asset_Get', response);
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
-          costCenterId: asset.cost_center_id,          
+          costCenterId: asset.cost_center_id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description,
           assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
@@ -530,7 +535,7 @@ export default function ServiceRequest() {
 
     const dataset = {
       //"user_ad": currentUser.employee_username,
-     
+
     };
 
     try {
@@ -562,7 +567,7 @@ export default function ServiceRequest() {
       setError("An error occurred while fetching technician.");
     }
   };
-  
+
   // const fetchTechnician = async () => {
   //   console.log('Call : fetchTechnician', defaultValues.siteId, "costCenterId", costCenterId, moment().format('HH:mm:ss:SSS'));
 
@@ -726,7 +731,8 @@ export default function ServiceRequest() {
     readData(null);
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
     dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
-    setOpenReject(false); //ปิด Modal Reject Reason       
+    setOpenReject(false); //ปิด Modal Reject Reason     
+    setIsValidate(null);  //เคลี่ยร์ Validate
 
   };
 
@@ -753,7 +759,7 @@ export default function ServiceRequest() {
           const userData = response.data[0];
           if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
             setSiteId(userData.site_id);
-            setCostCenterId(userData.cost_center_id);           
+            setCostCenterId(userData.cost_center_id);
 
           } else {
             setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
@@ -777,7 +783,7 @@ export default function ServiceRequest() {
     if (!currentUser) return;
 
     const dataset = {
-      "user_ad" : employeeUsername,
+      "user_ad": employeeUsername,
       "service_center_id": selectedServiceCenter?.serviceCenterId,
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
@@ -796,8 +802,8 @@ export default function ServiceRequest() {
         Array.isArray(result) && result.forEach((el) => {
           el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
           el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
-          el.cost_center_label = "[" + el.cost_center_code + "]" + " | " + el.cost_center_name        
-          el.service_center_label = "[" + el.service_center_code + "]" + " | " + el.service_center_name    
+          el.cost_center_label = "[" + el.cost_center_code + "]" + " | " + el.cost_center_name
+          el.service_center_label = "[" + el.service_center_code + "]" + " | " + el.service_center_name
 
           setDefaultValues(prevValues => ({
             ...prevValues,
@@ -940,51 +946,68 @@ export default function ServiceRequest() {
   const serviceRequestReject = async () => {
     console.log('Call : serviceRequestReject', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
+
+    const dataForValidate = {
+      rejectReason: rejectReason || null,
+    }
+
+    console.log(dataForValidate,'dataForValidate');
+    
+    const isValidate = checkValidate(dataForValidate, []);
+    const isValidateAll = isCheckValidateAll(isValidate);
+  
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      //console.log(isValidateAll,'sasasasa');
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
+
     //confirmModal.createModal("Reject Data ?", "info", async () => {
-      if (draftData && rejectReason) {
-        console.log(" Reject Data:", draftData);
+    if (draftData && rejectReason) {
+      console.log(" Reject Data:", draftData);
 
-        // สร้างข้อมูลที่จะส่ง
-        const payload = {
-          rejectActionModel: {
-            req_id: draftData.requestId,
-            req_status: "Reject Approved",
-            reject_reason: rejectReason
-          },
-          currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
-        };
+      // สร้างข้อมูลที่จะส่ง
+      const payload = {
+        rejectActionModel: {
+          req_id: draftData.requestId,
+          req_status: "Reject Approved",
+          reject_reason: rejectReason
+        },
+        currentAccessModel: {
+          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+        }
+      };
 
-        try {
+      try {
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
+        // ใช้ _POST เพื่อส่งข้อมูล
+        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
-          if (response && response.status === "success") {
-            console.log('Reject successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+        if (response && response.status === "success") {
+          console.log('Reject successfully:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+          Massengmodal.createModal(
+            <div className="text-center p-4">
+              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+              {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
+            </div>,
+            'success', () => {
 
-                handleClose();
-              });
-          } else {
-            console.error('Failed to Reject:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
-          }
-        } catch (error) {
-          console.error('Error Submit Reject:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+              handleClose();
+            });
+        } else {
+          console.error('Failed to Reject:', response);
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
         }
+      } catch (error) {
+        console.error('Error Submit Reject:', error);
+        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
       }
+    }
     //});
   };
 
@@ -992,108 +1015,148 @@ export default function ServiceRequest() {
   const serviceTimeSheetAdd = async () => {
     console.log('Call : serviceTimeSheetAdd', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
-    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
-      if (draftData) {
-        const serviceTimeSheetModels = draftData.timeSheetData.map((item: any) => ({
-          id: item.subTimeSheetId,
-          req_id: draftData.requestId,
-          revision_id: draftData.revisionCurrent.revisionId,
-          time_sheet_no: String(item.no),
-          work_start_date: DateToDB(item.work_start_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
-          work_end_date: DateToDB(item.work_end_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
-          work_hour: String(item.work_hour),
-          technician: item.technician.tecEmpName || item.technician,
-          description: item.description,
-          delete_flag: item.delete_flag
-        }));
 
-        const payload = {
-          serviceTimeSheetModels: serviceTimeSheetModels,
-          currentAccessModel: {
-            user_id: currentUser.employee_username || ""
-          }
-        };
+    if (draftData.timeSheetData.length === 0) {
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-green-600">กรุณาระบุรายการชั่วโมงทำงาน</p>
+          {/* <p className="text-lg text-gray-800">
+            <span className="font-semibold text-gray-900">Request No:</span>
+            <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+          </p> */}
+        </div>,
+        'error',
+        async () => {
 
-        console.log("Payload:", payload);
-        try {
-          const response = await _POST(payload, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Add");
+        }
+      );
 
-          if (response && response.status === "success") {
-            console.log('successfully:', response);
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+    } else {
+
+      confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
+        if (draftData) {
+          const serviceTimeSheetModels = draftData.timeSheetData.map((item: any) => ({
+            id: item.subTimeSheetId,
+            req_id: draftData.requestId,
+            revision_id: draftData.revisionCurrent.revisionId,
+            time_sheet_no: String(item.no),
+            work_start_date: DateToDB(item.work_start_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
+            work_end_date: DateToDB(item.work_end_date) || null, // ใช้ moment เพื่อแปลงวันที่, 
+            work_hour: String(item.work_hour),
+            technician: item.technician.tecEmpName || item.technician,
+            description: item.description,
+            delete_flag: item.delete_flag
+          }));
+
+          const payload = {
+            serviceTimeSheetModels: serviceTimeSheetModels,
+            currentAccessModel: {
+              user_id: currentUser.employee_username || ""
+            }
+          };
+
+          console.log("Payload:", payload);
+          try {
+            const response = await _POST(payload, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Add");
+
+            if (response && response.status === "success") {
+              console.log('successfully:', response);
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success',
-              async () => {
-                await changeStatus(draftData, currentUser.employee_username);
-                handleClose();
-              }
-            );
-          } else {
-            console.error('Failed to Time Sheet:', response);
+                </div>,
+                'success',
+                async () => {
+                  await changeStatus(draftData, currentUser.employee_username);
+                  handleClose();
+                }
+              );
+            } else {
+              console.error('Failed to Time Sheet:', response);
+            }
+          } catch (error) {
+            console.error('Error Submit Time Sheet:', error);
           }
-        } catch (error) {
-          console.error('Error Submit Time Sheet:', error);
         }
-      }
-    });
+      });
+
+    }
+
   };
 
   //Add Submit ไปลง Database
   const serviceTimeSheetJobDone = async () => {
     console.log('Call : serviceTimeSheetJobDone', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
-      if (draftData) {
-        console.log("JobDone Data:", draftData);
+    console.log(" Time Sheet Data:", draftData.timeSheetData);
 
-        // สร้างข้อมูลที่จะส่ง
-        const payload = {
-          changeStatusModel: {
-            id: draftData.requestId,
-            new_status: "Job Done",
-            app_user: ""
-          },
-          currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
-        };
+    if (draftData.timeSheetData.length === 0) {
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-green-600">กรุณาระบุรายการชั่วโมงทำงาน</p>
+          {/* <p className="text-lg text-gray-800">
+            <span className="font-semibold text-gray-900">Request No:</span>
+            <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+          </p> */}
+        </div>,
+        'error',
+        async () => {
 
-        try {
-          console.log('JobDone model', payload);
+        }
+      );
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+    } else {
+      confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
+        if (draftData) {
+          console.log("JobDone Data:", draftData);
 
-          if (response && response.status === "success") {
-            console.log('JobDone successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+          // สร้างข้อมูลที่จะส่ง
+          const payload = {
+            changeStatusModel: {
+              id: draftData.requestId,
+              new_status: "Job Done",
+              app_user: ""
+            },
+            currentAccessModel: {
+              user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+            }
+          };
+
+          try {
+            console.log('JobDone model', payload);
+
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+
+            if (response && response.status === "success") {
+              console.log('JobDone successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
+                </div>,
+                'success', () => {
 
-                handleClose();
-              });
-          } else {
-            console.error('Failed to JobDone:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to JobDone:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error JobDone:', error);
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error JobDone:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      }
-    });
+      });
+    }
   };
 
 
@@ -1308,6 +1371,7 @@ export default function ServiceRequest() {
             value={rejectReason}
             multiline={true}
             onChange={(value) => setRejectReason(value)}
+            Validate={isValidate}
           />
 
         }

@@ -11,8 +11,10 @@ import moment from 'moment';
 import { _POST } from '../../../service/mas';
 import { v4 as uuidv4 } from 'uuid';
 import { dateFormatTimeEN, stringWithCommas } from '../../../../libs/datacontrol';
-import DetePickerBasic from '../../../components/MUI/DetePickerBasic';
 import DatePickerBasic from '../../../components/MUI/DetePickerBasic';
+import { checkValidate, isCheckValidateAll } from '../../../../libs/validations';
+import { useListServiceTimeSheet } from '../core/service_time_sheet_provider';
+
 
 interface TimeSheetBodyProps {
     onDataChange?: (data: any[]) => void;
@@ -32,6 +34,8 @@ export default function TimeSheetBody({
     actions,
     serviceCenter
 }: TimeSheetBodyProps) {
+
+    const { isValidate, setIsValidate } = useListServiceTimeSheet()
     const [workStartDate, setWorkStartDate] = useState(null);
     const [workEndDate, setWorkEndDate] = useState(null);
     const [technician, setTechnician] = useState<any>(null);
@@ -42,6 +46,12 @@ export default function TimeSheetBody({
     const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด
     const [rejectJobReason, setRejectJobReason] = useState("");
     const [optionTechnician, setOptionTechnician] = useState<any>(options?.technician || []);
+
+    //Validate
+    const [lovData, setLovData] = useState<any[]>([]); // Store response data
+    const [workHourMax, setWorkHourMax] = useState<any>(""); // Your workHour state
+
+    const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
 
     // Effect for fetching data in "Reade" mode
@@ -101,7 +111,31 @@ export default function TimeSheetBody({
 
     // Handler for adding new data in "TimeSheet" mode
     const handleSetDataList = () => {
-        if (actions === "TimeSheet" && technician && workHour && description) {
+
+        const data = {
+            work_start_date: dateFormatTimeEN(workStartDate, "DD/MM/YYYY"),
+            work_end_date: dateFormatTimeEN(workEndDate, "DD/MM/YYYY"),
+            technician: technician?.tecEmpName,
+            work_hour: workHour,
+            description
+        }
+        console.log(data, 'data');
+
+        const isValidate = checkValidate(data, []);
+        console.log(isValidate, 'isValidate');
+        const isValidateAll = isCheckValidateAll(isValidate);
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+            setIsValidate(isValidate);
+            return;
+        }
+
+        if (isCheckHour && isValidationEnabled) {
+            setIsValidate(null);
+            return;
+        }
+
+        setIsValidate(null);
+        if (actions === "TimeSheet" || actions === "JobDone" && technician && workHour && description) {
             const newData = {
                 subTimeSheetId: uuidv4(), // กำหนด uuid สำหรับแต่ละแถวใหม่
                 no: dataList.length + 1, // เพิ่มหมายเลขลำดับที่
@@ -112,10 +146,12 @@ export default function TimeSheetBody({
                 description,
                 newRowDataFlag: true, // ระบุว่าเป็นข้อมูลใหม่                
             };
-
             console.log(newData, "newDatanewDatanewDatanewData");
 
             setDataList((prevList) => [...prevList, newData]);
+            setIsValidate(null);
+            setWorkStartDate(null);
+            setWorkEndDate(null);
             setTechnician(null);
             setWorkHour("");
             setDescription('');
@@ -196,19 +232,19 @@ export default function TimeSheetBody({
         });
     }, [dataList]);
 
-//วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
-React.useEffect(() => {
-   
-    
-        const filterTechnician = options?.technician.filter((item: any) =>
-      (!serviceCenter?.serviceCenterId || item.costCenterId
-        .toString()
-        .includes(serviceCenter?.serviceCenterId || serviceCenter))
-      );
-      //console.log(filterTechnician,'sssssssssssssssssssssssss');
-      setOptionTechnician(filterTechnician);
+    //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
+    React.useEffect(() => {
 
-  }, [serviceCenter]);
+
+        const filterTechnician = options?.technician.filter((item: any) =>
+        (!serviceCenter?.serviceCenterId || item.costCenterId
+            .toString()
+            .includes(serviceCenter?.serviceCenterId || serviceCenter))
+        );
+        //console.log(filterTechnician,'sssssssssssssssssssssssss');
+        setOptionTechnician(filterTechnician);
+
+    }, [serviceCenter]);
 
     // Data preparation for "Reade" mode
     const readOnlyDataRow = useMemo(() => {
@@ -244,20 +280,53 @@ React.useEffect(() => {
 
     // useEffect to send data change to parent component
     useEffect(() => {
-        if (actions === "TimeSheet") {
+        if (actions === "TimeSheet" || actions === "JobDone") {
             // Call debounced function
             debouncedOnDataChange(dataList);
         }
     }, [dataList, debouncedOnDataChange, actions]);
 
-    // const isCheckHour = useMemo(() => {
-    //     if(workHour != ""){
-    //         console.log(workHour);
-    //         if(workHour > 100){
-    //             return true
-    //         }
-    //     }
-    // }, [workHour]);
+    // Fetch max work hour data with useEffect
+    useEffect(() => {
+        const fetchMaxWorkHour = async () => {
+            const dataset = {
+                lov_type: 'work_hour_maximum',
+                lov_code: 'Maximum',
+            };
+
+            try {
+                const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+                if (response && response.status === "success") {
+                    const fetchedData = response.data.map((item: any) => ({
+                        lov_code: item.lov_code,
+                        hourMax: item.lov1,  // Assuming 'lov1' holds the max hour
+                    }));
+
+                    setLovData(fetchedData);
+
+                    if (fetchedData.length > 0) {
+                        setWorkHourMax(parseInt(fetchedData[0].hourMax, 10)); // Set first entry as max hour
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching max work hour:", error);
+            }
+        };
+
+        fetchMaxWorkHour();
+    }, []); // Run once on mount
+
+    // Memoize the check logic
+    const isCheckHour = useMemo(() => {
+        if (workHour !== "" && workHourMax !== null) {
+            setIsValidate(null);
+            return parseInt(workHour, 10) > workHourMax;
+
+        }
+        return false;
+    }, [workHour, workHourMax]);
+
 
     return (
         <div className="border rounded-xl px-2 py-2">
@@ -266,42 +335,52 @@ React.useEffect(() => {
                     <div className="flex items-center space-x-2">
                         <div className="w-full md:w-1/2">
                             <DatePickerBasic
+                                 required={"required"}
                                 labelname="วันเริ่มต้น"
                                 valueStart={workStartDate}
                                 onchangeStart={setWorkStartDate}
                                 disableFuture
                                 disabled={actions === "Reade" || actions === "JobDone"}
+                                validate={isValidate?.work_start_date}
+
                             />
                         </div>
                         <label className="pt-5 mt-5 ">ถึง</label>
                         <div className="w-full md:w-1/2">
                             <DatePickerBasic
+                                 required={"required"}
                                 labelname="วันสิ้นสุด"
                                 valueStart={workEndDate}
                                 onchangeStart={setWorkEndDate}
                                 disableFuture
                                 disabled={actions === "Reade" || actions === "JobDone"}
+                                validate={isValidate?.work_end_date}
+                                minDate={workStartDate}
                             />
                         </div>
                     </div>
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
+                         required={"required"}
                         labelName="ช่าง"
                         column="tecEmpName"
                         setvalue={setTechnician}
                         options={optionTechnician || []}
                         value={technician}
                         disabled={actions === "Reade" || actions === "JobDone"}
+                        Validate={isValidate?.technician}
                     />
                 </div>
                 <div className="col-md-3 mb-2">
                     <FullWidthTextField
+                         required={"required"}
                         labelName={"ชั่วโมงทำงาน"}
                         value={workHour ?? ""}
                         onChange={(value: any) => setWorkHour(stringWithCommas(value))}
                         disabled={actions === "Reade" || actions === "JobDone"}
-                    //Validate={isCheckHour}
+                        Validate={isValidate?.work_hour}
+                        isCheckHour={isCheckHour}
                     />
                     {/* ปิดไว้ก่อนเผื่อกลับมาใช้ */}
                     {/* <AutocompleteComboBox
@@ -317,10 +396,12 @@ React.useEffect(() => {
             <div className="row justify-start">
                 <div className="col-md-9 mb-2">
                     <FullWidthTextareaField
+                         required={"required"}
                         labelName="รายละเอียด"
                         onChange={(value) => setDescription(value)}
                         value={description}
                         disabled={actions === "Reade" || actions === "JobDone"}
+                        Validate={isValidate?.description}
                     />
                 </div>
                 <div className="col-md-1 mb-2 w-5 pt-10">

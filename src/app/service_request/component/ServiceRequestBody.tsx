@@ -4,6 +4,7 @@ import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
 import debounce from 'lodash/debounce';
 import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
+import { useListServiceRequest } from "../core/service_request_provider";
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -46,6 +47,7 @@ export default function ServiceRequestBody({
   disableOnly,
   actions
 }: ServiceRequestBodyProps) {
+  const {isValidate, setIsValidate, isDuplicate, setIsDuplicate}= useListServiceRequest()
   const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
@@ -72,6 +74,7 @@ export default function ServiceRequestBody({
 
   const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
   const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
+
 
 
   // Function to handle data change with debounce
@@ -206,16 +209,17 @@ export default function ServiceRequestBody({
     //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
 
     const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
-      (!costCenter?.siteCode || item.siteCode
-        .toString()
-        .includes(costCenter?.siteCode || costCenter))
-      );
+    (!costCenter?.siteCode || item.siteCode
+      .toString()
+      .includes(costCenter?.siteCode || costCenter))
+    );
 
-      setOptionServiceCenter(filterServiceCenter);
+    setOptionServiceCenter(filterServiceCenter);
 
   }, [costCenter, jobType])
 
 
+  
 
   return (
     <div>
@@ -269,7 +273,10 @@ export default function ServiceRequestBody({
               setFixedAssetCode(null)
               //setFixedAssetDescription("")
             }}
-            options={options?.costCenter || []}
+            options={options?.costCenter || []}            
+            Validate={isValidate?.costCenter}
+           
+        
           />
           {/* <FullWidthTextField
             labelName={"Cost center"}
@@ -315,9 +322,18 @@ export default function ServiceRequestBody({
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
+              // console.log(costCenter,'costCenter💥💥💥💥',data);
+              if(costCenter?.costCenterCode == data?.serviceCenterCode){
+                setIsDuplicate(true);
+              }else{
+                setIsDuplicate(false);
+              }
+              
               //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
             options={optionServiceCenter || []}
+            Validate={isValidate?.serviceCenter}
+            ValidateDuplicate={isDuplicate}
           />
         </div>
         {/* <div className="col-md-3 mb-2">
@@ -341,6 +357,7 @@ export default function ServiceRequestBody({
             }}
             disabled={disableOnly}
             options={options?.jobType || []}
+            Validate={isValidate?.jobType}
           />
         </div>
         <div className="col-md-10 mb-2">
@@ -352,6 +369,7 @@ export default function ServiceRequestBody({
             setvalue={setBudgetCode}
             disabled={disableOnly}
             options={optionBudgetCode}
+            Validate={isValidate?.budgetCode}
           />
         </div>
       </div>

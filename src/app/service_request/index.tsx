@@ -17,6 +17,8 @@ import MenuListComposition from "../../components/MUI/MenuListComposition";
 import BasicChips from "../../components/MUI/BasicChips";
 import { dateFormatTimeEN, dateFormatTimeTH, DateToDB } from "../../../libs/datacontrol"
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
+import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
+import { useListServiceRequest } from "./core/service_request_provider";
 
 interface OptionsState {
   costCenter: any[];
@@ -72,6 +74,7 @@ const defaultVal = {
 }
 
 export default function ServiceRequest() {
+  const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
   const [requestNo, setRequestNo] = useState("");
   const menuFuncList = useSelector((state: any) => state?.menuFuncList);
   const [status, setStatus] = useState("");
@@ -114,6 +117,13 @@ export default function ServiceRequest() {
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const roleName = currentUser?.role_name;
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
+  const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
+
+  //Revision
+  const [revisionMaximum, setRevisionMaximum] = useState<any>(null);
+
+  //สำหรับ Validate 
+
   //console.log(showButton,'showButton');
 
 
@@ -128,6 +138,7 @@ export default function ServiceRequest() {
         searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อคอมโพเนนต์ถูกเรนเดอร์ครั้งแรก
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
         searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
+        fetchRevisionMaximum(),
       ]);
     };
     fetchData();
@@ -381,7 +392,7 @@ export default function ServiceRequest() {
           costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
-          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description + ' (' + budget.job_type + ')'
+          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description
         }));
 
         setOptions((prevOptions) => ({
@@ -398,6 +409,42 @@ export default function ServiceRequest() {
     } catch (error) {
       console.error("Error fetching budget codes:", error);
       setError("An error occurred while fetching budget codes.");
+    }
+  };
+
+  
+  const fetchRevisionMaximum = async () => {
+    console.log('Call : fetchRevisionMaximum', moment().format('HH:mm:ss:SSS'));
+    try {
+
+      const dataset = {
+        "lov_type": "revision_type",
+        "lov_code": "Maximum"
+      };
+
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+      if (response && response.status === "success") {
+        console.log(response, 'Success fetch Revision Maximum');
+        const revisionMaximum = response.data.map((dataRevision: any) => ({
+          revisionMaximum: dataRevision.lov1
+        }));
+
+        if(revisionMaximum.length > 0) {
+          //console.log(revisionMaximum[0].revisionMaximum, 'sdsdsd');
+          setRevisionMaximum(revisionMaximum[0].revisionMaximum);
+
+        }
+
+       
+
+
+      } else {
+        setError("Failed to fetch Revision Maximum.");
+      }
+    } catch (error) {
+      console.error("Error fetching Revision Maximum:", error);
+      setError("An error occurred while fetching Revision Maximum.");
     }
   };
 
@@ -586,6 +633,8 @@ export default function ServiceRequest() {
     dataTableServiceRequest_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
     setOpenReject(false); //ปิด Modal Reject Reason
     setOpenRejectJob(false); //ปิด Modal Reject Job Reason 
+    setIsValidate(null);
+    setIsDuplicate(false);
 
   };
 
@@ -763,8 +812,29 @@ export default function ServiceRequest() {
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
     console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
+    const dataForValidate = {
+      costCenter: draftData.costCenter,
+      serviceCenter: draftData.serviceCenter,
+      jobType: draftData.jobType,
+      budgetCode: draftData.budgetCode,
+    }
+    const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
+    const isValidateAll = isCheckValidateAll(isValidate);
+    
+    if(isDuplicate && isValidationEnabled){
+      return;
+    }
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      //console.log(isValidateAll,);
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
+    // console.log('Call : isValidate', isValidate, moment().format('HH:mm:ss:SSS'));
+    // console.log('Call : isValidateAll', isValidateAll, moment().format('HH:mm:ss:SSS'));
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
+
         console.log("Saving draft data:", draftData);
 
         // สร้างข้อมูลที่จะส่ง
@@ -773,15 +843,15 @@ export default function ServiceRequest() {
             req_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
             app_user: null,
-            cost_center_id: draftData.costCenter.costCenterId || "",
+            cost_center_id: draftData.costCenter?.costCenterId || "",
             service_center_id: draftData.serviceCenter?.serviceCenterId || "",
             description: draftData.description || "",
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
-            budget_id: draftData.budgetCode.budgetId || "",
-            job_type: draftData.jobType.lov_code || "",
+            budget_id: draftData.budgetCode?.budgetId || "",
+            job_type: draftData.jobType?.lov_code || "",
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -823,12 +893,26 @@ export default function ServiceRequest() {
         }
       }
     });
+
   };
 
   //Add Edit ไปลง Database
   const serviceRequestDraftEdit = async () => {
     console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));
-
+    const dataForValidate = {
+      costCenter: draftData.costCenter,
+      serviceCenter: draftData.serviceCenter,
+      jobType: draftData.jobType,
+      budgetCode: draftData.budgetCode,
+    }
+    const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
+    const isValidateAll = isCheckValidateAll(isValidate);
+    if (Object.keys(isValidateAll).length > 0) {
+      //console.log(isValidateAll,);
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
@@ -999,7 +1083,7 @@ export default function ServiceRequest() {
   //AddApprove ไปลง Database
   const serviceRequestApproved = async () => {
     console.log('Call : serviceRequestApproved', draftData, moment().format('HH:mm:ss:SSS'));
-    confirmModal.createModal("ConfirmApprove Data ?", "info", async () => {
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Approved Data:", draftData);
 
@@ -1050,6 +1134,23 @@ export default function ServiceRequest() {
   const serviceRequestSubmitReject = async () => {
     console.log('Call : serviceRequestSubmitReject', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
+
+    const dataForValidate = {
+      rejectReason: rejectReason || null,
+    }
+
+    console.log(dataForValidate,'dataForValidate');
+    
+    const isValidate = checkValidate(dataForValidate, []);
+    const isValidateAll = isCheckValidateAll(isValidate);
+  
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      //console.log(isValidateAll,'sasasasa');
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
+
     //confirmModal.createModal("Submit Reject Data ?", "info", async () => {
 
     if (draftData && rejectReason) {
@@ -1157,7 +1258,42 @@ export default function ServiceRequest() {
   const serviceRequestRejectJob = async () => {
     console.log('Call : serviceRequestRejectJob', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectJobReason', rejectJobReason, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : revisionMaximum', revisionMaximum, moment().format('HH:mm:ss:SSS'));
+
+    const dataForValidate = {
+      rejectJobReason: rejectJobReason || null,
+    }
+
+    console.log(dataForValidate,'dataForValidate');
+    
+    const isValidate = checkValidate(dataForValidate, []);
+    const isValidateAll = isCheckValidateAll(isValidate);
+  
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      //console.log(isValidateAll,'sasasasa');
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
+
+    if(draftData.countRevision >= revisionMaximum && isValidationEnabled){
+
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-green-600">ปฏิเสธงานได้มากสุดแค่ 2 ครั้ง</p>
+          {/* <p className="text-lg text-gray-800">
+              <span className="font-semibold text-gray-900">Request No:</span>
+              <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+            </p> */}
+        </div>,
+        'error', () => {         
+
+        });
+
+        return;
+    }
     //confirmModal.createModal("Reject Job Reject Data ?", "info", async () => {
+  
     if (draftData && rejectJobReason) {
       console.log("Reject Job Reject Data:", draftData);
 
@@ -1439,6 +1575,7 @@ export default function ServiceRequest() {
             value={rejectReason}
             multiline={true}
             onChange={(value) => setRejectReason(value)}
+            Validate={isValidate}
           />
 
         }
@@ -1458,6 +1595,7 @@ export default function ServiceRequest() {
             value={rejectJobReason}
             multiline={true}
             onChange={(value) => setRejectJobReason(value)}
+            Validate={isValidate}
           />
 
         }

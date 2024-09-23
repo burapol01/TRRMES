@@ -14,10 +14,11 @@ interface AutocompleteComboBox {
   options?: any[];
   setvalue?: (value: any) => void;
   Validate?: boolean;
+  ValidateDuplicate?: boolean;
 }
 
 export default function AutocompleteComboBox(props: AutocompleteComboBox) {
-  const { value, labelName, required, setvalue, options = [], column, disabled, readonly } = props;
+  const { value, labelName, required, setvalue, options = [], column, disabled, readonly, ValidateDuplicate } = props;
 
   const handleOnChange = (e: any, newValue: any) => {
     //console.log(newValue);
@@ -85,6 +86,16 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
           />
         )}
       />
+      {props.Validate && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          กรุณาเลือกข้อมูล
+        </p>
+      )}
+      {props.ValidateDuplicate && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          Service Center ห้ามเลือกซ้ำกับ Cost center
+        </p>
+      )}
     </>
   );
 }

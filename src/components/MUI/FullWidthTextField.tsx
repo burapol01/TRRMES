@@ -14,6 +14,7 @@ interface FullWidthTextFieldProps {
   Validate?: boolean;
   validateTextLable?: string;
   hidden?: boolean; // Add new prop for hidden state
+  isCheckHour?: boolean;
 }
 
 export default function FullWidthTextField(props: FullWidthTextFieldProps) {
@@ -28,8 +29,8 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
       </label>
       <TextField
         fullWidth
-        sx={{ 
-          
+        sx={{
+
           "& .MuiInputBase-input.Mui-disabled": {
             WebkitTextFillColor: "black", // For text color in WebKit browsers
           },
@@ -46,12 +47,12 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
                 borderColor: "info.main",
               },
             },
-          },         
+          },
         }}
         InputProps={{
           readOnly: props.readonly,
-          endAdornment: props.endAdornment ? <InputAdornment position="end">%</InputAdornment> : null,         
-          inputProps: {          
+          endAdornment: props.endAdornment ? <InputAdornment position="end">%</InputAdornment> : null,
+          inputProps: {
             style: { textAlign: props.textAlignTextField },
           },
         }}
@@ -61,8 +62,14 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
         disabled={props.disabled}
         onChange={hedelonChange}
         value={props.value}
-        // helperText={props.Validate ? "5555555555":""}
+      // helperText={props.Validate ? "5555555555":""}
       />
+      {(props.Validate || props.isCheckHour) && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          {props.Validate ? "กรุณากรอกข้อมูล" : "ชั่วโมงทำงานเกิน"}
+        </p>
+      )}
+
       {props.validateTextLable ? (
         <label htmlFor="" className={`fs-7 py-1 sarabun-regular-lable-validate`}>
           {props.validateTextLable}
