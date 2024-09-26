@@ -7,10 +7,10 @@ import LocalizedFormat from "dayjs/plugin/buddhistEra";
 import OverwriteAdapterDayjs from "../dataAdapter";
 import { Stack } from "@mui/material";
 import { DesktopDatePicker } from "@mui/x-date-pickers"
- 
+
 dayjs.locale("th");
 dayjs.extend(LocalizedFormat);
- 
+
 interface DatePickerBasic {
   valueStart?: any;
   onchangeStart: (el: any) => void;
@@ -25,7 +25,7 @@ interface DatePickerBasic {
   minDate?: dayjs.Dayjs | null;
   maxDate?: dayjs.Dayjs | null;
 }
- 
+
 export default function DatePickerBasic({
   valueStart,
   onchangeStart,
@@ -41,18 +41,18 @@ export default function DatePickerBasic({
   maxDate,
 }: DatePickerBasic) {
   const dateFormat = "DD/MM/YYYY";
- 
+
   const handleTextField = (e: any) => {
     const fullTime = dayjs(e).format("YYYY-MM-DDTHH:mm:ssZ[Z]")
     if (fullTime != "Invalid Date") {
       const year = (Number(fullTime.split("-")[0]) - 543)
       const newFilltime = `${year}-${fullTime.split("-")[1]}-${fullTime.split("-")[2]}`;
       onchangeStart(dayjs(newFilltime, 'YYYY-MM-DDTHH:mm:ssZ[Z]'))
-    }else{
+    } else {
       onchangeStart(null)
     }
   }
- 
+
   return (
     <div style={{ width: "100%" }}>
       <label className={`${required} fs-5 text-gray-900 py-2`}>
@@ -106,7 +106,7 @@ export default function DatePickerBasic({
             shouldDisableDate={disableWeekends}
             minDate={minDate}
             maxDate={maxDate}
-           
+
           />
         </LocalizationProvider>
       </Stack>

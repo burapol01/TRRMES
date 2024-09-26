@@ -32,6 +32,7 @@ interface FuncDialog {
 }
 
 const actionConfig = {
+  
   Draft: {
     mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
@@ -73,7 +74,7 @@ const actionConfig = {
     cancelButton: { show: true },
   },
   Create: {
-    mainButton: { label: "Create", show: true },
+    mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
@@ -89,6 +90,11 @@ const actionConfig = {
   },
   RejectReason: {
     mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  ImportFile: {
+    mainButton: { label: "นำเข้า", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
@@ -159,54 +165,7 @@ export default function FuncDialog(props: FuncDialog) {
                 colorname="error"
               />
             </div>
-          )}
-
-          {/* {props.actions === "AcceptJob" || props.actions === "TimeSheet" ? (
-            <div className="py-3">
-              {props.openBottonHidden && (
-                <FullWidthButton
-                  handleonClick={props.handlefunction}
-                  labelName={props.actions === "AcceptJob" ? "Start" : "Save"}
-                  variant_text="contained"
-                  colorname={props.colorBotton}>
-                </FullWidthButton>
-              )}
-            </div>
-          ) : (
-
-            <div className="py-3">
-              {props.openBottonHidden && (
-                <FullWidthButton
-                  handleonClick={props.handlefunction}
-                  labelName={props.titlename}
-                  variant_text="contained"
-                  colorname={props.colorBotton}>
-                </FullWidthButton>
-              )}
-            </div>
-
-
-          )}
-
-          {props.actions === "Approved" || props.actions === "AcceptJob" ? (
-            <div className="pr-5">
-              <FullWidthButton
-                handleonClick={props.handleRejectAction}
-                labelName={props.actions === "Approved" ? "Submit Reject" : "Reject" }
-                variant_text="contained"
-                colorname="error"
-              />
-            </div>
-          ) : (
-            <div className="pr-5">
-              <FullWidthButton
-                handleonClick={props.handleClose}
-                labelName="Cancel"
-                variant_text="contained"
-                colorname="error"
-              />
-            </div>
-          )} */}
+          )}         
         </DialogActions>
       </BootstrapDialog>
     </React.Fragment>

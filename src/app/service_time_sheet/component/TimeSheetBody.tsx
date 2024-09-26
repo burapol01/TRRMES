@@ -53,6 +53,12 @@ export default function TimeSheetBody({
 
     const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
+    //Validate เลือกได้เฉพราะเดือนปัจจุบัน
+    const year = dayjs(new Date()).format("YYYY")
+    const month = dayjs(new Date()).format("MM")
+    const minDate = dayjs(new Date(Number(year), Number(month) - 1, 1));
+    const maxDate = dayjs(new Date(Number(year), Number(month) + 1, 0));
+
 
     // Effect for fetching data in "Reade" mode
     useEffect(() => {
@@ -290,7 +296,7 @@ export default function TimeSheetBody({
     useEffect(() => {
         const fetchMaxWorkHour = async () => {
             const dataset = {
-                lov_type: 'work_hour_maximum',
+                lov_type: 'work_hour_minmax_type',
                 lov_code: 'Maximum',
             };
 
@@ -328,6 +334,7 @@ export default function TimeSheetBody({
     }, [workHour, workHourMax]);
 
 
+
     return (
         <div className="border rounded-xl px-2 py-2">
             <div className="row justify-start">
@@ -335,20 +342,24 @@ export default function TimeSheetBody({
                     <div className="flex items-center space-x-2">
                         <div className="w-full md:w-1/2">
                             <DatePickerBasic
-                                 required={"required"}
+                                required={"required"}
                                 labelname="วันเริ่มต้น"
                                 valueStart={workStartDate}
-                                onchangeStart={setWorkStartDate}
+                                onchangeStart={(value) => {
+                                    setWorkStartDate(value)
+                                    setWorkEndDate(null)
+                                }}
                                 disableFuture
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_start_date}
-
+                                minDate={minDate}
+                                maxDate={maxDate}
                             />
                         </div>
                         <label className="pt-5 mt-5 ">ถึง</label>
                         <div className="w-full md:w-1/2">
                             <DatePickerBasic
-                                 required={"required"}
+                                required={"required"}
                                 labelname="วันสิ้นสุด"
                                 valueStart={workEndDate}
                                 onchangeStart={setWorkEndDate}
@@ -356,13 +367,15 @@ export default function TimeSheetBody({
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_end_date}
                                 minDate={workStartDate}
+
+                            // maxDate={maxDate}
                             />
                         </div>
                     </div>
                 </div>
                 <div className="col-md-3 mb-2">
                     <AutocompleteComboBox
-                         required={"required"}
+                        required={"required"}
                         labelName="ช่าง"
                         column="tecEmpName"
                         setvalue={setTechnician}
@@ -374,7 +387,7 @@ export default function TimeSheetBody({
                 </div>
                 <div className="col-md-3 mb-2">
                     <FullWidthTextField
-                         required={"required"}
+                        required={"required"}
                         labelName={"ชั่วโมงทำงาน"}
                         value={workHour ?? ""}
                         onChange={(value: any) => setWorkHour(stringWithCommas(value))}
@@ -396,7 +409,7 @@ export default function TimeSheetBody({
             <div className="row justify-start">
                 <div className="col-md-9 mb-2">
                     <FullWidthTextareaField
-                         required={"required"}
+                        required={"required"}
                         labelName="รายละเอียด"
                         onChange={(value) => setDescription(value)}
                         value={description}
