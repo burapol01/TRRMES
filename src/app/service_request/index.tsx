@@ -7,7 +7,7 @@ import EnhancedTable from "../../components/MUI/DataTables";
 import { Request_headCells } from "../../../libs/columnname";
 import FuncDialog from "../../components/MUI/FullDialog";
 import ServiceRequestBody from "./component/ServiceRequestBody";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import moment from 'moment';
 import { confirmModal } from "../../components/MUI/Comfirmmodal";
@@ -19,6 +19,8 @@ import { dateFormatTimeEN, dateFormatTimeTH, DateToDB } from "../../../libs/data
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 import { useListServiceRequest } from "./core/service_request_provider";
+import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
+import { plg_uploadFileRename } from "../../service/upload";
 
 interface OptionsState {
   costCenter: any[];
@@ -71,9 +73,11 @@ const defaultVal = {
   siteId: "",
   rejectSubmitReason: "",
   rejectStartReason: "",
+  requestAttachFileList: [],
 }
 
 export default function ServiceRequest() {
+  const dispatch = useDispatch()
   const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
   const [requestNo, setRequestNo] = useState("");
   const menuFuncList = useSelector((state: any) => state?.menuFuncList);
@@ -252,7 +256,8 @@ export default function ServiceRequest() {
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
           assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description
+          assetDescription: asset.description,
+          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
         }));
 
         setOptionsSearch((prevOptions) => ({
@@ -412,7 +417,7 @@ export default function ServiceRequest() {
     }
   };
 
-  
+
   const fetchRevisionMaximum = async () => {
     console.log('Call : fetchRevisionMaximum', moment().format('HH:mm:ss:SSS'));
     try {
@@ -430,13 +435,13 @@ export default function ServiceRequest() {
           revisionMaximum: dataRevision.lov1
         }));
 
-        if(revisionMaximum.length > 0) {
+        if (revisionMaximum.length > 0) {
           //console.log(revisionMaximum[0].revisionMaximum, 'sdsdsd');
           setRevisionMaximum(revisionMaximum[0].revisionMaximum);
 
         }
 
-       
+
 
 
       } else {
@@ -566,6 +571,7 @@ export default function ServiceRequest() {
       fixedAssetDescription: data?.fixed_asset_description || '',
       rejectSubmitReason: data?.reject_submit_reason || '',
       rejectStartReason: data?.reject_start_reason || '',
+      requestAttachFileList: data?.requestAttachFileList
 
     })
   };
@@ -653,42 +659,50 @@ export default function ServiceRequest() {
       user_ad: employeeUsername || null
     };
 
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
+    dispatch(startLoadScreen());
+    setTimeout(async () => {
+      try {
+        const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
 
-      if (response && response.status === "success") {
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          const userData = response.data[0];
-          if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
-            //console.log(userData,"userData");
+        if (response && response.status === "success") {
+          dispatch(endLoadScreen());
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+            const userData = response.data[0];
+            if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
+              //console.log(userData,"userData");
 
 
-            //setAppReqUser(userData.app_req_user);
-            setDefaultValues(prevValues => ({
-              ...prevValues,
-              reqUser: employeeUsername || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
-              // appReqUser: userData.app_req_user || prevValues.appReqUser,
-              // costCenterId: userData.cost_center_id || prevValues.costCenterId,
-              // costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
-              // costCenterName: userData.cost_center_name || prevValues.costCenterName,
-              // site: userData.site_code || prevValues.site,
-              // siteId: userData.site_id || prevValues.siteId
-            }));
-            //console.log(response, 'UserGet');
+              //setAppReqUser(userData.app_req_user);
+              setDefaultValues(prevValues => ({
+                ...prevValues,
+                reqUser: employeeUsername || prevValues.reqUser, // เพิ่มค่า user_ad ใน reqUser
+                // appReqUser: userData.app_req_user || prevValues.appReqUser,
+                // costCenterId: userData.cost_center_id || prevValues.costCenterId,
+                // costCenterCode: userData.cost_center_code || prevValues.costCenterCode,
+                // costCenterName: userData.cost_center_name || prevValues.costCenterName,
+                // site: userData.site_code || prevValues.site,
+                // siteId: userData.site_id || prevValues.siteId
+              }));
+              //console.log(response, 'UserGet');
 
+            } else {
+              dispatch(endLoadScreen());
+              setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
+            }
           } else {
-            setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
+            dispatch(endLoadScreen());
+            setErrorMessage("ไม่มีข้อมูล User ที่ตรงกับเงื่อนไข");
           }
         } else {
-          setErrorMessage("ไม่มีข้อมูล User ที่ตรงกับเงื่อนไข");
+          dispatch(endLoadScreen());
+          setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");
         }
-      } else {
-        setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        dispatch(endLoadScreen());
+        setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
-    }
+    }, 0);
   };
 
   //Get ดึงข้อมูลใส่ ตาราง
@@ -812,6 +826,7 @@ export default function ServiceRequest() {
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
     console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
+
     const dataForValidate = {
       costCenter: draftData.costCenter,
       serviceCenter: draftData.serviceCenter,
@@ -820,8 +835,8 @@ export default function ServiceRequest() {
     }
     const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
     const isValidateAll = isCheckValidateAll(isValidate);
-    
-    if(isDuplicate && isValidationEnabled){
+
+    if (isDuplicate && isValidationEnabled) {
       return;
     }
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
@@ -836,6 +851,27 @@ export default function ServiceRequest() {
       if (draftData) {
 
         console.log("Saving draft data:", draftData);
+
+
+        // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
+        const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
+          const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+          const newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest${index + 1}_${timestamp}`);
+          const reqUserFilename = image.name;
+
+          console.log(newFileName, `newFileName for image ${index}`);
+
+          // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
+          return {
+            file_patch: `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
+            req_user_filename: reqUserFilename,
+            req_sys_filename: newFileName
+          };
+        }));
+
+        // imageDataListArray จะมีข้อมูลของทุกไฟล์
+        console.log(imageDataListArray, 'All imageDataList');
+        //=====================================================================================================================================
 
         // สร้างข้อมูลที่จะส่ง
         const payload = {
@@ -860,37 +896,44 @@ export default function ServiceRequest() {
             code_group: draftData.site,
             code_type: "RQ",
             trans_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
-          }
+          },
+          requestAttachFileModel: imageDataListArray
         };
 
-        try {
-          console.log('Running model', payload);
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
+            console.log('Running model', payload);
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Add");
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Add");
 
-          if (response && response.status === "success") {
-            console.log('Draft saved successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">บันทึก</p>
-                <p className="text-lg text-gray-800">
-                  <span className="font-semibold text-gray-900">เลขที่ใบคำขอ :</span>
-                  <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-                </p>
-              </div>,
-              'success', () => {
-                handleClose();
-              });
-          } else {
-            console.error('Failed to save draft:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            if (response && response.status === "success") {
+              console.log('Draft saved successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">บันทึก</p>
+                  <p className="text-lg text-gray-800">
+                    <span className="font-semibold text-gray-900">เลขที่ใบคำขอ :</span>
+                    <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                  </p>
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to save draft:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error saving draft:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error saving draft:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
     });
 
@@ -898,7 +941,8 @@ export default function ServiceRequest() {
 
   //Add Edit ไปลง Database
   const serviceRequestDraftEdit = async () => {
-    console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));    
+
     const dataForValidate = {
       costCenter: draftData.costCenter,
       serviceCenter: draftData.serviceCenter,
@@ -916,6 +960,35 @@ export default function ServiceRequest() {
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
+
+        // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
+    const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
+      const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+      let newFileName;
+      if (image.file != null) {
+        newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest${index + 1}_${timestamp}`);
+      } else {
+
+        newFileName = null;
+
+      }
+      const reqUserFilename = image.name;
+
+      console.log(newFileName, `newFileName for image ${index}`);
+
+      // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
+      return {
+        request_attach_file_id: image.requestAttachFileId,
+        req_id: image.reqId,
+        file_patch: `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
+        req_user_filename: reqUserFilename,
+        req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName
+      };
+    }));
+
+    // imageDataListArray จะมีข้อมูลของทุกไฟล์
+    console.log(imageDataListArray, 'All imageDataList');
+    //=====================================================================================================================================
 
         //สร้างข้อมูลที่จะส่ง
         const payload = {
@@ -937,41 +1010,46 @@ export default function ServiceRequest() {
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          },
+          requestAttachFileModel: imageDataListArray
         };
 
         console.log(payload, 'payload');
 
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
 
-        try {
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Edit");
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Edit");
-
-          if (response && response.status === "success") {
-            console.log('Draft saved successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+            if (response && response.status === "success") {
+              console.log('Draft saved successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
 
-                handleClose();
-              });
-
-          } else {
-            console.error('Failed to save draft:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            } else {
+              console.error('Failed to save draft:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error saving draft:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error saving draft:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
 
     });
@@ -995,34 +1073,39 @@ export default function ServiceRequest() {
           }
         };
 
-        try {
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Delete");
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ServiceRequest/Service_Request_Draft_Delete");
 
-          if (response && response.status === "success") {
-            console.log('Draft delete successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+            if (response && response.status === "success") {
+              console.log('Draft delete successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
-
-                handleClose();
-              });
-          } else {
-            console.error('Failed to save draft:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to save draft:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error saving draft:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error saving draft:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
     });
 
@@ -1047,35 +1130,40 @@ export default function ServiceRequest() {
           }
         };
 
-        try {
-          console.log('payload', payload);
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
+            console.log('payload', payload);
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
-          if (response && response.status === "success") {
-            console.log('Submit successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+            if (response && response.status === "success") {
+              console.log('Submit successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
-
-                handleClose();
-              });
-          } else {
-            console.error('Failed to Submit:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to Submit:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error Submit:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error Submit:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
     });
   };
@@ -1099,33 +1187,38 @@ export default function ServiceRequest() {
           }
         };
 
-        try {
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
-          if (response && response.status === "success") {
-            console.log('Submit successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+            if (response && response.status === "success") {
+              console.log('Submit successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
-
-                handleClose();
-              });
-          } else {
-            console.error('Failed toApprove:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed toApprove:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('ErrorApprove:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('ErrorApprove:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
     });
   };
@@ -1139,11 +1232,11 @@ export default function ServiceRequest() {
       rejectReason: rejectReason || null,
     }
 
-    console.log(dataForValidate,'dataForValidate');
-    
+    console.log(dataForValidate, 'dataForValidate');
+
     const isValidate = checkValidate(dataForValidate, []);
     const isValidateAll = isCheckValidateAll(isValidate);
-  
+
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
       //console.log(isValidateAll,'sasasasa');
       setIsValidate(isValidate);
@@ -1168,34 +1261,39 @@ export default function ServiceRequest() {
         }
       };
 
-      try {
+      dispatch(startLoadScreen());
+      setTimeout(async () => {
+        try {
 
-        // ใช้ _POST เพื่อส่งข้อมูล
-        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
+          // ใช้ _POST เพื่อส่งข้อมูล
+          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
-        if (response && response.status === "success") {
-          console.log('Submit Reject successfully:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-          Massengmodal.createModal(
-            <div className="text-center p-4">
-              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-              {/* <p className="text-lg text-gray-800">
+          if (response && response.status === "success") {
+            console.log('Submit Reject successfully:', response);
+            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                {/* <p className="text-lg text-gray-800">
                 <span className="font-semibold text-gray-900">Request No:</span>
                 <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
               </p> */}
-            </div>,
-            'success', () => {
-
-              handleClose();
-            });
-        } else {
-          console.error('Failed to Submit Reject:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+              </div>,
+              'success', () => {
+                dispatch(endLoadScreen());
+                handleClose();
+              });
+          } else {
+            console.error('Failed to Submit Reject:', response);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+          }
+        } catch (error) {
+          console.error('Error Submit Reject:', error);
+          dispatch(endLoadScreen());
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      } catch (error) {
-        console.error('Error Submit Reject:', error);
-        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-      }
+      }, 2000);
     }
 
 
@@ -1221,35 +1319,40 @@ export default function ServiceRequest() {
           }
         };
 
-        try {
-          console.log('Running model', payload);
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
+            console.log('Running model', payload);
 
-          // ใช้ _POST เพื่อส่งข้อมูล
-          const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
-          if (response && response.status === "success") {
-            console.log('Close successfully:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-            Massengmodal.createModal(
-              <div className="text-center p-4">
-                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                {/* <p className="text-lg text-gray-800">
+            if (response && response.status === "success") {
+              console.log('Close successfully:', response);
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-              </div>,
-              'success', () => {
-
-                handleClose();
-              });
-          } else {
-            console.error('Failed to Close:', response);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                </div>,
+                'success', () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to Close:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error Close:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        } catch (error) {
-          console.error('Error Close:', error);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-        }
+        }, 2000);
       }
     });
   };
@@ -1264,11 +1367,11 @@ export default function ServiceRequest() {
       rejectJobReason: rejectJobReason || null,
     }
 
-    console.log(dataForValidate,'dataForValidate');
-    
+    console.log(dataForValidate, 'dataForValidate');
+
     const isValidate = checkValidate(dataForValidate, []);
     const isValidateAll = isCheckValidateAll(isValidate);
-  
+
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
       //console.log(isValidateAll,'sasasasa');
       setIsValidate(isValidate);
@@ -1276,7 +1379,7 @@ export default function ServiceRequest() {
     }
     setIsValidate(null);
 
-    if(draftData.countRevision >= revisionMaximum && isValidationEnabled){
+    if (draftData.countRevision >= revisionMaximum && isValidationEnabled) {
 
       Massengmodal.createModal(
         <div className="text-center p-4">
@@ -1286,14 +1389,14 @@ export default function ServiceRequest() {
               <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
             </p> */}
         </div>,
-        'error', () => {         
+        'error', () => {
 
         });
 
-        return;
+      return;
     }
     //confirmModal.createModal("Reject Job Reject Data ?", "info", async () => {
-  
+
     if (draftData && rejectJobReason) {
       console.log("Reject Job Reject Data:", draftData);
 
@@ -1310,34 +1413,39 @@ export default function ServiceRequest() {
         }
       };
 
-      try {
+      dispatch(startLoadScreen());
+      setTimeout(async () => {
+        try {
 
-        // ใช้ _POST เพื่อส่งข้อมูล
-        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
+          // ใช้ _POST เพื่อส่งข้อมูล
+          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
-        if (response && response.status === "success") {
-          console.log('Reject Job Reject successfully:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-          Massengmodal.createModal(
-            <div className="text-center p-4">
-              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-              {/* <p className="text-lg text-gray-800">
+          if (response && response.status === "success") {
+            console.log('Reject Job Reject successfully:', response);
+            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-            </div>,
-            'success', () => {
-
-              handleClose();
-            });
-        } else {
-          console.error('Failed to Reject Job Reject:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+              </div>,
+              'success', () => {
+                dispatch(endLoadScreen());
+                handleClose();
+              });
+          } else {
+            console.error('Failed to Reject Job Reject:', response);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+          }
+        } catch (error) {
+          console.error('Error Reject Job Reject:', error);
+          dispatch(endLoadScreen());
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      } catch (error) {
-        console.error('Error Reject Job Reject:', error);
-        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-      }
+      }, 2000);
     }
     // });
   };
@@ -1381,7 +1489,7 @@ export default function ServiceRequest() {
               value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
               options={optionsSearch.fixedAssetCode}
-              column="assetCode"
+              column="assetCodeAndDescription"
               setvalue={handleAutocompleteChange(setSelectedAssetCode)}
             />
           </div>
@@ -1458,6 +1566,7 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody     
               disableOnly
+              actions={"Reade"}
             />
           }
         />

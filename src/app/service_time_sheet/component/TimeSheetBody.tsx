@@ -329,6 +329,8 @@ export default function TimeSheetBody({
             setIsValidate(null);
             return parseInt(workHour, 10) > workHourMax;
 
+        } else {
+            setIsValidate(null);
         }
         return false;
     }, [workHour, workHourMax]);

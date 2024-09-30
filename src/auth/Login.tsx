@@ -17,7 +17,7 @@ import {
   addUserRoleMenuFunc,
 } from "../../redux/actions/userAction";
 import {
-  EndLoadScreen,
+  endLoadScreen,
   startLoadScreen,
 } from "../../redux/actions/loadingScreenAction";
 import { login_auth_emp_get } from "../service/login";
@@ -70,16 +70,16 @@ export default function Login() {
             import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY,
             lsValue
           );
-          dispatch(EndLoadScreen());
+          dispatch(endLoadScreen());
         }
         if (reponse && reponse.status == "Error") {
           console.log(reponse);
-          dispatch(EndLoadScreen());
+          dispatch(endLoadScreen());
           await setErrorMessage(reponse?.error_message);
         }
        }, 2000);
     } catch (e) {
-      dispatch(EndLoadScreen());
+      dispatch(endLoadScreen());
       console.log(e);
     }
   };

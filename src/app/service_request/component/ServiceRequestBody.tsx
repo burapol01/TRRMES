@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import FullWidthTextField from "../../../components/MUI/FullWidthTextField";
 import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
+import StyleImageList from "../../../components/MUI/StandardImageList";
 import debounce from 'lodash/debounce';
 import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 import { useListServiceRequest } from "../core/service_request_provider";
+import moment from "moment";
+import { plg_uploadFileRename } from "../../../service/upload";
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -28,6 +31,7 @@ interface ServiceRequestBodyProps {
     fixedAssetDescription?: string;
     rejectSubmitReason?: string,
     rejectStartReason?: string,
+    requestAttachFileList?: any[];
   };
   options?: {
     costCenter: any[];
@@ -40,6 +44,11 @@ interface ServiceRequestBodyProps {
   actions?: string;
 }
 
+interface ImageItem {
+  img: string;
+  title: string;
+}
+
 export default function ServiceRequestBody({
   onDataChange,
   defaultValues,
@@ -47,7 +56,7 @@ export default function ServiceRequestBody({
   disableOnly,
   actions
 }: ServiceRequestBodyProps) {
-  const {isValidate, setIsValidate, isDuplicate, setIsDuplicate}= useListServiceRequest()
+  const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
   const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
@@ -106,7 +115,8 @@ export default function ServiceRequestBody({
       description,
       fixedAssetCode,
       fixedAssetDescription,
-      countRevision
+      countRevision,
+      imageList // เพิ่ม imageList เข้าไปใน data
     };
     // Call debounced function
     debouncedOnDataChange(data);
@@ -183,6 +193,8 @@ export default function ServiceRequestBody({
   }, [defaultValues])
 
 
+  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
+
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
   React.useEffect(() => {
     const filteredData = options?.budgetCode.filter((item: any) =>
@@ -219,7 +231,128 @@ export default function ServiceRequestBody({
   }, [costCenter, jobType])
 
 
+  //=========================================== การ Upload File ==========================================
+  interface ImageItem {
+    file: File | null; // เก็บข้อมูลไฟล์
+    name: string;      // ชื่อไฟล์
+    type: string | null;      // ประเภทไฟล์
+    url: string;       // URL สำหรับแสดง Preview
+  }
+  // Image Upload handling
+  const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const uploadedFiles: ImageItem[] = files.map((file) => {
+      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดง Preview
+      return {
+        file: file, // เก็บข้อมูลไฟล์
+        name: file.name, // ชื่อไฟล์
+        type: file.type, // ประเภทไฟล์
+        url: url, // URL สำหรับแสดง Preview
+      };
+    });
+
+    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดต state ด้วยรายการไฟล์ที่อัปโหลด
+
+    // log หลังจากอัปเดตรายการไฟล์ที่อัปโหลด
+    console.log(uploadedFiles, 'uploadedFiles');
+  };
+
+  // ฟังก์ชันจัดการการลบภาพ
+  const handleRemoveImage = (url: string) => {
+    setImageList((prevList) => prevList.filter(image => image.url !== url));
+  };
+
+  // Cleanup function
+  React.useEffect(() => {
+    return () => {
+      imageList.forEach((item) => {
+        URL.revokeObjectURL(item.url); // ลบ URL blob เพื่อประหยัด memory
+      });
+    };
+  }, [imageList]);
+
+  // Log imageList เพื่อดูค่าของไฟล์ที่อัปโหลด
+  React.useEffect(() => {
+    console.log(imageList, "imageList"); // log ค่าเมื่อ imageList ถูกอัปเดต
+   
+  }, [imageList]);
+
+  useEffect(() => {
+    const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
+    console.log(actions, 'actions');
+    if (actions === "Reade" || actions === "Update" && requestAttachFileList.length > 0) {
+      const existingFiles = requestAttachFileList.map((file: any) => ({
+        requestAttachFileId: file.id,
+        reqId: file.req_id,
+        reqSysFilename: file.req_sys_filename,
+        file: null,
+        name: file.req_user_filename,
+        type: null,
+        url: file.file_patch
+      }));
+      console.log(existingFiles, 'existingFilesexistingFiles');
+      
+      setImageList(existingFiles);
+    }
+  }, [defaultValues?.requestAttachFileList, actions]);
   
+  
+
+
+  const itemData = [
+    {
+      img: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
+      title: 'Breakfast',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
+      title: 'Burger',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45',
+      title: 'Camera',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c',
+      title: 'Coffee',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8',
+      title: 'Hats',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62',
+      title: 'Honey',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6',
+      title: 'Basketball',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1518756131217-31eb79b20e8f',
+      title: 'Fern',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1597645587822-e99fa5d45d25',
+      title: 'Mushrooms',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af',
+      title: 'Tomato basil',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1471357674240-e1a485acb3e1',
+      title: 'Sea star',
+    },
+    {
+      img: 'https://images.unsplash.com/photo-1589118949245-7d38baf380d6',
+      title: 'Bike',
+    },
+  ];
+
+
 
   return (
     <div>
@@ -273,10 +406,10 @@ export default function ServiceRequestBody({
               setFixedAssetCode(null)
               //setFixedAssetDescription("")
             }}
-            options={options?.costCenter || []}            
+            options={options?.costCenter || []}
             Validate={isValidate?.costCenter}
-           
-        
+
+
           />
           {/* <FullWidthTextField
             labelName={"Cost center"}
@@ -323,12 +456,12 @@ export default function ServiceRequestBody({
             setvalue={(data) => {
               setServiceCenter(data);
               // console.log(costCenter,'costCenter💥💥💥💥',data);
-              if(costCenter?.costCenterCode == data?.serviceCenterCode){
+              if (costCenter?.costCenterCode == data?.serviceCenterCode) {
                 setIsDuplicate(true);
-              }else{
+              } else {
                 setIsDuplicate(false);
               }
-              
+
               //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
             options={optionServiceCenter || []}
@@ -389,6 +522,38 @@ export default function ServiceRequestBody({
             options={optionFixedAssetCode || []}
           />
         </div>
+
+
+
+
+
+        {/*ฉันต้องการสร้างที่ Upload File รูปตรงนี้ และ Preview*/}
+        <div>
+          <h1>Image Gallery</h1>
+          <div className="upload-container">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="upload-input"
+            />
+          </div>
+          <div className="image-preview-container">
+            <StyleImageList
+              itemData={imageList.map(image => ({
+                img: image.url,
+                title: image.name,
+              }))}
+              onRemoveImage={handleRemoveImage} // ส่งฟังก์ชันลบไปยังคอมโพเนนต์
+            />
+          </div>
+        </div>
+
+
+
+
+
         {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}

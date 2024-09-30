@@ -15,7 +15,7 @@ export default function LoadingScreen(props: LoadingScreen) {
         sx={{
           color: "#fff",
           backgroundColor: "white",
-          zIndex: (theme) => theme.zIndex.drawer + 1,
+          zIndex: (theme) => theme.zIndex.modal + 1,
         }}
         open={loading}
       >

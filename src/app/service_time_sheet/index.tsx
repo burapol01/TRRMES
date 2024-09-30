@@ -6,7 +6,7 @@ import FullWidthButton from "../../components/MUI/FullWidthButton";
 import EnhancedTable from "../../components/MUI/DataTables";
 import { Request_headCells } from "../../../libs/columnname";
 import FuncDialog from "../../components/MUI/FullDialog";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import moment from 'moment';
 import ServiceTimeSheetBody from "./component/ServiceTimeSheetBody";
@@ -18,6 +18,7 @@ import { dateFormatTimeEN, DateToDB } from "../../../libs/datacontrol";
 import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField";
 import { useListServiceTimeSheet } from "./core/service_time_sheet_provider";
 import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
+import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
 
 interface OptionsState {
   costCenter: any[];
@@ -79,7 +80,7 @@ const defaultVal = {
 }
 
 export default function ServiceTimeSheet() {
-
+  const dispatch = useDispatch()
   const { isValidate, setIsValidate } = useListServiceTimeSheet()
   const [requestNo, setRequestNo] = useState("");
   const [status, setStatus] = useState("");
@@ -258,7 +259,8 @@ export default function ServiceTimeSheet() {
         const fixedAssetCodes = response.data.map((asset: any) => ({
           assetCodeId: asset.id,
           assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description
+          assetDescription: asset.description,
+          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
         }));
 
         setOptionsSearch((prevOptions) => ({
@@ -751,29 +753,36 @@ export default function ServiceTimeSheet() {
       user_ad: employeeUsername || null
     };
 
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
+    dispatch(startLoadScreen());
+    setTimeout(async () => {
+      try {
+        const response = await _POST(dataset, "/api_trr_mes/MasterData/User_Get");
 
-      if (response && response.status === "success") {
-        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-          const userData = response.data[0];
-          if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
-            setSiteId(userData.site_id);
-            setCostCenterId(userData.cost_center_id);
+        if (response && response.status === "success") {
+          dispatch(endLoadScreen());
+          if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+            const userData = response.data[0];
+            if (userData.user_ad === employeeUsername || userData.app_req_user === employeeUsername) {
+              setSiteId(userData.site_id);
+              setCostCenterId(userData.cost_center_id);
 
+            } else {
+              setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
+            }
           } else {
-            setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
+            dispatch(endLoadScreen());
+            setErrorMessage("ไม่มีข้อมูล User ที่ตรงกับเงื่อนไข");
           }
         } else {
-          setErrorMessage("ไม่มีข้อมูล User ที่ตรงกับเงื่อนไข");
+          dispatch(endLoadScreen());
+          setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");
         }
-      } else {
-        setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        dispatch(endLoadScreen());
+        setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
-    }
+    }, 0);
   };
 
   //Get ดึงข้อมูลใส่ ตาราง
@@ -911,6 +920,7 @@ export default function ServiceTimeSheet() {
           }
         };
 
+        dispatch(startLoadScreen());
         try {
           // ใช้ _POST เพื่อส่งข้อมูล
           const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
@@ -927,15 +937,17 @@ export default function ServiceTimeSheet() {
                 </p> */}
               </div>,
               'success', () => {
-
+                dispatch(endLoadScreen());
                 handleClose();
               });
           } else {
             console.error('Failed toApprove:', response);
+            dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
           }
         } catch (error) {
           console.error('ErrorApprove:', error);
+          dispatch(endLoadScreen());
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
       }
@@ -951,11 +963,11 @@ export default function ServiceTimeSheet() {
       rejectReason: rejectReason || null,
     }
 
-    console.log(dataForValidate,'dataForValidate');
-    
+    console.log(dataForValidate, 'dataForValidate');
+
     const isValidate = checkValidate(dataForValidate, []);
     const isValidateAll = isCheckValidateAll(isValidate);
-  
+
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
       //console.log(isValidateAll,'sasasasa');
       setIsValidate(isValidate);
@@ -979,34 +991,39 @@ export default function ServiceTimeSheet() {
         }
       };
 
-      try {
+      dispatch(startLoadScreen());
+      setTimeout(async () => {
+        try {
 
-        // ใช้ _POST เพื่อส่งข้อมูล
-        const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
+          // ใช้ _POST เพื่อส่งข้อมูล
+          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
 
-        if (response && response.status === "success") {
-          console.log('Reject successfully:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-          Massengmodal.createModal(
-            <div className="text-center p-4">
-              <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-              {/* <p className="text-lg text-gray-800">
+          if (response && response.status === "success") {
+            console.log('Reject successfully:', response);
+            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-            </div>,
-            'success', () => {
-
-              handleClose();
-            });
-        } else {
-          console.error('Failed to Reject:', response);
-          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+              </div>,
+              'success', () => {
+                dispatch(endLoadScreen());
+                handleClose();
+              });
+          } else {
+            console.error('Failed to Reject:', response);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+          }
+        } catch (error) {
+          console.error('Error Submit Reject:', error);
+          dispatch(endLoadScreen());
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      } catch (error) {
-        console.error('Error Submit Reject:', error);
-        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-      }
+      }, 2000);
     }
     //});
   };
@@ -1056,31 +1073,37 @@ export default function ServiceTimeSheet() {
           };
 
           console.log("Payload:", payload);
-          try {
-            const response = await _POST(payload, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Add");
+          dispatch(startLoadScreen());
+          setTimeout(async () => {
+            try {
+              const response = await _POST(payload, "/api_trr_mes/ServiceTimeSheet/Service_Time_Sheet_Add");
 
-            if (response && response.status === "success") {
-              console.log('successfully:', response);
-              Massengmodal.createModal(
-                <div className="text-center p-4">
-                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                  {/* <p className="text-lg text-gray-800">
+              if (response && response.status === "success") {
+                console.log('successfully:', response);
+                Massengmodal.createModal(
+                  <div className="text-center p-4">
+                    <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                    {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-                </div>,
-                'success',
-                async () => {
-                  await changeStatus(draftData, currentUser.employee_username);
-                  handleClose();
-                }
-              );
-            } else {
-              console.error('Failed to Time Sheet:', response);
+                  </div>,
+                  'success',
+                  async () => {
+                    await changeStatus(draftData, currentUser.employee_username);
+                    dispatch(endLoadScreen());
+                    handleClose();
+                  }
+                );
+              } else {
+                console.error('Failed to Time Sheet:', response);
+                dispatch(endLoadScreen());
+              }
+            } catch (error) {
+              console.error('Error Submit Time Sheet:', error);
+              dispatch(endLoadScreen());
             }
-          } catch (error) {
-            console.error('Error Submit Time Sheet:', error);
-          }
+          }, 2000);
         }
       });
 
@@ -1125,41 +1148,48 @@ export default function ServiceTimeSheet() {
             }
           };
 
-          try {
-            console.log('JobDone model', payload);
+          dispatch(startLoadScreen());
+          setTimeout(async () => {
+            try {
+              console.log('JobDone model', payload);
 
-            // ใช้ _POST เพื่อส่งข้อมูล
-            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
+              // ใช้ _POST เพื่อส่งข้อมูล
+              const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status");
 
-            if (response && response.status === "success") {
-              console.log('JobDone successfully:', response);
-              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-              Massengmodal.createModal(
-                <div className="text-center p-4">
-                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                  {/* <p className="text-lg text-gray-800">
+              if (response && response.status === "success") {
+                console.log('JobDone successfully:', response);
+                // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+                Massengmodal.createModal(
+                  <div className="text-center p-4">
+                    <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                    {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-                </div>,
-                'success', () => {
-
-                  handleClose();
-                });
-            } else {
-              console.error('Failed to JobDone:', response);
-              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+                  </div>,
+                  'success', () => {
+                    dispatch(endLoadScreen());
+                    handleClose();
+                  });
+              } else {
+                console.error('Failed to JobDone:', response);
+                dispatch(endLoadScreen());
+                // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+              }
+            } catch (error) {
+              console.error('Error JobDone:', error);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
             }
-          } catch (error) {
-            console.error('Error JobDone:', error);
-            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-          }
+
+          }, 2000);
+
         }
       });
     }
   };
 
-
+  //Function เปลี่ยนสถานะ
   const changeStatus = async (draftData: any, currentUser: any) => {
     console.log('Call : changeStatus', draftData, moment().format('HH:mm:ss:SSS'));
 
@@ -1238,7 +1268,7 @@ export default function ServiceTimeSheet() {
               value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
               options={optionsSearch.fixedAssetCode}
-              column="assetCode"
+              column="assetCodeAndDescription"
               setvalue={handleAutocompleteChange(setSelectedAssetCode)}
             />
           </div>
