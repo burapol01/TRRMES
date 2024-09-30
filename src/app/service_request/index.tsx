@@ -21,6 +21,7 @@ import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 import { useListServiceRequest } from "./core/service_request_provider";
 import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
 import { plg_uploadFileRename } from "../../service/upload";
+import { v4 as uuidv4 } from 'uuid';
 
 interface OptionsState {
   costCenter: any[];
@@ -617,10 +618,10 @@ export default function ServiceRequest() {
 
   };
 
-  const handleClickClose = (data: any) => {
+  const handleClickClose = (data: any) => {    
     setOpenClose(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User
 
   };
 
@@ -641,6 +642,29 @@ export default function ServiceRequest() {
     setOpenRejectJob(false); //ปิด Modal Reject Job Reason 
     setIsValidate(null);
     setIsDuplicate(false);
+
+    
+
+    //Cleanup URLs เมื่อ component ถูกลบ
+    if (Array.isArray(draftData.imageList)) {
+      draftData.imageList.forEach((item: any) => {
+        if (item.url.startsWith("blob:")) {
+          URL.revokeObjectURL(item.url);
+
+        }
+
+      });
+    }
+
+    if (Array.isArray(draftData.mageListView)) {
+      draftData.imageListView.forEach((item: any) => {
+        if (item.url.startsWith("blob:")) {
+          URL.revokeObjectURL(item.url);
+        }
+      });
+    }
+
+    draftData.imageList = []; //เคลีย์ขยะตอน กด Edit เนื่องจากรูปค้าง
 
   };
 
@@ -852,20 +876,30 @@ export default function ServiceRequest() {
 
         console.log("Saving draft data:", draftData);
 
-
         // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
         const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
+          dispatch(startLoadScreen());
           const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
-          const newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest${index + 1}_${timestamp}`);
+          let newFileName;
+          if (image.file != null && image.flagDeleteFile != true) {
+            newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest_${uuidv4()}_${timestamp}`);
+          } else {
+
+            newFileName = null;
+
+          }
           const reqUserFilename = image.name;
 
           console.log(newFileName, `newFileName for image ${index}`);
 
           // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
           return {
-            file_patch: `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
+            request_attach_file_id: image.requestAttachFileId,
+            req_id: image.reqId,
+            file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
             req_user_filename: reqUserFilename,
-            req_sys_filename: newFileName
+            req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
+            flag_delete_file: image.flagDeleteFile
           };
         }));
 
@@ -888,6 +922,7 @@ export default function ServiceRequest() {
             fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode?.budgetId || "",
             job_type: draftData.jobType?.lov_code || "",
+            RequestAttachFileList: imageDataListArray
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -896,11 +931,10 @@ export default function ServiceRequest() {
             code_group: draftData.site,
             code_type: "RQ",
             trans_date: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
-          },
-          requestAttachFileModel: imageDataListArray
+          }
         };
 
-        dispatch(startLoadScreen());
+       
         setTimeout(async () => {
           try {
             console.log('Running model', payload);
@@ -933,7 +967,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 500);
       }
     });
 
@@ -941,7 +975,7 @@ export default function ServiceRequest() {
 
   //Add Edit ไปลง Database
   const serviceRequestDraftEdit = async () => {
-    console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));    
+    console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));
 
     const dataForValidate = {
       costCenter: draftData.costCenter,
@@ -962,33 +996,34 @@ export default function ServiceRequest() {
         console.log("Saving draft data:", draftData);
 
         // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
-    const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
-      const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
-      let newFileName;
-      if (image.file != null) {
-        newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest${index + 1}_${timestamp}`);
-      } else {
+        const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
+          const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+          let newFileName;
+          if (image.file != null && image.flagDeleteFile != true) {          
+            newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest_${uuidv4()}_${timestamp}`);
+          } else {
 
-        newFileName = null;
+            newFileName = null;
 
-      }
-      const reqUserFilename = image.name;
+          }
+          const reqUserFilename = image.name;
 
-      console.log(newFileName, `newFileName for image ${index}`);
+          console.log(newFileName, `newFileName for image ${index}`);
 
-      // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
-      return {
-        request_attach_file_id: image.requestAttachFileId,
-        req_id: image.reqId,
-        file_patch: `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
-        req_user_filename: reqUserFilename,
-        req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName
-      };
-    }));
+          // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
+          return {
+            request_attach_file_id: image.requestAttachFileId,
+            req_id: image.reqId,
+            file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
+            req_user_filename: reqUserFilename,
+            req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
+            flag_delete_file: image.flagDeleteFile
+          };
+        }));
 
-    // imageDataListArray จะมีข้อมูลของทุกไฟล์
-    console.log(imageDataListArray, 'All imageDataList');
-    //=====================================================================================================================================
+        // imageDataListArray จะมีข้อมูลของทุกไฟล์
+        console.log(imageDataListArray, 'All imageDataList');
+        //=====================================================================================================================================
 
         //สร้างข้อมูลที่จะส่ง
         const payload = {
@@ -1007,11 +1042,11 @@ export default function ServiceRequest() {
             fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode.budgetId || "",
             job_type: draftData.jobType.lov_code || "",
+            RequestAttachFileList: imageDataListArray
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          },
-          requestAttachFileModel: imageDataListArray
+          }
         };
 
         console.log(payload, 'payload');
@@ -1049,7 +1084,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 500);
       }
 
     });
@@ -1604,6 +1639,7 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody
               disableOnly
+              actions={"Reade"}
 
             />
           }
@@ -1624,6 +1660,7 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody
               disableOnly
+              actions={"Reade"}
 
             />
           }
@@ -1644,6 +1681,7 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody
               disableOnly
+              actions={"Reade"}
 
             />
           }
@@ -1664,6 +1702,7 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody     
               disableOnly
+              actions={"Reade"}
             />
           }
         />

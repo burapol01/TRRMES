@@ -8,6 +8,8 @@ import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 import { useListServiceRequest } from "../core/service_request_provider";
 import moment from "moment";
 import { plg_uploadFileRename } from "../../../service/upload";
+// Import CSS styles
+import "../../../app/service_request/css/choose_file.css";
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -237,121 +239,107 @@ export default function ServiceRequestBody({
     name: string;      // ชื่อไฟล์
     type: string | null;      // ประเภทไฟล์
     url: string;       // URL สำหรับแสดง Preview
+    flagDeleteFile?: boolean; // Flag สำหรับระบุว่ารูปนี้ถูกลบหรือไม่
+    flagNewFile?: boolean;    // Flag สำหรับระบุว่ารูปนี้เป็นรูปใหม่
   }
   // Image Upload handling
   const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
+  const [imageListView, setImageListView] = useState<ImageItem[]>([]); // เก็บข้อมูลสำหรับการแสดงผล
 
+
+  // การอัปโหลดไฟล์
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const uploadedFiles: ImageItem[] = files.map((file) => {
-      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดง Preview
+      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
       return {
-        file: file, // เก็บข้อมูลไฟล์
-        name: file.name, // ชื่อไฟล์
-        type: file.type, // ประเภทไฟล์
-        url: url, // URL สำหรับแสดง Preview
+        file: file,
+        name: file.name,
+        type: file.type,
+        url: url,
+        flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+        flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
       };
     });
 
-    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดต state ด้วยรายการไฟล์ที่อัปโหลด
-
-    // log หลังจากอัปเดตรายการไฟล์ที่อัปโหลด
-    console.log(uploadedFiles, 'uploadedFiles');
+    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+    setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
   };
 
   // ฟังก์ชันจัดการการลบภาพ
   const handleRemoveImage = (url: string) => {
-    setImageList((prevList) => prevList.filter(image => image.url !== url));
+    setImageList((prevList) =>
+      prevList.map((image) =>
+        image.url === url ? { ...image, flagDeleteFile: true } : image
+      )
+    ); // ตั้งค่า flagDeleteFile เป็น true ใน imageList
+
+    // ลบภาพจากการแสดงผลใน imageListView
+    setImageListView((prevList) =>
+      prevList.filter((image) => image.url !== url)); // ลบภาพจากการแสดงผลใน imageListView
+
+
+
   };
 
-  // Cleanup function
-  React.useEffect(() => {
-    return () => {
-      imageList.forEach((item) => {
-        URL.revokeObjectURL(item.url); // ลบ URL blob เพื่อประหยัด memory
-      });
-    };
-  }, [imageList]);
-
-  // Log imageList เพื่อดูค่าของไฟล์ที่อัปโหลด
-  React.useEffect(() => {
-    console.log(imageList, "imageList"); // log ค่าเมื่อ imageList ถูกอัปเดต
-   
-  }, [imageList]);
-
+  // โหลดไฟล์ที่มีอยู่แล้ว
   useEffect(() => {
+    // ล้างค่า imageList และ imageListView ทุกครั้งก่อนที่จะโหลดไฟล์ใหม่
+    setImageList([]);
+    setImageListView([]);
     const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
-    console.log(actions, 'actions');
+    console.log(requestAttachFileList, 'requestAttachFileList');
+
     if (actions === "Reade" || actions === "Update" && requestAttachFileList.length > 0) {
       const existingFiles = requestAttachFileList.map((file: any) => ({
         requestAttachFileId: file.id,
         reqId: file.req_id,
         reqSysFilename: file.req_sys_filename,
+        filePatch: file.file_patch,
         file: null,
         name: file.req_user_filename,
         type: null,
-        url: file.file_patch
+        url: file.file_patch,
+        flagNewFile: false, // รูปที่มีอยู่แล้ว
+        flagDeleteFile: false // ยังไม่ได้ถูกลบ
       }));
       console.log(existingFiles, 'existingFilesexistingFiles');
-      
-      setImageList(existingFiles);
+
+      setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
+      setImageListView(existingFiles); // แสดงผลไฟล์
     }
   }, [defaultValues?.requestAttachFileList, actions]);
-  
-  
 
 
-  const itemData = [
-    {
-      img: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-      title: 'Breakfast',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1551782450-a2132b4ba21d',
-      title: 'Burger',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1522770179533-24471fcdba45',
-      title: 'Camera',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1444418776041-9c7e33cc5a9c',
-      title: 'Coffee',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8',
-      title: 'Hats',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62',
-      title: 'Honey',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1516802273409-68526ee1bdd6',
-      title: 'Basketball',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1518756131217-31eb79b20e8f',
-      title: 'Fern',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1597645587822-e99fa5d45d25',
-      title: 'Mushrooms',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1567306301408-9b74779a11af',
-      title: 'Tomato basil',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1471357674240-e1a485acb3e1',
-      title: 'Sea star',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1589118949245-7d38baf380d6',
-      title: 'Bike',
-    },
-  ];
+  // Cleanup URLs เมื่อ component ถูกลบ
+  // useEffect(() => {
+  //   return () => {
+  //     if (Array.isArray(imageList)) {
+  //       imageList.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
 
+  //     if (Array.isArray(imageListView)) {
+  //       imageListView.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
+
+  //   };
+  // }, [imageList, imageListView]);
+
+
+  // Log การอัปเดตของ imageList And imageListView
+
+  // useEffect(() => {
+  //   console.log(imageList, "imageList");
+  //   console.log(imageListView, "imageListView");
+  // }, [imageList, imageListView]);
 
 
   return (
@@ -524,34 +512,41 @@ export default function ServiceRequestBody({
         </div>
 
 
+        <div className="gallery-container">
+          {/* เงื่อนไขในการแสดงปุ่มเลือกไฟล์ */}
+          {actions !== "Reade" && (
+            <div className="upload-container">
+              <label className="upload-label">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="upload-input"
+                />
+                <span className="upload-button">
+                  <span className="upload-text">เลือกไฟล์</span>
+                  <i className="fas fa-file-image"></i> {/* ไอคอนโฟลเดอร์ */}
+                </span>
+              </label>
+            </div>
+          )}
 
-
-
-        {/*ฉันต้องการสร้างที่ Upload File รูปตรงนี้ และ Preview*/}
-        <div>
-          <h1>Image Gallery</h1>
-          <div className="upload-container">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="upload-input"
-            />
-          </div>
-          <div className="image-preview-container">
+          {imageListView.length === 0 ? (
+            <div className="no-image-container">
+              <p style={{ fontSize: '24px', color: '#999' }}>No Image</p>
+            </div>
+          ) : (
             <StyleImageList
-              itemData={imageList.map(image => ({
+              itemData={imageListView.map((image) => ({
                 img: image.url,
                 title: image.name,
               }))}
-              onRemoveImage={handleRemoveImage} // ส่งฟังก์ชันลบไปยังคอมโพเนนต์
+              onRemoveImage={handleRemoveImage}
+              actions={actions}
             />
-          </div>
+          )}
         </div>
-
-
-
 
 
         {/* <div className="col-md-9 mb-2">
