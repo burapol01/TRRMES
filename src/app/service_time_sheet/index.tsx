@@ -19,6 +19,8 @@ import FullWidthTextareaField from "../../components/MUI/FullWidthTextareaField"
 import { useListServiceTimeSheet } from "./core/service_time_sheet_provider";
 import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
+import { plg_uploadFileRename } from "../../service/upload";
+import { v4 as uuidv4 } from 'uuid';
 
 interface OptionsState {
   costCenter: any[];
@@ -77,6 +79,7 @@ const defaultVal = {
   siteId: "",
   rejectSubmitReason: "",
   rejectStartReason: "",
+  requestAttachFileList: [],
 }
 
 export default function ServiceTimeSheet() {
@@ -688,6 +691,7 @@ export default function ServiceTimeSheet() {
       fixedAssetDescription: data?.fixed_asset_description || '',
       rejectSubmitReason: data?.reject_submit_reason || '',
       rejectStartReason: data?.reject_start_reason || '',
+      requestAttachFileList: data?.requestAttachFileList
 
     })
   };
@@ -735,6 +739,26 @@ export default function ServiceTimeSheet() {
     dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
     setOpenReject(false); //ปิด Modal Reject Reason     
     setIsValidate(null);  //เคลี่ยร์ Validate
+    //Cleanup URLs เมื่อ component ถูกลบ
+    if (Array.isArray(draftData.imageList)) {
+      draftData.imageList.forEach((item: any) => {
+        if (item.url.startsWith("blob:")) {
+          URL.revokeObjectURL(item.url);
+
+        }
+
+      });
+    }
+
+    if (Array.isArray(draftData.mageListView)) {
+      draftData.imageListView.forEach((item: any) => {
+        if (item.url.startsWith("blob:")) {
+          URL.revokeObjectURL(item.url);
+        }
+      });
+    }
+
+    draftData.imageList = []; //เคลีย์ขยะตอน กด Edit เนื่องจากรูปค้าง
 
   };
 
@@ -745,7 +769,7 @@ export default function ServiceTimeSheet() {
   //================================================================================================
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
-    console.log('Call : fetchUserData', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : 🟢 เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
 
     if (!employeeUsername) return;
 

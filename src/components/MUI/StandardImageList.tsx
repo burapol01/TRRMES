@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Modal from '@mui/material/Modal'; // นำเข้า Modal
 import Box from '@mui/material/Box';
+import { CircularProgress, useMediaQuery } from '@mui/material';
 
 interface Item {
   img: string;
@@ -34,16 +35,22 @@ const modalStyle = {
 export default function StyleImageList({ itemData, onRemoveImage, actions }: StyleImageListProps) {
   const [open, setOpen] = React.useState(false); // สเตทสำหรับเปิด modal
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null); // สเตทสำหรับเก็บรูปภาพที่เลือก
+  const [imageLoading, setImageLoading] = React.useState(true);
+  const handleImageLoad = () => setImageLoading(false);
 
-  const handleOpen = (img: string) => {
+  
+  const handleOpen = React.useCallback((img: string) => {
     setSelectedImage(img); // กำหนดรูปภาพที่เลือก
     setOpen(true); // เปิด modal
-  };
-
-  const handleClose = () => {
+  }, []);
+  
+  const handleClose = React.useCallback(() => {
     setOpen(false); // ปิด modal
     setSelectedImage(null); // ลบรูปภาพที่เลือก
-  };
+  }, []);
+  
+  const isLargeScreen = useMediaQuery('(min-width:600px)');
+  const isMediumScreen = useMediaQuery('(min-width:700px)');
 
   return (
     <div
@@ -57,7 +64,7 @@ export default function StyleImageList({ itemData, onRemoveImage, actions }: Sty
       }}
     >
       <ImageList
-        cols={window.innerWidth > 600 ? 4 : window.innerWidth > 700 ? 3 : 2} // ปรับจำนวนคอลัมน์ตามขนาดหน้าจอ   
+        cols={isLargeScreen ? 4 : isMediumScreen ? 3 : 2} // ปรับจำนวนคอลัมน์ตามขนาดหน้าจอ   
         gap={8} // ระยะห่างระหว่างรูปภาพ
       >
         {itemData.map((item) => (
@@ -101,18 +108,24 @@ export default function StyleImageList({ itemData, onRemoveImage, actions }: Sty
       </ImageList>
 
       {/* Modal สำหรับแสดงรูปภาพขนาดใหญ่ */}
+      {/* Modal Image */}
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
           {selectedImage && (
-            <img
-              src={selectedImage}
-              alt="Expanded view"
-              style={{
-                width: '100%',
-                height: 'auto',
-                borderRadius: '8px',
-              }}
-            />
+            <>
+              {imageLoading && <CircularProgress />} {/* แสดงตัวโหลด */}
+              <img
+                src={selectedImage}
+                alt="Expanded view"
+                onLoad={handleImageLoad}  // เรียกใช้เมื่อรูปโหลดเสร็จ
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  borderRadius: '8px',
+                  display: imageLoading ? 'none' : 'block',
+                }}
+              />
+            </>
           )}
         </Box>
       </Modal>

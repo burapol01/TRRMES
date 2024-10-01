@@ -1,4 +1,5 @@
 import axios from "axios";
+import { log } from "console";
 
 export async function plg_uploadFileRename(element: File, path: string, rename: string) {
   // Validate the file input
@@ -6,6 +7,9 @@ export async function plg_uploadFileRename(element: File, path: string, rename: 
     console.error("Invalid file element provided");
     return;
   }
+
+  console.log(import.meta.env.VITE_PROD_SITE,'import.meta.env.VITE_PROD_SITE');
+  
 
   // Prepare FormData for upload
   const data = new FormData();

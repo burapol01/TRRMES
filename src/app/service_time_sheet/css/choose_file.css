@@ -1,0 +1,73 @@
+.gallery-container {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .upload-container {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+  
+  .upload-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .upload-input {
+    display: none; /* ซ่อน input ไฟล์ */
+  }
+  
+  .upload-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    border: none;
+    transition: background-color 0.3s ease;
+  }
+  
+  .upload-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .upload-text {
+    margin-right: 10px;
+  }
+  
+  .folder-icon {
+    width: 20px;
+    height: 20px;
+    background-image: url('/path-to-your-folder-icon.svg'); /* ไอคอนโฟลเดอร์ */
+    background-size: cover;
+  }
+  
+  .image-preview-container {
+    border: none; /* ลบขอบ */
+    padding: 0; /* ลบ padding */
+    margin: 0; /* ลบ margin */
+    overflow: hidden; /* ป้องกันการ overflow ของรูปภาพ */
+  }
+  .no-image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px; /* ปรับความสูงให้เหมาะสม */
+    border: 2px dashed #ccc; /* ขอบเป็นเส้นประเพื่อให้สังเกตง่าย */
+    border-radius: 8px; /* มุมโค้งมน */
+    margin-top: 20px; /* ระยะห่างจากด้านบน */
+    background-color: #f9f9f9; /* สีพื้นหลัง */
+  }
+
+  .image-list-container {
+    background-color: #f0f0f0; /* สีพื้นหลังเทา */
+    border: 2px dashed #ccc; /* ขอบเป็นเส้นประสีเทา */
+    border-radius: 8px; /* มุมโค้งมน */
+    padding: 10px; /* เพิ่ม padding */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* เงา */
+  }
+  
+  

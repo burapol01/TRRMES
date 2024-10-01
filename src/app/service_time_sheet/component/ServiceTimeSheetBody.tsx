@@ -5,6 +5,9 @@ import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaFie
 import debounce from 'lodash/debounce';
 import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 import TimeSheetBody from "./TimeSheetBody";
+import StyleImageList from "../../../components/MUI/StandardImageList";
+// Import CSS styles
+import "../../../app/service_time_sheet/css/choose_file.css";
 
 interface ServiceTimeSheetBodyProps {
   onDataChange?: (data: any) => void;
@@ -28,6 +31,7 @@ interface ServiceTimeSheetBodyProps {
     fixedAssetDescription?: string;
     rejectSubmitReason?: string,
     rejectStartReason?: string,
+    requestAttachFileList?: any[];
   };
   options?: {
     costCenter: any[];
@@ -116,7 +120,8 @@ export default function ServiceTimeSheetBody({
       fixedAssetDescription,
       countRevision,
       revisionCurrent,
-      timeSheetData
+      timeSheetData,
+      imageList // เพิ่ม imageList เข้าไปใน data
     };
     // Call debounced function
     debouncedOnDataChange(data);
@@ -224,7 +229,7 @@ export default function ServiceTimeSheetBody({
         .includes(jobType?.lov_code))
 
     );
-//console.log(filteredData, 'filteredData');
+    //console.log(filteredData, 'filteredData');
     //ใส่ useState ใหม่ 
     setOptionBudgetCode(filteredData);
 
@@ -239,15 +244,123 @@ export default function ServiceTimeSheetBody({
     //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
 
     const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
-      (!costCenter?.siteCode || item.siteCode
-        .toString()
-        .includes(costCenter?.siteCode || costCenter))
-      );
+    (!costCenter?.siteCode || item.siteCode
+      .toString()
+      .includes(costCenter?.siteCode || costCenter))
+    );
 
-      setOptionServiceCenter(filterServiceCenter);
+    setOptionServiceCenter(filterServiceCenter);
 
   }, [costCenter, jobType])
 
+
+  //=========================================== การ Upload File ==========================================
+  interface ImageItem {
+    file: File | null; // เก็บข้อมูลไฟล์
+    name: string;      // ชื่อไฟล์
+    type: string | null;      // ประเภทไฟล์
+    url: string;       // URL สำหรับแสดง Preview
+    flagDeleteFile?: boolean; // Flag สำหรับระบุว่ารูปนี้ถูกลบหรือไม่
+    flagNewFile?: boolean;    // Flag สำหรับระบุว่ารูปนี้เป็นรูปใหม่
+  }
+  // Image Upload handling
+  const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
+  const [imageListView, setImageListView] = useState<ImageItem[]>([]); // เก็บข้อมูลสำหรับการแสดงผล
+
+
+  // การอัปโหลดไฟล์
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const uploadedFiles: ImageItem[] = files.map((file) => {
+      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
+      return {
+        file: file,
+        name: file.name,
+        type: file.type,
+        url: url,
+        flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+        flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
+      };
+    });
+
+    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+    setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+  };
+
+  // ฟังก์ชันจัดการการลบภาพ
+  const handleRemoveImage = (url: string) => {
+    setImageList((prevList) =>
+      prevList.map((image) =>
+        image.url === url ? { ...image, flagDeleteFile: true } : image
+      )
+    ); // ตั้งค่า flagDeleteFile เป็น true ใน imageList
+
+    // ลบภาพจากการแสดงผลใน imageListView
+    setImageListView((prevList) =>
+      prevList.filter((image) => image.url !== url)); // ลบภาพจากการแสดงผลใน imageListView
+
+
+
+  };
+
+  // โหลดไฟล์ที่มีอยู่แล้ว
+  useEffect(() => {
+    // ล้างค่า imageList และ imageListView ทุกครั้งก่อนที่จะโหลดไฟล์ใหม่
+    setImageList([]);
+    setImageListView([]);
+    const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
+    console.log(requestAttachFileList, 'requestAttachFileList');
+
+    if (requestAttachFileList.length > 0) {
+      const existingFiles = requestAttachFileList.map((file: any) => ({
+        requestAttachFileId: file.id,
+        reqId: file.req_id,
+        reqSysFilename: file.req_sys_filename,
+        filePatch: file.file_patch,
+        file: null,
+        name: file.req_user_filename,
+        type: null,
+        url: file.file_patch,
+        flagNewFile: false, // รูปที่มีอยู่แล้ว
+        flagDeleteFile: false // ยังไม่ได้ถูกลบ
+      }));
+      console.log(existingFiles, 'existingFilesexistingFiles');
+
+      setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
+      setImageListView(existingFiles); // แสดงผลไฟล์
+    }
+  }, [defaultValues?.requestAttachFileList, actions]);
+
+
+  // Cleanup URLs เมื่อ component ถูกลบ
+  // useEffect(() => {
+  //   return () => {
+  //     if (Array.isArray(imageList)) {
+  //       imageList.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
+
+  //     if (Array.isArray(imageListView)) {
+  //       imageListView.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
+
+  //   };
+  // }, [imageList, imageListView]);
+
+
+  // Log การอัปเดตของ imageList And imageListView
+
+  // useEffect(() => {
+  //   console.log(imageList, "imageList");
+  //   console.log(imageListView, "imageListView");
+  // }, [imageList, imageListView]);
 
 
   return (
@@ -403,6 +516,27 @@ export default function ServiceTimeSheetBody({
             options={optionFixedAssetCode || []}
           />
         </div>
+
+
+        <div className="gallery-container">
+          {/* เงื่อนไขในการแสดงปุ่มเลือกไฟล์ */}
+          {imageListView.length === 0 ? (
+            <div className="no-image-container">
+              <p style={{ fontSize: '24px', color: '#999' }}>No Image</p>
+            </div>
+          ) : (
+            <StyleImageList
+              itemData={imageListView.map((image) => ({
+                img: image.url,
+                title: image.name,
+              }))}
+              onRemoveImage={handleRemoveImage}
+              actions={"Reade"}
+            />
+          )}
+        </div>
+
+
         {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}

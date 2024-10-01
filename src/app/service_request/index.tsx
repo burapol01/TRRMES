@@ -431,7 +431,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
 
       if (response && response.status === "success") {
-        console.log(response, 'Success fetch Revision Maximum');
+        //console.log(response, 'Success fetch Revision Maximum');
         const revisionMaximum = response.data.map((dataRevision: any) => ({
           revisionMaximum: dataRevision.lov1
         }));
@@ -618,7 +618,7 @@ export default function ServiceRequest() {
 
   };
 
-  const handleClickClose = (data: any) => {    
+  const handleClickClose = (data: any) => {
     setOpenClose(true);
     readData(data)
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User
@@ -643,7 +643,7 @@ export default function ServiceRequest() {
     setIsValidate(null);
     setIsDuplicate(false);
 
-    
+
 
     //Cleanup URLs เมื่อ component ถูกลบ
     if (Array.isArray(draftData.imageList)) {
@@ -675,7 +675,7 @@ export default function ServiceRequest() {
   //================================================================================================
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
-    console.log('Call : เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : 🟢 เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
 
     if (!employeeUsername) return;
 
@@ -847,6 +847,49 @@ export default function ServiceRequest() {
     }
   };
 
+  // ฟังก์ชันสร้าง imageDataListArray และอัปโหลดไฟล์
+  const createImageDataListArray = async (imageList: any, reqNo: any, req_id: any) => {
+    const imageDataListArray = await Promise.all(
+      imageList.map(async (image: any, index: any) => {
+        const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+        let newFileName;
+
+        if (image.file != null && image.flagDeleteFile != true) {
+          newFileName = await plg_uploadFileRename(image.file, reqNo, `${reqNo}_${uuidv4()}_${timestamp}`); // ใช้ reqNo แทน Image
+        } else {
+          newFileName = null;
+        }
+
+        const reqUserFilename = image.name;
+
+        // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
+        return {
+          request_attach_file_id: image.requestAttachFileId,
+          req_id: image.reqId || req_id,
+          file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/${import.meta.env.VITE_PROD_SITE}/ServiceRequest/${reqNo}/${newFileName}`, // ใช้ reqNo แทน Image
+          req_user_filename: reqUserFilename,
+          req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
+          flag_delete_file: image.flagDeleteFile
+        };
+      })
+    );
+
+    const payload = {
+      RequestAttachFileList: imageDataListArray,
+      currentAccessModel: {
+        user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+      },
+
+    };
+    console.log('imageDataListArray:', imageDataListArray);
+
+    // อัปโหลดไฟล์โดยใช้ API Request_Attach_File_Add
+    const attachFileResponse = await _POST(payload, "/api_trr_mes/ServiceRequest/Request_Attach_File_Add");
+    console.log('Attach file response:', attachFileResponse);
+
+    return attachFileResponse;
+  };
+
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
     console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
@@ -876,37 +919,6 @@ export default function ServiceRequest() {
 
         console.log("Saving draft data:", draftData);
 
-        // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
-        const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
-          dispatch(startLoadScreen());
-          const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
-          let newFileName;
-          if (image.file != null && image.flagDeleteFile != true) {
-            newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest_${uuidv4()}_${timestamp}`);
-          } else {
-
-            newFileName = null;
-
-          }
-          const reqUserFilename = image.name;
-
-          console.log(newFileName, `newFileName for image ${index}`);
-
-          // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
-          return {
-            request_attach_file_id: image.requestAttachFileId,
-            req_id: image.reqId,
-            file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
-            req_user_filename: reqUserFilename,
-            req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
-            flag_delete_file: image.flagDeleteFile
-          };
-        }));
-
-        // imageDataListArray จะมีข้อมูลของทุกไฟล์
-        console.log(imageDataListArray, 'All imageDataList');
-        //=====================================================================================================================================
-
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           serviceRequestModel: {
@@ -921,8 +933,7 @@ export default function ServiceRequest() {
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode?.budgetId || "",
-            job_type: draftData.jobType?.lov_code || "",
-            RequestAttachFileList: imageDataListArray
+            job_type: draftData.jobType?.lov_code || ""
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -934,7 +945,7 @@ export default function ServiceRequest() {
           }
         };
 
-       
+
         setTimeout(async () => {
           try {
             console.log('Running model', payload);
@@ -944,19 +955,28 @@ export default function ServiceRequest() {
 
             if (response && response.status === "success") {
               console.log('Draft saved successfully:', response);
-              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-              Massengmodal.createModal(
-                <div className="text-center p-4">
-                  <p className="text-xl font-semibold mb-2 text-green-600">บันทึก</p>
-                  <p className="text-lg text-gray-800">
-                    <span className="font-semibold text-gray-900">เลขที่ใบคำขอ :</span>
-                    <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-                  </p>
-                </div>,
-                'success', () => {
-                  dispatch(endLoadScreen());
-                  handleClose();
-                });
+
+              // เรียกใช้ฟังก์ชัน createImageDataListArray โดยส่ง imageList และ req_no ไป
+              const attachFileResponse = await createImageDataListArray(draftData.imageList, response.req_no, response.req_id);
+
+              // ตรวจสอบผลลัพธ์การอัปโหลดไฟล์
+              if (attachFileResponse && attachFileResponse.status === "success") {
+
+                // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+                Massengmodal.createModal(
+                  <div className="text-center p-4">
+                    <p className="text-xl font-semibold mb-2 text-green-600">บันทึก</p>
+                    <p className="text-lg text-gray-800">
+                      <span className="font-semibold text-gray-900">เลขที่ใบคำขอ :</span>
+                      <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                    </p>
+                  </div>,
+                  'success', () => {
+                    dispatch(endLoadScreen());
+                    handleClose();
+                  });
+              }
+
             } else {
               console.error('Failed to save draft:', response);
               dispatch(endLoadScreen());
@@ -995,36 +1015,6 @@ export default function ServiceRequest() {
       if (draftData) {
         console.log("Saving draft data:", draftData);
 
-        // วนลูป imageList เพื่ออัปโหลดและสร้าง imageDataList สำหรับแต่ละรูป =========================================================================
-        const imageDataListArray = await Promise.all(draftData.imageList.map(async (image: any, index: any) => {
-          const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
-          let newFileName;
-          if (image.file != null && image.flagDeleteFile != true) {          
-            newFileName = await plg_uploadFileRename(image.file, "Image", `ImageRequest_${uuidv4()}_${timestamp}`);
-          } else {
-
-            newFileName = null;
-
-          }
-          const reqUserFilename = image.name;
-
-          console.log(newFileName, `newFileName for image ${index}`);
-
-          // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
-          return {
-            request_attach_file_id: image.requestAttachFileId,
-            req_id: image.reqId,
-            file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/DEV/ServiceRequest/Image/${newFileName}`,
-            req_user_filename: reqUserFilename,
-            req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
-            flag_delete_file: image.flagDeleteFile
-          };
-        }));
-
-        // imageDataListArray จะมีข้อมูลของทุกไฟล์
-        console.log(imageDataListArray, 'All imageDataList');
-        //=====================================================================================================================================
-
         //สร้างข้อมูลที่จะส่ง
         const payload = {
           serviceRequestModel: {
@@ -1041,8 +1031,7 @@ export default function ServiceRequest() {
             description: draftData.description || "",
             fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
             budget_id: draftData.budgetCode.budgetId || "",
-            job_type: draftData.jobType.lov_code || "",
-            RequestAttachFileList: imageDataListArray
+            job_type: draftData.jobType.lov_code || ""
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -1060,19 +1049,28 @@ export default function ServiceRequest() {
 
             if (response && response.status === "success") {
               console.log('Draft saved successfully:', response);
-              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-              Massengmodal.createModal(
-                <div className="text-center p-4">
-                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                  {/* <p className="text-lg text-gray-800">
+
+              // เรียกใช้ฟังก์ชัน createImageDataListArray โดยส่ง imageList และ requestNo ไป
+              const attachFileResponse = await createImageDataListArray(draftData.imageList, draftData.requestNo, draftData.requestId);
+
+              // ตรวจสอบผลลัพธ์การอัปโหลดไฟล์
+              if (attachFileResponse && attachFileResponse.status === "success") {
+
+                // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+                Massengmodal.createModal(
+                  <div className="text-center p-4">
+                    <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                    {/* <p className="text-lg text-gray-800">
                   <span className="font-semibold text-gray-900">Request No:</span>
                   <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
                 </p> */}
-                </div>,
-                'success', () => {
-                  dispatch(endLoadScreen());
-                  handleClose();
-                });
+                  </div>,
+                  'success', () => {
+                    dispatch(endLoadScreen());
+                    handleClose();
+                  });
+
+              }
 
             } else {
               console.error('Failed to save draft:', response);

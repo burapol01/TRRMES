@@ -525,7 +525,7 @@ export default function ServiceRequestBody({
                   className="upload-input"
                 />
                 <span className="upload-button">
-                  <span className="upload-text">เลือกไฟล์</span>
+                  <span className="upload-text">เพิ่มรูปภาพ</span>
                   <i className="fas fa-file-image"></i> {/* ไอคอนโฟลเดอร์ */}
                 </span>
               </label>
