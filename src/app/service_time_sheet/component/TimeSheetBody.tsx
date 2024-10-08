@@ -351,11 +351,10 @@ export default function TimeSheetBody({
                                     setWorkStartDate(value)
                                     setWorkEndDate(null)
                                 }}
-                                disableFuture
+                                disablePast
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_start_date}
-                                minDate={minDate}
-                                maxDate={maxDate}
+                                checkValidateMonth={true}                               
                             />
                         </div>
                         <label className="pt-5 mt-5 ">ถึง</label>
@@ -365,12 +364,11 @@ export default function TimeSheetBody({
                                 labelname="วันสิ้นสุด"
                                 valueStart={workEndDate}
                                 onchangeStart={setWorkEndDate}
-                                disableFuture
+                                disablePast
                                 disabled={actions === "Reade" || actions === "JobDone"}
-                                validate={isValidate?.work_end_date}
-                                minDate={workStartDate}
-
-                            // maxDate={maxDate}
+                                validate={isValidate?.work_start_date}
+                                checkValidateMonth={true}
+                                startDate={workStartDate}  // ส่งค่า endDate เข้ามาเพื่อตรวจสอบ
                             />
                         </div>
                     </div>
