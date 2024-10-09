@@ -351,7 +351,7 @@ export default function TimeSheetBody({
                                     setWorkStartDate(value)
                                     setWorkEndDate(null)
                                 }}
-                                disablePast
+                                //disablePast
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_start_date}
                                 checkValidateMonth={true}                               
@@ -364,7 +364,7 @@ export default function TimeSheetBody({
                                 labelname="วันสิ้นสุด"
                                 valueStart={workEndDate}
                                 onchangeStart={setWorkEndDate}
-                                disablePast
+                                //disablePast
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_start_date}
                                 checkValidateMonth={true}
