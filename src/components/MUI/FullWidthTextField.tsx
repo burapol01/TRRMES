@@ -15,6 +15,7 @@ interface FullWidthTextFieldProps {
   validateTextLable?: string;
   hidden?: boolean; // Add new prop for hidden state
   isCheckHour?: boolean;
+  workHourMax?: number;
 }
 
 export default function FullWidthTextField(props: FullWidthTextFieldProps) {
@@ -66,7 +67,7 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
       />
       {(props.Validate || props.isCheckHour) && (
         <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
-          {props.Validate ? "กรุณากรอกข้อมูล" : "ชั่วโมงทำงานเกิน"}
+          {props.Validate ? "กรุณากรอกข้อมูล" : "ชั่วโมงทำงานห้ามเกิน " + props.workHourMax + " ชม."}
         </p>
       )}
 

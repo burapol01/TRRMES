@@ -684,6 +684,7 @@ export default function ServiceTimeSheet() {
       countRevision: data?.count_revision || '',
       serviceCenterId: data?.service_center_id || '',
       site: data?.site_code || '',
+      siteId: data?.site_id || '',
       jobType: data?.job_type || '',
       budgetCode: data?.budget_id || '',
       description: data?.description || '',

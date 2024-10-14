@@ -443,12 +443,13 @@ export default function ServiceRequestBody({
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
+              //เก็บ Validate นี้ไว้ก่อนเผื่อสักวันได้กลับมาใช้
               // console.log(costCenter,'costCenter💥💥💥💥',data);
-              if (costCenter?.costCenterCode == data?.serviceCenterCode) {
-                setIsDuplicate(true);
-              } else {
+              // if (costCenter?.costCenterCode == data?.serviceCenterCode) {
+              //   setIsDuplicate(true);
+              // } else {
                 setIsDuplicate(false);
-              }
+              // }
 
               //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}

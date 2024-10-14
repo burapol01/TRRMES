@@ -22,6 +22,7 @@ interface ServiceTimeSheetBodyProps {
     costCenterName?: string;
     status?: string;
     site?: string;
+    siteId?: string;
     countRevision?: string;
     serviceCenterId?: string;
     jobType?: string;
@@ -136,6 +137,7 @@ export default function ServiceTimeSheetBody({
 
     if (actions != "Create") {
 
+      console.log(defaultValues?.siteId, 'siteId')
       console.log(options?.costCenter, 'dd')
       console.log(defaultValues?.costCenterId, 'costCenterId')
 
@@ -606,6 +608,7 @@ export default function ServiceTimeSheetBody({
                 options={options}
                 serviceCenter={serviceCenter}
                 revisionCurrent={revisionCurrent}
+                siteId={defaultValues?.siteId}
                 actions={actions}
 
               />

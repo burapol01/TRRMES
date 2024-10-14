@@ -24,6 +24,7 @@ interface TimeSheetBodyProps {
     };
     serviceCenter: any;
     revisionCurrent: any;
+    siteId: any;
     actions?: string;
 }
 
@@ -32,7 +33,8 @@ export default function TimeSheetBody({
     options,
     revisionCurrent,
     actions,
-    serviceCenter
+    serviceCenter,
+    siteId
 }: TimeSheetBodyProps) {
 
     const { isValidate, setIsValidate } = useListServiceTimeSheet()
@@ -50,6 +52,7 @@ export default function TimeSheetBody({
     //Validate
     const [lovData, setLovData] = useState<any[]>([]); // Store response data
     const [workHourMax, setWorkHourMax] = useState<any>(""); // Your workHour state
+    const [cutOffFlag, setCutOffFlag] = useState<any>("");
 
     const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
@@ -115,18 +118,22 @@ export default function TimeSheetBody({
     }, [actions, revisionCurrent]);
 
 
-    // Handler for adding new data in "TimeSheet" mode
-    const handleSetDataList = () => {
+    // ปุ่มกดลงเวลา Handler for adding new data in "TimeSheet" mode
+    const handleSetDataList = async () => {
+
+        const reSultCutOffFlag = await fetchCheckMonthlyCutOff(workStartDate)
+        setCutOffFlag(reSultCutOffFlag);
 
         const data = {
             work_start_date: dateFormatTimeEN(workStartDate, "DD/MM/YYYY"),
             work_end_date: dateFormatTimeEN(workEndDate, "DD/MM/YYYY"),
             technician: technician?.tecEmpName,
             work_hour: workHour,
-            description
+            description,
         }
         console.log(data, 'data');
 
+        //Validate =================================================================
         const isValidate = checkValidate(data, []);
         console.log(isValidate, 'isValidate');
         const isValidateAll = isCheckValidateAll(isValidate);
@@ -140,6 +147,12 @@ export default function TimeSheetBody({
             return;
         }
 
+        console.log(reSultCutOffFlag, 'reSultCutOffFlag');
+        if (reSultCutOffFlag && isValidationEnabled) {
+
+            return;
+        }
+        //Validate =================================================================
         setIsValidate(null);
         if (actions === "TimeSheet" || actions === "JobDone" && technician && workHour && description) {
             const newData = {
@@ -212,7 +225,7 @@ export default function TimeSheetBody({
                 delete: (
                     actions !== "Reade" && (
                         <FullWidthButton
-                            labelName="Delete"
+                            labelName="ลบ"
                             colorname="error"
                             handleonClick={() => handleDelete(row.subTimeSheetId, isNewRow)}
                             variant_text="contained"
@@ -292,6 +305,8 @@ export default function TimeSheetBody({
         }
     }, [dataList, debouncedOnDataChange, actions]);
 
+    //Validate
+    //================================================================================================
     // Fetch max work hour data with useEffect
     useEffect(() => {
         const fetchMaxWorkHour = async () => {
@@ -336,6 +351,36 @@ export default function TimeSheetBody({
     }, [workHour, workHourMax]);
 
 
+    // Fetch Check Monthly CutOff data with useEffect
+    const fetchCheckMonthlyCutOff = async (workStartDate: any) => {
+        const dataset = {
+            site_id: siteId,
+            work_start_date: dateFormatTimeEN(workStartDate, "DD/MM/YYYY"),
+        };
+
+        try {
+            const response = await _POST(dataset, "/api_trr_mes/CheckMonthlyCutOff/CheckMonthlyCutOff_Get");
+
+            if (response && response.status === "success") {
+                const fetchedData = response.data.map((item: any) => ({
+                    cut_off_flag: item.cut_off_flag,
+                }));
+
+                console.log(fetchedData[0].cut_off_flag, 'fetchedData.cut_off_flag');
+
+                return fetchedData[0].cut_off_flag; // Return the cut_off_flag
+            } else {
+                throw new Error("Failed to fetch data: Invalid response status");
+            }
+        } catch (error) {
+            console.error("Error fetching monthly cut off:", error);
+            return null; // Return null in case of an error
+        }
+    };
+
+
+
+
 
     return (
         <div className="border rounded-xl px-2 py-2">
@@ -354,7 +399,9 @@ export default function TimeSheetBody({
                                 //disablePast
                                 disabled={actions === "Reade" || actions === "JobDone"}
                                 validate={isValidate?.work_start_date}
-                                checkValidateMonth={true}                               
+                                checkValidateMonth={true}
+                                cutOffFlag={cutOffFlag}
+
                             />
                         </div>
                         <label className="pt-5 mt-5 ">ถึง</label>
@@ -394,6 +441,7 @@ export default function TimeSheetBody({
                         disabled={actions === "Reade" || actions === "JobDone"}
                         Validate={isValidate?.work_hour}
                         isCheckHour={isCheckHour}
+                        workHourMax={workHourMax}
                     />
                     {/* ปิดไว้ก่อนเผื่อกลับมาใช้ */}
                     {/* <AutocompleteComboBox
