@@ -61,3 +61,20 @@ export async function _POST(datasend:any, path:string) {
   }
 }
 
+export async function _GET_ORGREPORT(datasend:any, path:string) {
+  const url = `${
+    import.meta.env.VITE_APP_TRR_API_URL_ORGREPORT
+  }${path}`;
+  
+  try {
+    const res = await axios.post(url, datasend);
+    const data = res.data;
+    if(data && data.status == "success"){
+      return data.data;
+    }
+  } catch {
+    return false;
+  }
+}
+
+

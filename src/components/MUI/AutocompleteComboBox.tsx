@@ -3,6 +3,7 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { grey } from "@mui/material/colors";
 
 interface AutocompleteComboBox {
+  filterOptions?: any;
   value?: any; // เปลี่ยนเป็น any เพื่อรองรับ object
   labelName: string;
   required?: string;
@@ -18,7 +19,7 @@ interface AutocompleteComboBox {
 }
 
 export default function AutocompleteComboBox(props: AutocompleteComboBox) {
-  const { value, labelName, required, setvalue, options = [], column, disabled, readonly, ValidateDuplicate } = props;
+  const { value, labelName, required, setvalue, options = [], column, disabled, readonly, ValidateDuplicate, filterOptions } = props;
 
   const handleOnChange = (e: any, newValue: any) => {
     //console.log(newValue);
@@ -37,6 +38,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         {labelName}
       </label>
       <Autocomplete
+        filterOptions={filterOptions}
         sx={{
 
           width: "100%"
@@ -46,15 +48,15 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         id="combo-box-demo"
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
-        renderOption={(props, option) =>{ 
+        renderOption={(props, option) => {
           //console.log(option); // Debugging
           return (
-          <li {...props} key={`${option[`${column}`]}-${option?.id}`}>
-            {option[`${column}`]} 
-          </li>)
+            <li {...props} key={`${option[`${column}`]}-${option?.id}`}>
+              {option[`${column}`]}
+            </li>)
         }}
-        
-        
+
+
         onChange={handleOnChange}
         disabled={disabled}
         readOnly={readonly}

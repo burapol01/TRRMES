@@ -10,6 +10,7 @@ import moment from "moment";
 import { plg_uploadFileRename } from "../../../service/upload";
 // Import CSS styles
 import "../../../app/service_request/css/choose_file.css";
+import { createFilterOptions } from "@mui/material";
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -194,10 +195,16 @@ export default function ServiceRequestBody({
 
   }, [defaultValues])
 
+  //AutocompleteComboBox ===================================================================================================================
+  //ตัวกรองข้อมูลแค่แสดง 100 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 100;
+  const defaultFilterOptions = createFilterOptions();
 
-  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
+  const filterOptions = (options: any[], state: any) => {
+    return defaultFilterOptions(options, state).slice(0, OPTIONS_LIMIT);
+  };
 
-  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
     const filteredData = options?.budgetCode.filter((item: any) =>
       (!costCenter?.costCenterId || item.costCenterId
@@ -231,8 +238,9 @@ export default function ServiceRequestBody({
     setOptionServiceCenter(filterServiceCenter);
 
   }, [costCenter, jobType])
+//AutocompleteComboBox ===================================================================================================================
 
-
+  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
   //=========================================== การ Upload File ==========================================
   interface ImageItem {
     file: File | null; // เก็บข้อมูลไฟล์
@@ -342,6 +350,8 @@ export default function ServiceRequestBody({
   // }, [imageList, imageListView]);
 
 
+
+
   return (
     <div>
       <div className="row justify-start">
@@ -448,7 +458,7 @@ export default function ServiceRequestBody({
               // if (costCenter?.costCenterCode == data?.serviceCenterCode) {
               //   setIsDuplicate(true);
               // } else {
-                setIsDuplicate(false);
+              setIsDuplicate(false);
               // }
 
               //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
@@ -484,13 +494,15 @@ export default function ServiceRequestBody({
         </div>
         <div className="col-md-10 mb-2">
           <AutocompleteComboBox
+            filterOptions={filterOptions}
             required={"required"}
             labelName={"Budget Code"}
             column="budgetCodeAndJobType"
             value={budgetCode}
             setvalue={setBudgetCode}
             disabled={disableOnly}
-            options={optionBudgetCode}
+            // options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            options={options?.budgetCode}
             Validate={isValidate?.budgetCode}
           />
         </div>
@@ -498,6 +510,7 @@ export default function ServiceRequestBody({
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <AutocompleteComboBox
+            filterOptions={filterOptions}
             //required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCodeAndDescription"
@@ -508,7 +521,8 @@ export default function ServiceRequestBody({
               setFixedAssetCode(data);
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
-            options={optionFixedAssetCode || []}
+            //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            options={options?.fixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
           />
         </div>
 

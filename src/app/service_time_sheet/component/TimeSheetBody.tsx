@@ -355,7 +355,7 @@ export default function TimeSheetBody({
     const fetchCheckMonthlyCutOff = async (workStartDate: any) => {
         const dataset = {
             site_id: siteId,
-            work_start_date: dateFormatTimeEN(workStartDate, "DD/MM/YYYY"),
+            work_start_date: dateFormatTimeEN(workStartDate,"YYYY-MM-DD"),
         };
 
         try {
