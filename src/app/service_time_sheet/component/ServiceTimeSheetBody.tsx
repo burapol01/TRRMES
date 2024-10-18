@@ -8,6 +8,7 @@ import TimeSheetBody from "./TimeSheetBody";
 import StyleImageList from "../../../components/MUI/StandardImageList";
 // Import CSS styles
 import "../../../app/service_time_sheet/css/choose_file.css";
+import { createFilterOptions } from "@mui/material";
 
 interface ServiceTimeSheetBodyProps {
   onDataChange?: (data: any) => void;
@@ -219,13 +220,21 @@ export default function ServiceTimeSheetBody({
 
   }, [defaultValues])
 
+  //AutocompleteComboBox ===================================================================================================================
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 200;
+  const defaultFilterOptions = createFilterOptions();
 
-  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์
+  const filterOptions = (options: any[], state: any) => {
+    return defaultFilterOptions(options, state).slice(0, OPTIONS_LIMIT);
+  };
+
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
     const filteredData = options?.budgetCode.filter((item: any) =>
-      (!costCenter?.costCenterId || item.costCenterId
-        .toString()
-        .includes(costCenter?.costCenterId)) &&
+      // (!costCenter?.costCenterId || item.costCenterId
+      //   .toString()
+      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
       (!jobType?.lov_code || item.jobType
         .toString()
         .includes(jobType?.lov_code))
@@ -254,8 +263,9 @@ export default function ServiceTimeSheetBody({
     setOptionServiceCenter(filterServiceCenter);
 
   }, [costCenter, jobType])
+//AutocompleteComboBox ===================================================================================================================
 
-
+  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
   //=========================================== การ Upload File ==========================================
   interface ImageItem {
     file: File | null; // เก็บข้อมูลไฟล์
@@ -493,19 +503,23 @@ export default function ServiceTimeSheetBody({
         </div>
         <div className="col-md-10 mb-2">
           <AutocompleteComboBox
+            filterOptions={filterOptions}
             required={"required"}
             labelName={"Budget Code"}
             column="budgetCodeAndJobType"
             value={budgetCode}
             setvalue={setBudgetCode}
             disabled={disableOnly}
-            options={optionBudgetCode}
+             options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            //options={options?.budgetCode}
           />
         </div>
       </div>
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <AutocompleteComboBox
+            filterOptions={filterOptions}
+            //required={"required"}
             labelName={"Fixed Asset Code"}
             column="assetCodeAndDescription"
             value={fixedAssetCode}
@@ -515,7 +529,8 @@ export default function ServiceTimeSheetBody({
               setFixedAssetCode(data);
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
-            options={optionFixedAssetCode || []}
+            //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            options={options?.fixedAssetCode || []} 
           />
         </div>
 

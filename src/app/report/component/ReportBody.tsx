@@ -19,7 +19,7 @@ export default function ReportBody({
 
   const VITE_APP_SITE = import.meta.env.VITE_APP_SITE;
   const VITE_APP = import.meta.env.VITE_APP;
-  const VITE_SITE_PATH = import.meta.env.VITE_SITE_PATH;
+  const VITE_SITE_PATH = import.meta.env.VITE_PROD_SITE;
   const VITE_APP_TRR_API_URL_REPORT = import.meta.env.VITE_APP_TRR_API_URL_REPORT;
   const ReportViewer = "/Pages/ReportViewer.aspx?/";
   const [showIframe, setShowIframe] = React.useState(false);
@@ -38,6 +38,8 @@ export default function ReportBody({
 
   React.useEffect(() => {
     preViewReport()
+    console.log(dataelement?.report_code,'sss');
+    
   }, [])
 
 

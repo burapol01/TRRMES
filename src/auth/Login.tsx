@@ -21,6 +21,10 @@ import {
   startLoadScreen,
 } from "../../redux/actions/loadingScreenAction";
 import { login_auth_emp_get } from "../service/login";
+import { IconButton, InputAdornment } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import './login.css'
 
 function Copyright() {
   return (
@@ -42,6 +46,16 @@ const defaultTheme = createTheme();
 export default function Login() {
   const dispatch = useDispatch();
   const [errorMessage, setErrorMessage] = React.useState("");
+
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+ 
+  const handleClickShowPassword = () => {
+    setShowPassword((prevShowPassword) => !prevShowPassword);
+  };
+ 
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   const handleSubmit = (event: any) => {
     dispatch(startLoadScreen());
@@ -142,8 +156,23 @@ export default function Login() {
                 fullWidth
                 name="password"
                 label="Password"
-                type="password"
+                className="inputPass"
+                type={showPassword ? "text" : "password"}
                 id="password"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 autoComplete="current-password"
                 error={errorMessage != ""}
               />

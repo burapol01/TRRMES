@@ -196,8 +196,8 @@ export default function ServiceRequestBody({
   }, [defaultValues])
 
   //AutocompleteComboBox ===================================================================================================================
-  //ตัวกรองข้อมูลแค่แสดง 100 แต่สามารถค้นหาได้ทั้งหมด
-  const OPTIONS_LIMIT = 100;
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 200;
   const defaultFilterOptions = createFilterOptions();
 
   const filterOptions = (options: any[], state: any) => {
@@ -207,9 +207,9 @@ export default function ServiceRequestBody({
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
     const filteredData = options?.budgetCode.filter((item: any) =>
-      (!costCenter?.costCenterId || item.costCenterId
-        .toString()
-        .includes(costCenter?.costCenterId)) &&
+      // (!costCenter?.costCenterId || item.costCenterId
+      //   .toString()
+      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
       (!jobType?.lov_code || item.jobType
         .toString()
         .includes(jobType?.lov_code))
@@ -501,8 +501,8 @@ export default function ServiceRequestBody({
             value={budgetCode}
             setvalue={setBudgetCode}
             disabled={disableOnly}
-            // options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            options={options?.budgetCode}
+             options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            //options={options?.budgetCode}
             Validate={isValidate?.budgetCode}
           />
         </div>
@@ -522,7 +522,7 @@ export default function ServiceRequestBody({
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
             //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            options={options?.fixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            options={options?.fixedAssetCode || []} 
           />
         </div>
 
