@@ -49,9 +49,9 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
         renderOption={(props, option) => {
-          //console.log(option); // Debugging
+          console.log(option); // Debugging
           return (
-            <li {...props} key={`${option[`${column}`]}-${option?.id}`}>
+            <li {...props} key={`${option[`${column}`]}`}>
               {option[`${column}`]}
             </li>)
         }}

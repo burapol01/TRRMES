@@ -7,7 +7,7 @@ import EnhancedTable from "../../components/MUI/DataTables";
 import { Request_headCells } from "../../../libs/columnname";
 import FuncDialog from "../../components/MUI/FullDialog";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Button, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import moment from 'moment';
 import ServiceTimeSheetBody from "./component/ServiceTimeSheetBody";
 import { confirmModal } from "../../components/MUI/Comfirmmodal";
@@ -182,7 +182,14 @@ export default function ServiceTimeSheet() {
 
 
 
-  // หน้าค้นหา Search ========================================================================================================= 
+  // หน้าค้นหา Search =========================================================================================================
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+const OPTIONS_LIMIT = 200;
+const defaultFilterOptions = createFilterOptions();
+
+const filterOptions = (optionsSearch: any[], state: any) => {
+  return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
+}; 
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -1290,6 +1297,7 @@ export default function ServiceTimeSheet() {
           </div>
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
+             filterOptions={filterOptions}
               value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
               options={optionsSearch.fixedAssetCode}

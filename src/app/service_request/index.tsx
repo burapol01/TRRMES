@@ -8,7 +8,7 @@ import { Request_headCells } from "../../../libs/columnname";
 import FuncDialog from "../../components/MUI/FullDialog";
 import ServiceRequestBody from "./component/ServiceRequestBody";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Button, createFilterOptions, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import moment from 'moment';
 import { confirmModal } from "../../components/MUI/Comfirmmodal";
 import { Massengmodal } from "../../components/MUI/Massengmodal";
@@ -177,7 +177,13 @@ export default function ServiceRequest() {
 
 
   // หน้าค้นหา Search ========================================================================================================= 
+//ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+const OPTIONS_LIMIT = 200;
+const defaultFilterOptions = createFilterOptions();
 
+const filterOptions = (optionsSearch: any[], state: any) => {
+  return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
+};
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -866,7 +872,7 @@ export default function ServiceRequest() {
         return {
           request_attach_file_id: image.requestAttachFileId,
           req_id: image.reqId || req_id,
-          file_patch: newFileName === null ? image.filePatch : `https://dev-tools.trrgroup.com/storage/TRR-MES/${import.meta.env.VITE_PROD_SITE}/ServiceRequest/${reqNo}/${newFileName}`, // ใช้ reqNo แทน Image
+          file_patch: newFileName === null ? image.filePatch : `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}/ServiceRequest/${reqNo}/${newFileName}`, // ใช้ reqNo แทน Image
           req_user_filename: reqUserFilename,
           req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
           flag_delete_file: image.flagDeleteFile
@@ -1501,6 +1507,7 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
+             filterOptions={filterOptions}
               value={selectedServiceCenter}
               labelName={"Service Center"}
               options={optionsSearch.serviceCenter}
@@ -1519,6 +1526,7 @@ export default function ServiceRequest() {
           </div>
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
+             filterOptions={filterOptions}
               value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
               options={optionsSearch.fixedAssetCode}

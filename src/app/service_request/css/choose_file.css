@@ -18,6 +18,13 @@
   .upload-input {
     display: none; /* ซ่อน input ไฟล์ */
   }
+
+  .file-type-info {
+    margin-top: 10px; /* ระยะห่างจากปุ่ม */
+    margin-left: 5px;
+    color: #ff0000; /* สีแดงเพื่อให้เด่นชัด */
+    font-size: 12px;
+}
   
   .upload-button {
     display: inline-flex;

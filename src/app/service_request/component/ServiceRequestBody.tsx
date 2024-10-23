@@ -11,6 +11,7 @@ import { plg_uploadFileRename } from "../../../service/upload";
 // Import CSS styles
 import "../../../app/service_request/css/choose_file.css";
 import { createFilterOptions } from "@mui/material";
+import { Massengmodal } from "../../../components/MUI/Massengmodal";
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -207,12 +208,12 @@ export default function ServiceRequestBody({
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
     const filteredData = options?.budgetCode.filter((item: any) =>
-      // (!costCenter?.costCenterId || item.costCenterId
-      //   .toString()
-      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
-      (!jobType?.lov_code || item.jobType
-        .toString()
-        .includes(jobType?.lov_code))
+    // (!costCenter?.costCenterId || item.costCenterId
+    //   .toString()
+    //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+    (!jobType?.lov_code || item.jobType
+      .toString()
+      .includes(jobType?.lov_code))
 
     );
     //console.log(filteredData, 'filteredData');
@@ -238,7 +239,7 @@ export default function ServiceRequestBody({
     setOptionServiceCenter(filterServiceCenter);
 
   }, [costCenter, jobType])
-//AutocompleteComboBox ===================================================================================================================
+  //AutocompleteComboBox ===================================================================================================================
 
   // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
   //=========================================== การ Upload File ==========================================
@@ -257,22 +258,62 @@ export default function ServiceRequestBody({
 
   // การอัปโหลดไฟล์
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const allowedTypes = ['image/png']; // ชนิดไฟล์ที่อนุญาต ['image/jpeg', 'image/png', 'image/gif']; 
     const files = Array.from(event.target.files || []);
-    const uploadedFiles: ImageItem[] = files.map((file) => {
-      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
-      return {
-        file: file,
-        name: file.name,
-        type: file.type,
-        url: url,
-        flagNewFile: true,  // รูปนี้เป็นรูปใหม่
-        flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
-      };
+    const uploadedFiles: ImageItem[] = [];
+
+    files.forEach((file) => {
+      // ตรวจสอบว่าไฟล์ตรงตามประเภทที่อนุญาตหรือไม่
+      if (allowedTypes.includes(file.type)) {
+        const url = URL.createObjectURL(file);
+        uploadedFiles.push({
+          file: file,
+          name: file.name,
+          type: file.type,
+          url: url,
+          flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+          flagDeleteFile: false  // รูปนี้ยังไม่ได้ถูกลบ
+        });
+      } else {
+        console.warn(`File type "${file.type}" is not allowed.`);
+        Massengmodal.createModal(
+          <div className="text-center p-4">
+            <p className="text-xl font-semibold mb-2 text-green-600">ปัจจุบันระบบรองรับแค่ไฟล์ .png เท่านั้น</p>
+            {/* <p className="text-lg text-gray-800">
+              <span className="font-semibold text-gray-900">Request No:</span>
+              <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+            </p> */}
+          </div>,
+          'error',
+          async () => {
+
+          }
+        );
+      }
     });
 
-    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
-    setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+    if (uploadedFiles.length > 0) {
+      setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+      setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+    }
   };
+  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = Array.from(event.target.files || []);
+  //   const uploadedFiles: ImageItem[] = files.map((file) => {
+  //     const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
+  //     return {
+  //       file: file,
+  //       name: file.name,
+  //       type: file.type,
+  //       url: url,
+  //       flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+  //       flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
+  //     };
+  //   });
+
+  //   setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+  //   setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+  // };
 
   // ฟังก์ชันจัดการการลบภาพ
   const handleRemoveImage = (url: string) => {
@@ -501,7 +542,7 @@ export default function ServiceRequestBody({
             value={budgetCode}
             setvalue={setBudgetCode}
             disabled={disableOnly}
-             options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
             //options={options?.budgetCode}
             Validate={isValidate?.budgetCode}
           />
@@ -522,7 +563,7 @@ export default function ServiceRequestBody({
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
             //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            options={options?.fixedAssetCode || []} 
+            options={options?.fixedAssetCode || []}
           />
         </div>
 
@@ -543,6 +584,10 @@ export default function ServiceRequestBody({
                   <span className="upload-text">เพิ่มรูปภาพ</span>
                   <i className="fas fa-file-image"></i> {/* ไอคอนโฟลเดอร์ */}
                 </span>
+                {/* คำอธิบายเกี่ยวกับไฟล์ที่รองรับ */}
+                <p className="file-type-info">
+                  (*รองรับเฉพาะไฟล์ .png เท่านั้น)
+                </p>
               </label>
             </div>
           )}
