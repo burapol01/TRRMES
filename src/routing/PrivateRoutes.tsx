@@ -11,6 +11,7 @@ import ServiceRequestPage from '../app/service_request/service_request_page';
 import ServiceTimeSheetPage from '../app/service_time_sheet/service_time_sheet_page';
 import ServiceCost from '../app/service_cost';
 import BorderedTreeView from '../app/report';
+import UserPage from '../app/master/user/user_page';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
@@ -56,7 +57,7 @@ export default function PrivateRoutes() {
                     <Route path='service_request' element={<ServiceRequestPage />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheetPage />} />
                     <Route path='service_cost' element={<ServiceCost />} />
-                    <Route path='user' element={<User />} />
+                    <Route path='user' element={<UserPage />} />
                     <Route path='report' element={<BorderedTreeView />} />
                     {/* Pages */}
                     {/* <Route path='dashboard' element={<DashboardWrapper />} />

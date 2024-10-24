@@ -6,6 +6,7 @@ interface AutocompleteComboBox {
   filterOptions?: any;
   value?: any; // เปลี่ยนเป็น any เพื่อรองรับ object
   labelName: string;
+  description?: string;  // เพิ่ม prop สำหรับคำอธิบาย
   required?: string;
   disabled?: boolean;
   readonly?: boolean;
@@ -49,7 +50,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
         renderOption={(props, option) => {
-          console.log(option); // Debugging
+          //console.log(option[`${column}`]); // Debugging
           return (
             <li {...props} key={`${option[`${column}`]}`}>
               {option[`${column}`]}
@@ -88,6 +89,11 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
           />
         )}
       />
+      {props.description && (
+        <p style={{ color: "gray", fontSize: "0.875rem", marginTop: "4px" }}>
+          {props.description}
+        </p>
+      )}
       {props.Validate && (
         <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
           กรุณาเลือกข้อมูล

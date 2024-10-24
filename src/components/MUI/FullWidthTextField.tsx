@@ -5,6 +5,7 @@ import { grey } from '@mui/material/colors';
 interface FullWidthTextFieldProps {
   value?: any;
   labelName: string;
+  description?: string;  // เพิ่ม prop สำหรับคำอธิบาย
   required?: string;
   disabled?: boolean;
   onChange?: (value: any) => void;
@@ -24,10 +25,10 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
   };
 
   return (
-    <Box sx={{ display: props.hidden ? 'none' : 'block' }}>
+    <Box sx={{ display: props.hidden ? 'none' : 'block' }}>     
       <label htmlFor="" className={`${props.required} fs-5 py-2 sarabun-regular`}>
         {props.labelName}
-      </label>
+      </label>     
       <TextField
         fullWidth
         sx={{
@@ -65,6 +66,11 @@ export default function FullWidthTextField(props: FullWidthTextFieldProps) {
         value={props.value}
       // helperText={props.Validate ? "5555555555":""}
       />
+       {props.description && (
+        <p style={{ color: "gray", fontSize: "0.875rem", marginTop: "4px" }}>
+          {props.description}
+          </p>
+      )}
       {(props.Validate || props.isCheckHour) && (
         <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
           {props.Validate ? "กรุณากรอกข้อมูล" : "ชั่วโมงทำงานห้ามเกิน " + props.workHourMax + " ชม."}

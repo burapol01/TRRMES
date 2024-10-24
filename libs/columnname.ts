@@ -182,21 +182,42 @@ export const MasterUser_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'User Ad',
-        colWidth: 185
-    },
-    {
-        columnName: 'user_name',
-        numeric: 'center',
-        disablePadding: true,
-        label: 'ชื่อผู้ใช้งาน',
         colWidth: 150
     },
     {
+        columnName: 'user_name',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'ชื่อผู้ใช้งาน',
+        colWidth: 300
+    },
+    {
         columnName: 'cost_center_label',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
         label: 'Cost Center',
         colWidth: 300
+    },
+    {
+        columnName: 'service_center_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Service Center',
+        colWidth: 300
+    },
+    {
+        columnName: 'site_code',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Site',
+        colWidth: 100
+    },
+    {
+        columnName: 'app_req_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'คนอนุมัติ',
+        colWidth: 150
     },
     {
         columnName: 'create_by',
@@ -217,7 +238,7 @@ export const MasterUser_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'แก้ไขโดย',
-        colWidth: 200    
+        colWidth: 150    
     },
     {
         columnName: 'update_date',
