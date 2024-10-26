@@ -193,32 +193,41 @@ export default function ServiceTimeSheetBody({
       if (defaultValues?.appReqUser != "") {
         //console.log(defaultValues?.appReqUser, 'appReqUser')
         setheadUser(defaultValues?.appReqUser || "");
-      }
-
-
-
-      if (defaultValues?.requestId != "") {
-
-        //console.log(options?.revision, 'revision')
-        console.log(defaultValues?.requestId, 'requestId')
-        const mapRevisionData: any = setValueList(options?.revision, defaultValues?.requestId, 'reqId')
-        //console.log(mapRevisionData, 'mapRevisionData')
-        if (mapRevisionData.length > 0) {
-
-          setOptionRevision(mapRevisionData)
-          setRevisionCurrent(mapRevisionData[0])
-          // console.log(revisionCurrent, "revisionCurrent");
-
-        } else {
-          setOptionRevision([])
-        }
-
-      }
+      }     
 
     }
 
 
   }, [defaultValues])
+
+  //เปลี่ยนเป็นเรียกครั้งเดียว ในการ ดึงข้อมูล Revision มาแสดง
+  React.useMemo(() => {
+    if (defaultValues?.requestId !== "") {
+        console.log(actions, 'actions');
+        console.log(options?.revision, 'revision');
+        console.log(defaultValues?.requestId, 'requestId');
+
+        // รับค่า data จาก setValueList
+        const data: any[] = setValueList(options?.revision, defaultValues?.requestId, 'reqId') || []; // ใช้ || [] เพื่อให้ค่าเป็นอาเรย์ว่างถ้าเป็น undefined
+
+        console.log(data, 'mapRevisionData');
+
+        // ตรวจสอบความยาวของ data
+        if (data.length > 0) {
+            setOptionRevision(data);
+            setRevisionCurrent(data[0]);
+            console.log(revisionCurrent, "revisionCurrent");
+        } else {
+            setOptionRevision([]);
+        }
+
+        return data; // คืนค่า data
+    }
+    return []; // คืนค่าอาเรย์ว่างถ้า requestId ไม่ถูกตั้งค่า
+}, []); // กำหนด dependencies
+
+
+
 
   //AutocompleteComboBox ===================================================================================================================
   //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
@@ -231,6 +240,7 @@ export default function ServiceTimeSheetBody({
 
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
+   
     const filteredData = options?.budgetCode.filter((item: any) =>
       // (!costCenter?.costCenterId || item.costCenterId
       //   .toString()
@@ -262,7 +272,7 @@ export default function ServiceTimeSheetBody({
 
     setOptionServiceCenter(filterServiceCenter);
 
-  }, [costCenter, jobType])
+  }, [actions, reqUser,costCenter, jobType])
 //AutocompleteComboBox ===================================================================================================================
 
   // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
@@ -412,7 +422,7 @@ export default function ServiceTimeSheetBody({
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
             required={"required"}
-            labelName={"Cost center"}
+            labelName={"Cost Center"}
             column="costCentersCodeAndName"
             value={costCenter}
             disabled={disableOnly}
@@ -430,7 +440,7 @@ export default function ServiceTimeSheetBody({
             options={options?.costCenter || []}
           />
           {/* <FullWidthTextField
-            labelName={"Cost center"}
+            labelName={"Cost Center"}
             value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}

@@ -24,6 +24,7 @@ import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
 
 interface OptionsState {
+  costCenterForCreate: any[];
   costCenter: any[];
   serviceCenter: any[];
   jobType: any[];
@@ -32,6 +33,7 @@ interface OptionsState {
 }
 
 const initialOptions: OptionsState = {
+  costCenterForCreate: [],
   costCenter: [],
   serviceCenter: [],
   jobType: [],
@@ -87,6 +89,7 @@ export default function ServiceRequest() {
   const [appReqUser, setAppReqUser] = useState<string>("");
   const [textValue, setTextValue] = useState<string>("");
   const [statusValue, setStatusValue] = useState<string>("");
+  const [selectedCostCenter, setSelectedCostCenter] = useState<any>(null);
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<any>(null);
   const [selectedJobType, setSelectedJobType] = useState<any>(null);
   const [selectedAssetCode, setSelectedAssetCode] = useState<any>(null);
@@ -101,6 +104,9 @@ export default function ServiceRequest() {
   const [draftData, setDraftData] = useState<any>(null); // State to store draft data  
   const [options, setOptions] = useState<OptionsState>(initialOptions); // State for combobox options
   const [optionsSearch, setOptionsSearch] = useState<OptionsState>(initialOptions); // State for combobox options
+  const [optionCostCenter, setOptionCostCenter] = useState<any>(optionsSearch?.costCenter || []);
+  const [optionServiceCenter, setOptionServiceCenter] = useState<any>(optionsSearch?.serviceCenter || []);
+  const [optionFixedAssetCodes, setOptionFixedAssetCodes] = useState<any>(optionsSearch?.fixedAssetCode || []);
   const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด 
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error messages
   const handleTextChange = (value: string) => setTextValue(value);
@@ -121,6 +127,7 @@ export default function ServiceRequest() {
   //ตัวแปร ใช้ทุกที่
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const roleName = currentUser?.role_name;
+  const roleId = currentUser?.role_id;
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
@@ -140,7 +147,8 @@ export default function ServiceRequest() {
     console.log('Call : 🟢[1] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
     const fetchData = async () => {
       await Promise.all([
-        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อคอมโพเนนต์ถูกเรนเดอร์ครั้งแรก
+        searchFetchCostCenters(),
+        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
         searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
         fetchRevisionMaximum(),
@@ -152,11 +160,8 @@ export default function ServiceRequest() {
   //ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
   useEffect(() => {
     console.log('Call : 🟢[2] fetch UserData&serviceRequest', moment().format('HH:mm:ss:SSS'));
-
     if (employeeUsername) {
-      fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
-      dataTableServiceRequest_GET();
-
+      fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
     }
   }, [employeeUsername]);
 
@@ -164,9 +169,10 @@ export default function ServiceRequest() {
   useEffect(() => {
     console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
     if (defaultValues?.reqUser)
-      fetchCostCenters();
-    fetchServiceCenters();
+      fetchCostCentersForCrate();
     if (defaultValues) {
+      fetchCostCenters();
+      fetchServiceCenters();
       fetchJobTypes();
       fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
       fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
@@ -177,13 +183,104 @@ export default function ServiceRequest() {
 
 
   // หน้าค้นหา Search ========================================================================================================= 
-//ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
-const OPTIONS_LIMIT = 200;
-const defaultFilterOptions = createFilterOptions();
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 200;
+  const defaultFilterOptions = createFilterOptions();
 
-const filterOptions = (optionsSearch: any[], state: any) => {
-  return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
-};
+  const filterOptions = (optionsSearch: any[], state: any) => {
+    return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
+  };
+
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
+  // ฟังก์ชัน useMemo สำหรับกรอง Cost Center
+  const filteredUniqueCostCenters = React.useMemo(() => {
+    console.log(dataList, 'dataList');
+
+    const filterCostCenter = optionsSearch?.costCenter.filter((item: any) =>
+        dataList.some((dataItem: any) =>
+            !dataItem.cost_center_id ||
+            item.costCenterId.toString().includes(dataItem.cost_center_id.toString())
+        )
+    );
+
+    // ใช้ Set เพื่อลบค่าซ้ำ
+    const uniqueCostCenters = Array.from(new Set(filterCostCenter.map(item => item.costCenterId)));
+    return uniqueCostCenters.map(id =>
+        filterCostCenter.find(item => item.costCenterId === id)
+    );
+}, [optionsSearch?.costCenter, dataList]);
+
+// ฟังก์ชัน useMemo สำหรับกรอง Service Center
+const filteredServiceCenters = React.useMemo(() => {
+    return optionsSearch?.serviceCenter.filter((item: any) =>
+        dataList.some((dataItem: any) =>
+            !dataItem.service_center_id ||
+            item.serviceCenterId.toString().includes(dataItem.service_center_id.toString())
+        )
+    );
+}, [optionsSearch?.serviceCenter, dataList]);
+
+// ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
+const filteredFixedAssetCodes = React.useMemo(() => {
+    const fixedAssetIdSet = new Set(dataList
+        .filter(dataItem => dataItem.fixed_asset_id !== null)
+        .map(dataItem => dataItem.fixed_asset_id.toString())
+    );
+
+    return optionsSearch?.fixedAssetCode.filter((item: any) =>
+        fixedAssetIdSet.has(item.assetCodeId.toString())
+    );
+}, [optionsSearch?.fixedAssetCode, dataList]);
+
+// Set state
+React.useEffect(() => {
+    console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
+    setOptionCostCenter(filteredUniqueCostCenters);
+    
+    console.log(filteredServiceCenters, 'filterServiceCenter');
+    setOptionServiceCenter(filteredServiceCenters);
+    
+    console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+    setOptionFixedAssetCodes(filteredFixedAssetCodes);
+    
+}, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes]);
+
+
+  const searchFetchCostCenters = async () => {
+    console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
+
+    const dataset = {
+      //user_ad: employeeUsername
+    };
+
+    try {
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+
+      if (response && response.status === "success") {
+        //console.log('Cost_Center_Get', response)
+        const costCenters = response.data.map((costCenter: any) => ({
+          costCenterId: costCenter.id,
+          userAd: costCenter.user_ad,
+          appReqUser: costCenter.app_req_user,
+          costCenterCode: costCenter.cost_center_code,
+          costCenterName: costCenter.cost_center_name,
+          costCentersCodeAndName: "[" + costCenter.site_code + "] " + '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
+          siteCode: costCenter.site_code
+        }));
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          costCenter: costCenters,
+        }));
+      } else {
+        setError("Failed to fetch Cost Centers.");
+      }
+    } catch (error) {
+      console.error("Error fetching Cost Centers:", error);
+      setError("An error occurred while fetching Cost Centers.");
+    }
+  };
+
   const searchFetchServiceCenters = async () => {
     console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -200,7 +297,8 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           serviceCenterId: center.id,
           serviceCenterCode: center.cost_center_code,
           serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
+          serviceCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
+
         }));
 
         // console.log(serviceCenters, 'Service Center');
@@ -264,7 +362,7 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           assetCodeId: asset.id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description,
-          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
+          assetCodeAndDescription: "[" + asset.site_code + "] " + '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
         }));
 
         setOptionsSearch((prevOptions) => ({
@@ -286,7 +384,8 @@ const filterOptions = (optionsSearch: any[], state: any) => {
       ใช้สำหรับหน้า ServicesRequestBody 
   */
 
-  const fetchCostCenters = async () => {
+  //--------------------- ใช้เฉพราะตอน Create เท่านั้น
+  const fetchCostCentersForCrate = async () => {
     console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
@@ -300,10 +399,47 @@ const filterOptions = (optionsSearch: any[], state: any) => {
         //console.log('Cost_Center_Get', response)
         const costCenters = response.data.map((costCenter: any) => ({
           costCenterId: costCenter.id,
+          userAd: costCenter.user_ad,
           appReqUser: costCenter.app_req_user,
           costCenterCode: costCenter.cost_center_code,
           costCenterName: costCenter.cost_center_name,
-          costCentersCodeAndName: '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
+          costCentersCodeAndName: "[" + costCenter.site_code + "] " + '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
+          siteCode: costCenter.site_code
+        }));
+
+        setOptions((prevOptions) => ({
+          ...prevOptions,
+          costCenterForCreate: costCenters,
+        }));
+
+      } else {
+        setError("Failed to fetch Cost Centers.");
+      }
+    } catch (error) {
+      console.error("Error fetching Cost Centers:", error);
+      setError("An error occurred while fetching Cost Centers.");
+    }
+  };
+
+  const fetchCostCenters = async () => {
+    console.log('Call : fetchCostCenters', moment().format('HH:mm:ss:SSS'));
+
+    const dataset = {
+      //user_ad: employeeUsername
+    };
+
+    try {
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
+
+      if (response && response.status === "success") {
+        //console.log('Cost_Center_Get', response)
+        const costCenters = response.data.map((costCenter: any) => ({
+          costCenterId: costCenter.id,
+          userAd: costCenter.user_ad,
+          appReqUser: costCenter.app_req_user,
+          costCenterCode: costCenter.cost_center_code,
+          costCenterName: costCenter.cost_center_name,
+          costCentersCodeAndName: "[" + costCenter.site_code + "] " + '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
           siteCode: costCenter.site_code
         }));
 
@@ -311,7 +447,6 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           ...prevOptions,
           costCenter: costCenters,
         }));
-
       } else {
         setError("Failed to fetch Cost Centers.");
       }
@@ -338,7 +473,7 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           serviceCenterId: center.id,
           serviceCenterCode: center.cost_center_code,
           serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: '[' + center.cost_center_code + ']' + ' | ' + center.cost_center_name,
+          serviceCentersCodeAndName: "[" + center.site_code + "] " + '[' + center.cost_center_code + ']' + ' | ' + center.cost_center_name,
           siteCode: center.site_code
         }));
 
@@ -404,7 +539,8 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           costCenterId: budget.cost_center_id,
           budgetCode: budget.budget_code,
           jobType: budget.job_type,
-          budgetCodeAndJobType: '[' + budget.budget_code + ']' + ' | ' + budget.description
+          budgetCodeAndJobType: "[" + budget.site_code + "] " + '[' + budget.budget_code + ']' + ' | ' + budget.description,
+          siteCode: budget.site_code,
         }));
 
         setOptions((prevOptions) => ({
@@ -460,6 +596,36 @@ const filterOptions = (optionsSearch: any[], state: any) => {
     }
   };
 
+  //------------------- ดึง Role พิเศษมาตรวจจาก Lov Data
+  const fetchRoleSpecificViewAdmin = async () => {
+    console.log('Call : fetchRoleSpecificViewAdmin', moment().format('HH:mm:ss:SSS'));
+    try {
+      const dataset = {
+        "lov_type": "role_view_admin",
+        "lov_code": "RoleId"
+      };
+
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+      if (response && response.status === "success") {
+        const roleSpecific = response.data.map((dataRoleSpecific: any) => dataRoleSpecific.lov1);
+
+        if (roleSpecific.length > 0) {
+          console.log(roleSpecific[0], 'roleSpecific');
+          return roleSpecific[0]; // คืนค่าที่ต้องการ
+        } else {
+          throw new Error("No role specific data found.");
+        }
+      } else {
+        throw new Error("Failed to fetch Revision Maximum.");
+      }
+    } catch (error) {
+      console.error("Error fetching Revision Maximum:", error);
+      throw new Error("An error occurred while fetching Revision Maximum.");
+    }
+  };
+
+
   //BackUp budget
   /*-----------------------------------------------------------------------------------------------------------------
   // const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
@@ -511,7 +677,9 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           costCenterId: asset.cost_center_id,
           assetCode: asset.fixed_asset_code,
           assetDescription: asset.description,
-          assetCodeAndDescription: '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
+          assetCodeAndDescription: "[" + asset.site_code + "] " + '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description,
+          siteCode: asset.site_code,
+
 
         }));
 
@@ -537,6 +705,7 @@ const filterOptions = (optionsSearch: any[], state: any) => {
   const handleReset = () => {
     setTextValue("");
     setStatusValue("");
+    setSelectedCostCenter(null)
     setSelectedServiceCenter(null);
     setSelectedJobType(null);
     setSelectedAssetCode(null);
@@ -571,7 +740,7 @@ const filterOptions = (optionsSearch: any[], state: any) => {
       countRevision: data?.count_revision || '',
       serviceCenterId: data?.service_center_id || '',
       site: data?.site_code || '',
-      jobType: data?.job_type || '',
+      jobType: data?.job_type || 'Repair',
       budgetCode: data?.budget_id || '',
       description: data?.description || '',
       fixedAssetId: data?.fixed_asset_id || '',
@@ -679,6 +848,53 @@ const filterOptions = (optionsSearch: any[], state: any) => {
   };
 
   //================================================================================================
+  //เฉพราะ Role พิเศษเเก้เงื่อนไขที่นี่ที่เดียว
+  const handleRoleCheck = async () => {
+    console.log(roleId, 'role id');
+
+    try {
+      // เรียกใช้ฟังก์ชัน fetchRoleSpecificViewAdmin และรอผลลัพธ์
+      const roleSpecific = await fetchRoleSpecificViewAdmin();
+
+      // แปลง string เป็น array โดยใช้ split และ trim
+      const allowedRoleIds: string[] = roleSpecific
+        ? roleSpecific.split(',').map((id: string) => id.trim())
+        : [];
+
+      console.log(allowedRoleIds, 'allowedRoleIds');
+
+      // ตรวจสอบว่า roleId อยู่ใน allowedRoleIds หรือไม่
+      if (!allowedRoleIds.includes(roleId.toString())) {
+        // ถ้าไม่พบใน allowedRoleIds
+        Massengmodal.createModal(
+          <div className="text-center p-4">
+            <p className="text-xl font-semibold mb-2 text-green-600">
+              ไม่พบข้อมูลลงทะเบียนผู้ขอใช้บริการในระบบ โปรดแจ้ง Admin ให้ลงทะเบียนข้อมูลพื้นฐาน
+            </p>
+            <p className="text-lg text-gray-800">
+              <span className="font-semibold text-gray-900">"ผู้ขอใช้บริการ"</span>
+            </p>
+          </div>,
+          'error',
+          () => { }
+        );
+      } else {
+        // ถ้าข้อมูลถูกต้อง ให้เรียกใช้ฟังก์ชัน dataTableServiceRequest_GET
+        dataTableServiceRequest_GET();
+      }
+    } catch (error) {
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-red-600">
+            เกิดข้อผิดพลาดในการตรวจสอบข้อมูล Role
+          </p>
+        </div>,
+        'error',
+        () => { }
+      );
+    }
+  };
+
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
     console.log('Call : 🟢 เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
@@ -715,22 +931,64 @@ const filterOptions = (optionsSearch: any[], state: any) => {
               }));
               //console.log(response, 'UserGet');
 
+              // ถ้าข้อมูลถูกต้อง ให้เรียกใช้ฟังก์ชัน dataTableServiceTimeSheet_GET    
+              dataTableServiceRequest_GET();
+
             } else {
               dispatch(endLoadScreen());
-              setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบันโปรดทำการแก้ไขข้อมูล</p>
+                  {/* <p className="text-lg text-gray-800">
+                      <span className="font-semibold text-gray-900">Request No:</span>
+                      <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                    </p> */}
+                </div>,
+                'error', () => {
+
+                });
+              //setErrorMessage("ข้อมูล User ไม่ตรงกับข้อมูลปัจจุบัน");
             }
           } else {
             dispatch(endLoadScreen());
-            setErrorMessage("ไม่มีข้อมูล User ที่ตรงกับเงื่อนไข");
+
+            // เรียกใช้งานฟังก์ชัน handleRoleCheck กรณีที่ยังไม่ได้ลงทะเบียนและ Role พิเศษหรือไม่
+            handleRoleCheck();
+
+
           }
         } else {
           dispatch(endLoadScreen());
-          setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");
+
+          Massengmodal.createModal(
+            <div className="text-center p-4">
+              <p className="text-xl font-semibold mb-2 text-green-600">ไม่สามารถดึงข้อมูล User ได้</p>
+              {/* <p className="text-lg text-gray-800">
+                    <span className="font-semibold text-gray-900">Request No:</span>
+                    <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                  </p> */}
+            </div>,
+            'error', () => {
+
+            });
+          //setErrorMessage("ไม่สามารถดึงข้อมูล User ได้");        
+
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
         dispatch(endLoadScreen());
-        setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
+        Massengmodal.createModal(
+          <div className="text-center p-4">
+            <p className="text-xl font-semibold mb-2 text-green-600">เกิดข้อผิดพลาดในการดึงข้อมูล User</p>
+            {/* <p className="text-lg text-gray-800">
+                <span className="font-semibold text-gray-900">Request No:</span>
+                <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+              </p> */}
+          </div>,
+          'error', () => {
+
+          });
+        //setErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูล User");
       }
     }, 0);
   };
@@ -740,14 +998,18 @@ const filterOptions = (optionsSearch: any[], state: any) => {
     console.log('Call : dataTableServiceRequest_GET', moment().format('HH:mm:ss:SSS'));
 
     if (!currentUser) return;
+    console.log(currentUser, 'currentUser');
+
 
     const dataset = {
       "req_user": employeeUsername,
+      "cost_center_id": selectedCostCenter?.costCenterId,
       "service_center_id": selectedServiceCenter?.serviceCenterId,
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
       "fixed_asset_id": selectedAssetCode?.assetCodeId,
-      "req_status": status
+      "req_status": status,
+      "role_id": roleId?.toString()
     };
 
     try {
@@ -763,8 +1025,9 @@ const filterOptions = (optionsSearch: any[], state: any) => {
 
           el.req_date = dateFormatTimeEN(el.req_date, "DD/MM/YYYY HH:mm:ss")
           el.status_update = dateFormatTimeEN(el.status_update, "DD/MM/YYYY HH:mm:ss")
-          el.cost_center_label = "[" + el.cost_center_code + "]" + " | " + el.cost_center_name
-          el.service_center_label = "[" + el.service_center_code + "]" + " | " + el.service_center_name
+          el.cost_center_label = "[" + el.site_code + "] " + "[" + el.cost_center_code + "]" + " | " + el.cost_center_name
+          el.service_center_label = "[" + el.site_code + "] " + "[" + el.service_center_code + "]" + " | " + el.service_center_name
+          el.fixed_asset_label = el.fixed_asset_id === null ? "" : "[" + el.site_code + "] " + "[" + el.fixed_asset_code + "]" + " | " + el.fixed_asset_description
 
           el.ACTION = null
           el.ACTION = (
@@ -904,16 +1167,22 @@ const filterOptions = (optionsSearch: any[], state: any) => {
       costCenter: draftData.costCenter,
       serviceCenter: draftData.serviceCenter,
       jobType: draftData.jobType,
-      budgetCode: draftData.budgetCode,
+      budgetCode: draftData?.jobType?.lov_code === "Repair" ? false : draftData.budgetCode,
     }
     const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
+
+    if (draftData?.jobType?.lov_code === "Repair") {
+      isValidate.budgetCode = false;
+    }
+
     const isValidateAll = isCheckValidateAll(isValidate);
 
     if (isDuplicate && isValidationEnabled) {
       return;
     }
+    console.log(isValidateAll,);
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-      //console.log(isValidateAll,);
+      console.log(isValidateAll,);
       setIsValidate(isValidate);
       return;
     }
@@ -933,12 +1202,12 @@ const filterOptions = (optionsSearch: any[], state: any) => {
             app_user: null,
             cost_center_id: draftData.costCenter?.costCenterId || "",
             service_center_id: draftData.serviceCenter?.serviceCenterId || "",
-            description: draftData.description || "",
+            description: draftData.description || null,
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
-            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
-            budget_id: draftData.budgetCode?.budgetId || "",
+            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || null,
+            budget_id: draftData.budgetCode?.budgetId || null,
             job_type: draftData.jobType?.lov_code || ""
           },
           currentAccessModel: {
@@ -1007,12 +1276,17 @@ const filterOptions = (optionsSearch: any[], state: any) => {
       costCenter: draftData.costCenter,
       serviceCenter: draftData.serviceCenter,
       jobType: draftData.jobType,
-      budgetCode: draftData.budgetCode,
+      budgetCode: draftData.jobType.lov_code === "Repair" ? false : draftData.budgetCode,
     }
     const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
+
+    if (draftData.jobType.lov_code === "Repair") {
+      isValidate.budgetCode = false;
+    }
     const isValidateAll = isCheckValidateAll(isValidate);
+
     if (Object.keys(isValidateAll).length > 0) {
-      //console.log(isValidateAll,);
+      console.log(isValidateAll,);
       setIsValidate(isValidate);
       return;
     }
@@ -1028,15 +1302,15 @@ const filterOptions = (optionsSearch: any[], state: any) => {
             req_no: draftData?.requestNo || "",
             req_date: DateToDB(draftData.requestDate), // ใช้วันที่ปัจจุบัน
             req_user: draftData.reqUser || "",
-            app_user: "",
+            app_user: null,
             req_status: draftData.status || "",
             count_revision: draftData.countRevision || 0,
             status_update: DateToDB(new Date()), // ใช้วันที่ปัจจุบัน
             cost_center_id: draftData.costCenter.costCenterId || "",
             service_center_id: draftData.serviceCenter.serviceCenterId || "",
-            description: draftData.description || "",
-            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || "",
-            budget_id: draftData.budgetCode.budgetId || "",
+            description: draftData.description || null,
+            fixed_asset_id: draftData.fixedAssetCode?.assetCodeId || null,
+            budget_id: draftData.budgetCode?.budgetId || null,
             job_type: draftData.jobType.lov_code || ""
           },
           currentAccessModel: {
@@ -1507,10 +1781,20 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           </div>
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
-             filterOptions={filterOptions}
+              filterOptions={filterOptions}
+              value={selectedCostCenter}
+              labelName={"Cost Center"}
+              options={optionCostCenter}
+              column="costCentersCodeAndName"
+              setvalue={handleAutocompleteChange(setSelectedCostCenter)}
+            />
+          </div>
+          <div className="col-md-3 mb-2">
+            <AutocompleteComboBox
+              filterOptions={filterOptions}
               value={selectedServiceCenter}
               labelName={"Service Center"}
-              options={optionsSearch.serviceCenter}
+              options={optionServiceCenter}
               column="serviceCentersCodeAndName"
               setvalue={handleAutocompleteChange(setSelectedServiceCenter)}
             />
@@ -1526,10 +1810,10 @@ const filterOptions = (optionsSearch: any[], state: any) => {
           </div>
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
-             filterOptions={filterOptions}
+              filterOptions={filterOptions}
               value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
-              options={optionsSearch.fixedAssetCode}
+              options={optionFixedAssetCodes}
               column="assetCodeAndDescription"
               setvalue={handleAutocompleteChange(setSelectedAssetCode)}
             />

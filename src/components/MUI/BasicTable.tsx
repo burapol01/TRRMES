@@ -48,8 +48,9 @@ export default function BasicTable({ rows, columns, disabled = false ,actions}: 
                                         key={`${column.columnName}-${cellIndex}`}  // Ensure unique key for each cell
                                         align={column.numeric}
                                         className='border'
+                                        
                                     >
-                                        <label className="fs-6 pr-10 sarabun-regular">
+                                        <label className="fs-6 sarabun-regular" style={{ padding: '0', margin: '0' }}>
                                             {value}
                                         </label>
                                     </TableCell>

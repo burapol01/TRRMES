@@ -56,8 +56,22 @@ export const Request_headCells = [
         colWidth: 300
     },
     {
-        columnName: 'description',
+        columnName: 'job_type_name',
         numeric: 'center',
+        disablePadding: true,
+        label: 'ประเภทงาน',
+        colWidth: 100
+    },
+    {
+        columnName: 'fixed_asset_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Fixed Asset Description',
+        colWidth: 300
+    },
+    {
+        columnName: 'description',
+        numeric: 'left',
         disablePadding: true,
         label: 'รายละเอียด',
         colWidth: 300

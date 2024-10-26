@@ -63,39 +63,48 @@ export default function UserBody({
   //--------------------------- ข้อมูล User ที่ดึงมาจากการพิมพ์
   const handleUserAdChange = (value: any) => {
     // แปลงค่าที่กรอกเป็นตัวพิมพ์เล็ก
-    const lowerValue = value.toLowerCase();
-
+    const lowerValue = value.toLowerCase().trim(); // ลบ Space ที่ต้นและปลาย
+  
     // ตรวจสอบว่ามีเฉพาะตัวอักษรภาษาอังกฤษ, จุด, หรือ @ เท่านั้น
     const isValid = /^[a-z.@]*$/.test(lowerValue);
-
+  
     if (!isValid) {
       Massengmodal.createModal(
         <div className="text-center p-4">
           <p className="text-xl font-semibold mb-2 text-green-600">กรุณากรอกเฉพาะตัวอักษรภาษาอังกฤษเท่านั้น.</p>
-          {/* <p className="text-lg text-gray-800">
-            <span className="font-semibold text-gray-900">Request No:</span>
-            <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-          </p> */}
         </div>,
         'error',
-        async () => {
-
-        }
+        async () => {}
       );
       return; // หากมีอักขระที่ไม่ใช่ภาษาอังกฤษ ให้หยุดการพิมพ์
     }
-
+  
+    // ตรวจสอบการมี Space ติดมาที่ต้นหรือปลายของสตริง
+    if (value !== value.trim()) {
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-green-600">
+            กรุณาลบ "ช่องว่าง" ที่ต้นหรือปลายของตัวอักษรหรือที่ Copy มาจากที่อื่นอาจมีช่องว่างติดมาด้วย.</p>
+        
+        </div>,
+        'error',
+        async () => {}
+      );
+      return; // หากมี Space ติดมาที่ต้นหรือปลาย ให้หยุดการอัปเดต
+    }
+  
     // ตรวจสอบว่ามี "." หรือไม่
     const indexOfDot = lowerValue.indexOf('.');
-
+  
     if (indexOfDot !== -1 && lowerValue.length - indexOfDot > 4) {
       // หากมีจุดและตัวอักษรหลังจุดเกิน 3 ตัว จะหยุดการเพิ่มตัวอักษร
       return;
     }
-
+  
     // อัปเดตค่า userAd หากไม่เกินเงื่อนไข
     setUserAd(lowerValue);
   };
+  
 
   React.useEffect(() => {
 
@@ -127,7 +136,7 @@ export default function UserBody({
             description={"กรุณาพิมพ์คำว่า Service Center หากต้องการค้นหา."}
             column="costCentersCodeAndName"
             value={costCenter}
-            disabled={disableOnly}
+            disabled={actions === "Update" ? true : disableOnly}
             setvalue={(data) => {
               setCostCenter(data);
               setSite(data?.costCentersSiteCode || "");

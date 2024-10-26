@@ -55,6 +55,8 @@ export async function _POST(datasend:any, path:string) {
     const data = res.data;
     if(data && data.status == "success"){
       return data;
+    }else if(data && data.status == "error") {
+      return data;
     }
   } catch {
     return false;

@@ -5,11 +5,13 @@ import EnhancedTable from '../../components/MUI/DataTables';
 import FuncDialog from '../../components/MUI/FullDialog';
 import ServiceCostBody from './component/ServiceCostBody'; // import ไฟล์แยก ServiceCostBody
 import * as XLSX from 'xlsx';
+import { useSelector } from 'react-redux';
 
 export default function ServiceCost() {
     const [openAdd, setOpenAdd] = useState(false);
     const [actionType, setActionType] = useState<string | null>(null);
     const [excelData, setExcelData] = useState<any[]>([]); // เก็บข้อมูล Excel ที่อัปโหลด
+    const currentUser = useSelector((state: any) => state?.user?.user);
 
     /* ฟังก์ชันสำหรับการอัปโหลดไฟล์ Excel */
     const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => { // กำหนดประเภทของ event
@@ -63,10 +65,12 @@ export default function ServiceCost() {
 
     // ล้าง excelData เมื่อ dialog เปิด
     useEffect(() => {
+        console.log(currentUser,'currentUser');
+        
         if (openAdd) {
             setExcelData([]); // ล้างข้อมูล Excel ทุกครั้งที่เปิด dialog
         }
-    }, [openAdd]);
+    }, [openAdd, currentUser]);
 
     useEffect(() => {
 

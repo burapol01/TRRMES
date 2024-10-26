@@ -101,7 +101,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
       )}
       {props.ValidateDuplicate && (
         <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
-          Service Center ห้ามเลือกซ้ำกับ Cost center
+          Service Center ห้ามเลือกซ้ำกับ Cost Center
         </p>
       )}
     </>

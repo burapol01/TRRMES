@@ -135,7 +135,7 @@ export default function User() {
             costCenterId: center.id,
             costCenterCode: center.cost_center_code,
             costCenterName: center.cost_center_name,
-            costCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
+            costCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
           }));
 
         // กรองข้อมูลเฉพาะที่เป็น Service Center
@@ -145,7 +145,7 @@ export default function User() {
             serviceCenterId: center.id,
             serviceCenterCode: center.cost_center_code,
             serviceCenterName: center.cost_center_name,
-            serviceCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']'
+            serviceCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
           }));
 
         // อัพเดตค่าใน setOptionsSearch
@@ -227,8 +227,8 @@ export default function User() {
 
   };
 
-   //------------------- ลบข้อมูล
-   const handleClickDelete = (data: any) => {
+  //------------------- ลบข้อมูล
+  const handleClickDelete = (data: any) => {
     setOpenDelete(true);;
     readData(data)
 
@@ -270,7 +270,7 @@ export default function User() {
           costCenterId: center.id,
           costCenterCode: center.cost_center_code,
           costCenterName: center.cost_center_name,
-          costCentersCodeAndName: center.cost_center_name + ' [' + center.cost_center_code + ']' + (center.service_center_flag === true ? ' (Service Center)' : ''),
+          costCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']' + (center.service_center_flag === true ? ' (Service Center)' : ''),
           appReqUser: center.app_req_user,
           costCentersSiteCode: center.site_code
         }));
@@ -409,6 +409,17 @@ export default function User() {
             } else {
               console.error('Failed to JobDone:', response);
               dispatch(endLoadScreen());
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">{response.data[0].errorMessage}</p>
+                  {/* <p className="text-lg text-gray-800">
+                <span className="font-semibold text-gray-900">Request No:</span>
+                <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+              </p> */}
+                </div>,
+                'error', () => {
+                  dispatch(endLoadScreen());
+                });
               // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
             }
           } catch (error) {
@@ -525,7 +536,7 @@ export default function User() {
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           UserModel: {
-            id: resultData.userId, 
+            id: resultData.userId,
           },
           currentAccessModel: {
             user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
@@ -699,6 +710,7 @@ export default function User() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody 
               actions={"Update"}
+              
 
             />
           }

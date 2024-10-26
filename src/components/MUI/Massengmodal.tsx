@@ -4,7 +4,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Stack, Typography, IconButton, Box } from "@mui/material";
+import { Stack, Typography, IconButton, Box, createTheme, useMediaQuery, ThemeProvider } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 type Types = "success" | "error" | "warning" | "info";
@@ -31,6 +31,9 @@ const MassengmodalProvider: React.FC = () => {
   );
   const [open, setOpen] = React.useState(false);
 
+  const theme = createTheme(); // สร้าง theme
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm")); // ใช้ theme สำหรับ useMediaQuery
+
   React.useEffect(() => {
     Massengmodal = {
       createModal: (
@@ -54,14 +57,17 @@ const MassengmodalProvider: React.FC = () => {
   };
 
   return (
+    <ThemeProvider theme={theme}> {/* ครอบ MassengmodalProvider ด้วย ThemeProvider */}
     <Dialog
       open={open}
       onClose={handleClose}
+      fullWidth={isSmallScreen}
+      maxWidth={isSmallScreen ? "xs" : "sm"}
       sx={{
         zIndex: (theme) => theme.zIndex.modal + 10,
         "& .MuiDialog-paper": {
-          width: "20%", // Make it responsive
-          maxWidth: "600px", // Max width to prevent it from growing too large
+          width: isSmallScreen ? "90%" : "25%",
+          maxWidth: "600px",
         },
       }}
     >
@@ -111,6 +117,7 @@ const MassengmodalProvider: React.FC = () => {
         </Box>
       </DialogActions>
     </Dialog>
+    </ThemeProvider>
   );
 };
 

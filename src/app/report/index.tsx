@@ -142,44 +142,6 @@ const handleReset = () => {
 };
   return (
     <div>
-       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
-                {/* ค้นหาข้อมูล */}
-                <div className="px-6 pt-4">
-                    <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหาข้อมูล</label>
-                </div>
-                <div className="row px-10 pt-0 pb-5">
-                    <div className="col-md-3 mb-2">
-                        <FullWidthTextField labelName={"สรุปตารางประจำเดือน"} value={''} />
-                    </div>
-                    <div className="col-md-3 mb-2">
-                        <FullWidthTextField labelName={"วันที่นำเข้าข้อมูล"} value={''} />
-                    </div>
-                    <div className="col-md-3 mb-2">
-                        <FullWidthTextField labelName={"."} value={''} />
-                    </div>
-                    <div className="col-md-3 mb-2">
-                        <FullWidthTextField labelName={"คนที่นำเข้าข้อมูล"} value={''} />
-                    </div>
-                    <div className="flex justify-end pt-2">
-                        <div className="col-md-1 px-1">
-                            <FullWidthButton
-                                labelName={"ค้นหา"}
-                                handleonClick={handleSearch}
-                                variant_text="contained"
-                                colorname={"success"}
-                            />
-                        </div>
-                        <div className="col-md-1 px-1">
-                            <FullWidthButton
-                                labelName={"รีเซ็ต"}
-                                handleonClick={handleReset}
-                                variant_text="contained"
-                                colorname={"inherit"}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
           <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Report</label>

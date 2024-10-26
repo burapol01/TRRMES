@@ -38,6 +38,7 @@ interface ServiceRequestBodyProps {
     requestAttachFileList?: any[];
   };
   options?: {
+    costCenterForCreate: any[];
     costCenter: any[];
     serviceCenter: any[];
     jobType: any[];
@@ -61,6 +62,7 @@ export default function ServiceRequestBody({
   actions
 }: ServiceRequestBodyProps) {
   const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
+  const [optionCostCenter, setOptionCostCenter] = useState<any>(options?.costCenter || []);
   const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
   const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
   const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
@@ -207,13 +209,26 @@ export default function ServiceRequestBody({
 
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
+
+    console.log(actions, 'actions');
+    if (actions === "Create") {
+      setOptionCostCenter(options?.costCenterForCreate)
+
+    } else {
+      setOptionCostCenter(options?.costCenter)
+
+    }
+
     const filteredData = options?.budgetCode.filter((item: any) =>
-    // (!costCenter?.costCenterId || item.costCenterId
-    //   .toString()
-    //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
-    (!jobType?.lov_code || item.jobType
-      .toString()
-      .includes(jobType?.lov_code))
+      // (!costCenter?.costCenterId || item.costCenterId
+      //   .toString()
+      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+      (!costCenter?.siteCode || item.siteCode
+        .toString()
+        .includes(costCenter?.siteCode)) &&
+      (!jobType?.lov_code || item.jobType
+        .toString()
+        .includes(jobType?.lov_code))
 
     );
     //console.log(filteredData, 'filteredData');
@@ -221,20 +236,27 @@ export default function ServiceRequestBody({
     setOptionBudgetCode(filteredData);
 
     const filterFixedAssetCode = options?.fixedAssetCode.filter((item: any) =>
-    (!costCenter?.costCenterId || item.costCenterId
+    // (!costCenter?.costCenterId || item.costCenterId
+    //   .toString()
+    //   .includes(costCenter?.costCenterId || costCenter)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+    (!costCenter?.siteCode || item.siteCode
       .toString()
-      .includes(costCenter?.costCenterId || costCenter))
+      .includes(costCenter?.siteCode))
     );
 
     //ใส่ useState ใหม่ 
     setOptionFixedAssetCode(filterFixedAssetCode)
     //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
 
-    const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
-    (!costCenter?.siteCode || item.siteCode
-      .toString()
-      .includes(costCenter?.siteCode || costCenter))
-    );
+    const filterServiceCenter = options?.serviceCenter
+      // .filter((item: any) =>
+      // (!costCenter?.siteCode || item.siteCode
+      //   .toString()
+      //   .includes(costCenter?.siteCode || costCenter))
+      // )
+      .sort((a: any, b: any) =>
+        (b.siteCode === costCenter?.siteCode ? 1 : 0) - (a.siteCode === costCenter?.siteCode ? 1 : 0)
+      );
 
     setOptionServiceCenter(filterServiceCenter);
 
@@ -430,7 +452,7 @@ export default function ServiceRequestBody({
         <div className="col-md-3 mb-2">
           <AutocompleteComboBox
             required={"required"}
-            labelName={"Cost center"}
+            labelName={"Cost Center"}
             column="costCentersCodeAndName"
             value={costCenter}
             disabled={disableOnly}
@@ -445,13 +467,13 @@ export default function ServiceRequestBody({
               setFixedAssetCode(null)
               //setFixedAssetDescription("")
             }}
-            options={options?.costCenter || []}
+            options={optionCostCenter || []}
             Validate={isValidate?.costCenter}
 
 
           />
           {/* <FullWidthTextField
-            labelName={"Cost center"}
+            labelName={"Cost Center"}
             value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -504,6 +526,7 @@ export default function ServiceRequestBody({
 
               //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
+            //options={optionServiceCenter || []}
             options={optionServiceCenter || []}
             Validate={isValidate?.serviceCenter}
             ValidateDuplicate={isDuplicate}
@@ -541,10 +564,10 @@ export default function ServiceRequestBody({
             column="budgetCodeAndJobType"
             value={budgetCode}
             setvalue={setBudgetCode}
-            disabled={disableOnly}
+            disabled={jobType?.lov_code === "Repair" ? true : disableOnly}
             options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
             //options={options?.budgetCode}
-            Validate={isValidate?.budgetCode}
+            Validate={jobType?.lov_code === "Repair" ? false : isValidate?.budgetCode}
           />
         </div>
       </div>
@@ -562,8 +585,8 @@ export default function ServiceRequestBody({
               setFixedAssetCode(data);
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
-            //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            options={options?.fixedAssetCode || []}
+            options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+          //options={options?.fixedAssetCode || []}
           />
         </div>
 
