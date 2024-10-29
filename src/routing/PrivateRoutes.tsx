@@ -2,16 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import MasterLayout from '../layout/MasterLayout'
 import Example from '../app/Example'
 import Home from './../app/Home';
-import ServiceRequest from '../app/service_request';
-import ServiceTimeSheet from '../app/service_time_sheet';
-import { useSelector } from 'react-redux';
-import React from 'react';
-import User from '../app/master/user';
 import ServiceRequestPage from '../app/service_request/service_request_page';
 import ServiceTimeSheetPage from '../app/service_time_sheet/service_time_sheet_page';
 import ServiceCost from '../app/service_cost';
 import BorderedTreeView from '../app/report';
 import UserPage from '../app/master/user/user_page';
+import CostCenterPage from '../app/master/cost_center/CostCenterPage';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
@@ -54,6 +50,9 @@ export default function PrivateRoutes() {
 
                     <Route path='auth/*' element={<Navigate to={`/home`} />} />
                     <Route path='home' element={<Home />} />
+                    <Route path='cost_center' element={<CostCenterPage />} />
+                    {/* <Route path='budget' element={<BudgetPage />} />
+                    <Route path='fixed_asset' element={<FixedAssetPage />} /> */}
                     <Route path='service_request' element={<ServiceRequestPage />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheetPage />} />
                     <Route path='service_cost' element={<ServiceCost />} />
