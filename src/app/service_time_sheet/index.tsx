@@ -21,6 +21,7 @@ import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
 import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
+import { updateSessionStorageCurrentAccess } from "../../service/initmain";
 
 interface OptionsState {
   costCenter: any[];
@@ -130,6 +131,36 @@ export default function ServiceTimeSheet() {
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const roleId = currentUser?.role_id;
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
+
+   // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
+   function cleanAccessData(key: string) {
+    // ดึงค่าจาก session storage
+    const storedAccessData = sessionStorage.getItem(key);
+    if (storedAccessData) {
+      try {
+        // ลองแปลงข้อมูล JSON เป็นอ็อบเจกต์ทันที
+        return JSON.parse(storedAccessData);
+      } catch (error) {
+        // กรณีที่แปลงไม่ได้ ลองลบอักขระพิเศษเพิ่มเติมที่อาจเกิดขึ้น
+        const cleanedData = storedAccessData.replace(/\\/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        try {
+          return JSON.parse(cleanedData);
+        } catch (error) {
+          console.error('Error parsing JSON after cleanup:', error);
+          return null; // คืนค่า null ถ้ามีข้อผิดพลาดในการแปลง
+        }
+      }
+    } else {
+      console.log(`No value found in sessionStorage for ${key}.`);
+      return null; // คืนค่า null ถ้าไม่พบข้อมูล
+    }
+  }
+  
+   // เริ่มใช้งาน Current Access
+   const currentAccessObject = cleanAccessData('current_access');
+   updateSessionStorageCurrentAccess('screen_name', 'Service Time Sheet');
+   //console.log(currentAccessObject);
+ 
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -1151,6 +1182,16 @@ React.useEffect(() => {
   //Start Data ไปลง Database
   const serviceTimeSheetStart = async () => {
     console.log('Call : serviceTimeSheetStart', moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:Start/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
+
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
       if (draftData) {
         console.log("Start Data:", draftData);
@@ -1162,9 +1203,7 @@ React.useEffect(() => {
             new_status: "Start",
             app_user: ""
           },
-          currentAccessModel: {
-            user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         dispatch(startLoadScreen());
@@ -1206,6 +1245,15 @@ React.useEffect(() => {
     console.log('Call : serviceRequestReject', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
 
+     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+     updateSessionStorageCurrentAccess('event_name', 'EditStatus:Reject/Change_Status');
+
+     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+     const storedAccessData = sessionStorage.getItem('current_access');
+     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+     console.log(currentAccessObject, 'currentAccessObject');
+ 
+
     const dataForValidate = {
       rejectReason: rejectReason || null,
     }
@@ -1233,9 +1281,7 @@ React.useEffect(() => {
           req_status: "Reject Approved",
           reject_reason: rejectReason
         },
-        currentAccessModel: {
-          user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-        }
+        currentAccessModel: currentAccessObject
       };
 
       dispatch(startLoadScreen());
@@ -1280,6 +1326,14 @@ React.useEffect(() => {
     console.log('Call : serviceTimeSheetAdd', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
 
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Add/Service_Time_Sheet_Add');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     if (draftData.timeSheetData.length === 0) {
       Massengmodal.createModal(
         <div className="text-center p-4">
@@ -1314,9 +1368,7 @@ React.useEffect(() => {
 
           const payload = {
             serviceTimeSheetModels: serviceTimeSheetModels,
-            currentAccessModel: {
-              user_id: currentUser.employee_username || ""
-            }
+            currentAccessModel: currentAccessObject
           };
 
           //console.log("Payload:", payload);
@@ -1363,6 +1415,14 @@ React.useEffect(() => {
     console.log('Call : serviceTimeSheetJobDone', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
 
+     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+     updateSessionStorageCurrentAccess('event_name', 'EditStatus:JobDone/Change_Status');
+
+     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+     const storedAccessData = sessionStorage.getItem('current_access');
+     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+     console.log(currentAccessObject, 'currentAccessObject');
+
     if (draftData.timeSheetData.length === 0) {
       Massengmodal.createModal(
         <div className="text-center p-4">
@@ -1390,9 +1450,7 @@ React.useEffect(() => {
               new_status: "Job Done",
               app_user: ""
             },
-            currentAccessModel: {
-              user_id: currentUser.employee_username || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-            }
+            currentAccessModel: currentAccessObject
           };
 
           dispatch(startLoadScreen());
@@ -1440,6 +1498,14 @@ React.useEffect(() => {
   const changeStatus = async (draftData: any, currentUser: any) => {
     console.log('Call : changeStatus', draftData, moment().format('HH:mm:ss:SSS'));
 
+     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+     updateSessionStorageCurrentAccess('event_name', 'EditStatus:OnProcess/Change_Status');
+
+     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+     const storedAccessData = sessionStorage.getItem('current_access');
+     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+     console.log(currentAccessObject, 'currentAccessObject');
+
     if (draftData) {
       console.log("changeStatus Data:", draftData);
 
@@ -1450,9 +1516,7 @@ React.useEffect(() => {
           new_status: "On process",
           app_user: ""
         },
-        currentAccessModel: {
-          user_id: currentUser || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-        }
+        currentAccessModel: currentAccessObject
       };
 
       try {

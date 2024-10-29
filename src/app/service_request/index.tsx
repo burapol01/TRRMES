@@ -22,6 +22,7 @@ import { useListServiceRequest } from "./core/service_request_provider";
 import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
 import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
+import { updateSessionStorageCurrentAccess } from "../../service/initmain";
 
 interface OptionsState {
   costCenterForCreate: any[];
@@ -131,6 +132,39 @@ export default function ServiceRequest() {
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
 
+
+  // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
+  function cleanAccessData(key: string) {
+    // ดึงค่าจาก session storage
+    const storedAccessData = sessionStorage.getItem(key);
+    if (storedAccessData) {
+      try {
+        // ลองแปลงข้อมูล JSON เป็นอ็อบเจกต์ทันที
+        return JSON.parse(storedAccessData);
+      } catch (error) {
+        // กรณีที่แปลงไม่ได้ ลองลบอักขระพิเศษเพิ่มเติมที่อาจเกิดขึ้น
+        const cleanedData = storedAccessData.replace(/\\/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+        try {
+          return JSON.parse(cleanedData);
+        } catch (error) {
+          console.error('Error parsing JSON after cleanup:', error);
+          return null; // คืนค่า null ถ้ามีข้อผิดพลาดในการแปลง
+        }
+      }
+    } else {
+      console.log(`No value found in sessionStorage for ${key}.`);
+      return null; // คืนค่า null ถ้าไม่พบข้อมูล
+    }
+  }  
+
+  // เริ่มใช้งาน Current Access
+  const currentAccessObject = cleanAccessData('current_access');
+  updateSessionStorageCurrentAccess('screen_name', 'Service Request');
+  //console.log(currentAccessObject);
+
+
+  //console.log(currentAccessData, 'current_access'); // แสดงค่าที่ถูกเก็บใน session storage
+
   //Revision
   const [revisionMaximum, setRevisionMaximum] = useState<any>(null);
 
@@ -197,53 +231,53 @@ export default function ServiceRequest() {
     console.log(dataList, 'dataList');
 
     const filterCostCenter = optionsSearch?.costCenter.filter((item: any) =>
-        dataList.some((dataItem: any) =>
-            !dataItem.cost_center_id ||
-            item.costCenterId.toString().includes(dataItem.cost_center_id.toString())
-        )
+      dataList.some((dataItem: any) =>
+        !dataItem.cost_center_id ||
+        item.costCenterId.toString().includes(dataItem.cost_center_id.toString())
+      )
     );
 
     // ใช้ Set เพื่อลบค่าซ้ำ
     const uniqueCostCenters = Array.from(new Set(filterCostCenter.map(item => item.costCenterId)));
     return uniqueCostCenters.map(id =>
-        filterCostCenter.find(item => item.costCenterId === id)
+      filterCostCenter.find(item => item.costCenterId === id)
     );
-}, [optionsSearch?.costCenter, dataList]);
+  }, [optionsSearch?.costCenter, dataList]);
 
-// ฟังก์ชัน useMemo สำหรับกรอง Service Center
-const filteredServiceCenters = React.useMemo(() => {
+  // ฟังก์ชัน useMemo สำหรับกรอง Service Center
+  const filteredServiceCenters = React.useMemo(() => {
     return optionsSearch?.serviceCenter.filter((item: any) =>
-        dataList.some((dataItem: any) =>
-            !dataItem.service_center_id ||
-            item.serviceCenterId.toString().includes(dataItem.service_center_id.toString())
-        )
+      dataList.some((dataItem: any) =>
+        !dataItem.service_center_id ||
+        item.serviceCenterId.toString().includes(dataItem.service_center_id.toString())
+      )
     );
-}, [optionsSearch?.serviceCenter, dataList]);
+  }, [optionsSearch?.serviceCenter, dataList]);
 
-// ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
-const filteredFixedAssetCodes = React.useMemo(() => {
+  // ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
+  const filteredFixedAssetCodes = React.useMemo(() => {
     const fixedAssetIdSet = new Set(dataList
-        .filter(dataItem => dataItem.fixed_asset_id !== null)
-        .map(dataItem => dataItem.fixed_asset_id.toString())
+      .filter(dataItem => dataItem.fixed_asset_id !== null)
+      .map(dataItem => dataItem.fixed_asset_id.toString())
     );
 
     return optionsSearch?.fixedAssetCode.filter((item: any) =>
-        fixedAssetIdSet.has(item.assetCodeId.toString())
+      fixedAssetIdSet.has(item.assetCodeId.toString())
     );
-}, [optionsSearch?.fixedAssetCode, dataList]);
+  }, [optionsSearch?.fixedAssetCode, dataList]);
 
-// Set state
-React.useEffect(() => {
+  // Set state
+  React.useEffect(() => {
     console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
     setOptionCostCenter(filteredUniqueCostCenters);
-    
+
     console.log(filteredServiceCenters, 'filterServiceCenter');
     setOptionServiceCenter(filteredServiceCenters);
-    
+
     console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
     setOptionFixedAssetCodes(filteredFixedAssetCodes);
-    
-}, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes]);
+
+  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes]);
 
 
   const searchFetchCostCenters = async () => {
@@ -1133,7 +1167,7 @@ React.useEffect(() => {
 
         // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
         return {
-          request_attach_file_id: image.requestAttachFileId,
+          request_attach_file_id: image.requestAttachFileId || uuidv4(),
           req_id: image.reqId || req_id,
           file_patch: newFileName === null ? image.filePatch : `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}/ServiceRequest/${reqNo}/${newFileName}`, // ใช้ reqNo แทน Image
           req_user_filename: reqUserFilename,
@@ -1145,9 +1179,7 @@ React.useEffect(() => {
 
     const payload = {
       RequestAttachFileList: imageDataListArray,
-      currentAccessModel: {
-        user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-      },
+      currentAccessModel: currentAccessObject
 
     };
     console.log('imageDataListArray:', imageDataListArray);
@@ -1162,6 +1194,13 @@ React.useEffect(() => {
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
     console.log('Call : serviceRequestDraftAdd', draftData, moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Add/Service_Request_Draft_Add');
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
 
     const dataForValidate = {
       costCenter: draftData.costCenter,
@@ -1210,9 +1249,7 @@ React.useEffect(() => {
             budget_id: draftData.budgetCode?.budgetId || null,
             job_type: draftData.jobType?.lov_code || ""
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          },
+          currentAccessModel: currentAccessObject,
           documentRunningModel: {
             code_group: draftData.site,
             code_type: "RQ",
@@ -1271,6 +1308,12 @@ React.useEffect(() => {
   //Add Edit ไปลง Database
   const serviceRequestDraftEdit = async () => {
     console.log('Call : serviceRequestDraftEdit', draftData, moment().format('HH:mm:ss:SSS'));
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Service_Request_Draft_Edit');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
 
     const dataForValidate = {
       costCenter: draftData.costCenter,
@@ -1313,9 +1356,7 @@ React.useEffect(() => {
             budget_id: draftData.budgetCode?.budgetId || null,
             job_type: draftData.jobType.lov_code || ""
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         console.log(payload, 'payload');
@@ -1372,6 +1413,14 @@ React.useEffect(() => {
   //Add Delete ไปลง Database
   const serviceRequestDraftDelete = async () => {
     console.log('Call : serviceRequestDraftDelete', draftData.requestId, moment().format('HH:mm:ss:SSS'));
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Delete/Service_Request_Draft_Delete');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Saving draft data:", draftData);
@@ -1381,9 +1430,7 @@ React.useEffect(() => {
           serviceRequestModel: {
             id: draftData.requestId
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         dispatch(startLoadScreen());
@@ -1427,6 +1474,15 @@ React.useEffect(() => {
   //Add Submit ไปลง Database
   const serviceRequestDraftSubmit = async () => {
     console.log('Call : serviceRequestDraftSubmit', draftData, moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:Submit/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Submit Data:", draftData);
@@ -1438,9 +1494,7 @@ React.useEffect(() => {
             new_status: "Submit",
             app_user: draftData.costCenter.appReqUser
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         dispatch(startLoadScreen());
@@ -1484,6 +1538,15 @@ React.useEffect(() => {
   //AddApprove ไปลง Database
   const serviceRequestApproved = async () => {
     console.log('Call : serviceRequestApproved', draftData, moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:Approved/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Approved Data:", draftData);
@@ -1495,9 +1558,7 @@ React.useEffect(() => {
             new_status: "Approved",
             app_user: draftData.appReqUser
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         dispatch(startLoadScreen());
@@ -1541,6 +1602,14 @@ React.useEffect(() => {
     console.log('Call : serviceRequestSubmitReject', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
 
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:SubmitReject/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     const dataForValidate = {
       rejectReason: rejectReason || null,
     }
@@ -1569,9 +1638,7 @@ React.useEffect(() => {
           req_status: "Submit Reject",
           reject_reason: rejectReason
         },
-        currentAccessModel: {
-          user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-        }
+        currentAccessModel: currentAccessObject
       };
 
       dispatch(startLoadScreen());
@@ -1616,6 +1683,15 @@ React.useEffect(() => {
   //Add Close ไปลง Database
   const serviceRequestClose = async () => {
     console.log('Call : serviceRequestClose', draftData, moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:Close/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Close Data:", draftData);
@@ -1627,9 +1703,7 @@ React.useEffect(() => {
             new_status: "Close",
             app_user: draftData.appReqUser
           },
-          currentAccessModel: {
-            user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-          }
+          currentAccessModel: currentAccessObject
         };
 
         dispatch(startLoadScreen());
@@ -1676,6 +1750,14 @@ React.useEffect(() => {
     console.log('Call : rejectJobReason', rejectJobReason, moment().format('HH:mm:ss:SSS'));
     console.log('Call : revisionMaximum', revisionMaximum, moment().format('HH:mm:ss:SSS'));
 
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'EditStatus:RejectJob/Change_Status');
+
+    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
+    const storedAccessData = sessionStorage.getItem('current_access');
+    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
+    console.log(currentAccessObject, 'currentAccessObject');
+
     const dataForValidate = {
       rejectJobReason: rejectJobReason || null,
     }
@@ -1721,9 +1803,7 @@ React.useEffect(() => {
           reject_reason: rejectJobReason,
           revision_no: String(draftData.countRevision)
         },
-        currentAccessModel: {
-          user_id: employeeUsername || "" // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-        }
+        currentAccessModel: currentAccessObject
       };
 
       dispatch(startLoadScreen());
