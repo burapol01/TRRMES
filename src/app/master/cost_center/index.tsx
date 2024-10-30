@@ -123,20 +123,18 @@ export default function CostCenter() {
                 const costCenter = allCenters
                     .filter((center: any) => !center.service_center_flag) // กรองจาก service_center_flag = false
                     .map((center: any) => ({
-                        costCenterId: center.id,
-                        costCenterCode: center.cost_center_code,
-                        costCenterName: center.cost_center_name,
-                        appreqUser: center.app_req_user,
-                        // costCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
+                        "id": center.id,
+                        "cost_center_code": center.cost_center_code,
+                        "cost_center_name": center.cost_center_name,
+                        "app_req_user": center.app_req_user,
                     }));
 
                 // กรองข้อมูลเฉพาะที่ไม่ใช่ Service Center (service_center_flag = false)
                 const site = allCenters
                     .filter((center: any) => !center.service_center_flag) // กรองจาก service_center_flag = false
                     .map((center: any) => ({
-                        siteCode: center.site_code,
-                        siteName: center.site_name,
-                        // siteCodeAndName: "[" + center.site_code + "] " + center.site_name + ' [' + center.site_name + ']'
+                        "site_code": center.site_code,
+                        "site_name": center.site_name,
                     }));
 
                 // อัพเดตค่าใน setOptionsSearch
@@ -147,6 +145,7 @@ export default function CostCenter() {
 
                 console.log(costCenter, 'Master Cost Center');
                 console.log(site, 'Master Site');
+                
             } else {
                 setError("Failed to fetch cost centers.");
             }
@@ -463,7 +462,7 @@ export default function CostCenter() {
                         {/* ---------------------- Switch (True - Flase) ---------------------- */}
                             <CustomizedSwitches labelName='Service Center'/>
                         {/* ------------------------------------------------------------------- */}
-                        
+
                         <div className="flex items-center space-x-2">
                             <div className="">
                                 <FullWidthButton
