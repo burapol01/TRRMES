@@ -21,7 +21,7 @@ import { checkValidate, isCheckValidateAll } from "../../../libs/validations";
 import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingScreenAction";
 import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
-import { updateSessionStorageCurrentAccess } from "../../service/initmain";
+import { updateSessionStorageCurrentAccess, cleanAccessData, getCurrentAccessObject } from "../../service/initmain";
 
 interface OptionsState {
   costCenter: any[];
@@ -29,6 +29,7 @@ interface OptionsState {
   jobType: any[];
   budgetCode: any[];
   fixedAssetCode: any[];
+  requestStatus: any[];
   revision: any[];
   technician: any[];
   workHour: any[];
@@ -40,6 +41,7 @@ const initialOptions: OptionsState = {
   jobType: [],
   budgetCode: [],
   fixedAssetCode: [],
+  requestStatus: [],
   revision: [],
   technician: [],
   workHour: [],
@@ -98,6 +100,7 @@ export default function ServiceTimeSheet() {
   const [selectedServiceCenter, setSelectedServiceCenter] = useState<any>(null);
   const [selectedJobType, setSelectedJobType] = useState<any>(null);
   const [selectedAssetCode, setSelectedAssetCode] = useState<any>(null);
+  const [selectedRequestStatus, setSelectedRequestStatus] = useState<any>(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [openView, setOpenView] = useState<any>(false);
   const [openEdit, setOpenEdit] = useState(false);
@@ -112,6 +115,7 @@ export default function ServiceTimeSheet() {
   const [optionCostCenter, setOptionCostCenter] = useState<any>(optionsSearch?.costCenter || []);
   const [optionServiceCenter, setOptionServiceCenter] = useState<any>(optionsSearch?.serviceCenter || []);
   const [optionFixedAssetCodes, setOptionFixedAssetCodes] = useState<any>(optionsSearch?.fixedAssetCode || []);
+  const [optionRequestStatus, setOptionRequestStatus] = useState<any>(optionsSearch?.requestStatus || []);
   const [error, setError] = useState<string | null>(null); // สถานะสำหรับข้อผิดพลาด 
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // State for error messages
   const handleTextChange = (value: string) => setTextValue(value);
@@ -131,36 +135,14 @@ export default function ServiceTimeSheet() {
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const roleId = currentUser?.role_id;
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
+  const employeeDomain = currentUser?.employee_domain;
+  const screenName = 'Service Time Sheet';
 
-   // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
-   function cleanAccessData(key: string) {
-    // ดึงค่าจาก session storage
-    const storedAccessData = sessionStorage.getItem(key);
-    if (storedAccessData) {
-      try {
-        // ลองแปลงข้อมูล JSON เป็นอ็อบเจกต์ทันที
-        return JSON.parse(storedAccessData);
-      } catch (error) {
-        // กรณีที่แปลงไม่ได้ ลองลบอักขระพิเศษเพิ่มเติมที่อาจเกิดขึ้น
-        const cleanedData = storedAccessData.replace(/\\/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-        try {
-          return JSON.parse(cleanedData);
-        } catch (error) {
-          console.error('Error parsing JSON after cleanup:', error);
-          return null; // คืนค่า null ถ้ามีข้อผิดพลาดในการแปลง
-        }
-      }
-    } else {
-      console.log(`No value found in sessionStorage for ${key}.`);
-      return null; // คืนค่า null ถ้าไม่พบข้อมูล
-    }
-  }
-  
-   // เริ่มใช้งาน Current Access
-   const currentAccessObject = cleanAccessData('current_access');
-   updateSessionStorageCurrentAccess('screen_name', 'Service Time Sheet');
-   //console.log(currentAccessObject);
- 
+  // เริ่มใช้งาน Current Access
+  //ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
+  cleanAccessData('current_access');
+  updateSessionStorageCurrentAccess('screen_name', screenName);
+
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
   //============================================================================================================================
@@ -182,7 +164,8 @@ export default function ServiceTimeSheet() {
         searchFetchCostCenters(),
         searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes      
+        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
+        searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV       
       ]);
     };
     fetchData();
@@ -220,7 +203,7 @@ export default function ServiceTimeSheet() {
 
   // หน้าค้นหา Search =========================================================================================================
   //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
-  const OPTIONS_LIMIT = 200;
+  const OPTIONS_LIMIT = 100;
   const defaultFilterOptions = createFilterOptions();
 
   const filterOptions = (optionsSearch: any[], state: any) => {
@@ -233,53 +216,69 @@ export default function ServiceTimeSheet() {
     //console.log(dataList, 'dataList');
 
     const filterCostCenter = optionsSearch?.costCenter.filter((item: any) =>
-        dataList.some((dataItem: any) =>
-            !dataItem.cost_center_id ||
-            item.costCenterId.toString().includes(dataItem.cost_center_id.toString())
-        )
+      dataList.some((dataItem: any) =>
+        !dataItem.cost_center_id ||
+        item.costCenterId.toString().includes(dataItem.cost_center_id.toString())
+      )
     );
 
     // ใช้ Set เพื่อลบค่าซ้ำ
     const uniqueCostCenters = Array.from(new Set(filterCostCenter.map(item => item.costCenterId)));
     return uniqueCostCenters.map(id =>
-        filterCostCenter.find(item => item.costCenterId === id)
+      filterCostCenter.find(item => item.costCenterId === id)
     );
-}, [optionsSearch?.costCenter, dataList]);
+  }, [optionsSearch?.costCenter, dataList]);
 
-// ฟังก์ชัน useMemo สำหรับกรอง Service Center
-const filteredServiceCenters = React.useMemo(() => {
+  // ฟังก์ชัน useMemo สำหรับกรอง Service Center
+  const filteredServiceCenters = React.useMemo(() => {
     return optionsSearch?.serviceCenter.filter((item: any) =>
-        dataList.some((dataItem: any) =>
-            !dataItem.service_center_id ||
-            item.serviceCenterId.toString().includes(dataItem.service_center_id.toString())
-        )
+      dataList.some((dataItem: any) =>
+        !dataItem.service_center_id ||
+        item.serviceCenterId.toString().includes(dataItem.service_center_id.toString())
+      )
     );
-}, [optionsSearch?.serviceCenter, dataList]);
+  }, [optionsSearch?.serviceCenter, dataList]);
 
-// ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
-const filteredFixedAssetCodes = React.useMemo(() => {
+  // ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
+  const filteredFixedAssetCodes = React.useMemo(() => {
     const fixedAssetIdSet = new Set(dataList
-        .filter(dataItem => dataItem.fixed_asset_id !== null)
-        .map(dataItem => dataItem.fixed_asset_id.toString())
+      .filter(dataItem => dataItem.fixed_asset_id !== null)
+      .map(dataItem => dataItem.fixed_asset_id.toString())
     );
 
     return optionsSearch?.fixedAssetCode.filter((item: any) =>
-        fixedAssetIdSet.has(item.assetCodeId.toString())
+      fixedAssetIdSet.has(item.assetCodeId.toString())
     );
-}, [optionsSearch?.fixedAssetCode, dataList]);
+  }, [optionsSearch?.fixedAssetCode, dataList]);
 
-// Set state
-React.useEffect(() => {
+  // ฟังก์ชัน useMemo สำหรับกรอง Request Status
+  const filteredRequestStatus = React.useMemo(() => {
+    const RequestStatusSet = new Set(dataList
+      .filter(dataItem => dataItem.req_status !== null)
+      .map(dataItem => dataItem.req_status)
+    );
+
+    return optionsSearch?.requestStatus.filter((item: any) =>
+      RequestStatusSet.has(item.lov_code.toString())
+    );
+  }, [optionsSearch?.requestStatus, dataList]);
+
+  // Set state
+  React.useEffect(() => {
     //console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
     setOptionCostCenter(filteredUniqueCostCenters);
-    
+
     //console.log(filteredServiceCenters, 'filterServiceCenter');
     setOptionServiceCenter(filteredServiceCenters);
-    
+
     //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
     setOptionFixedAssetCodes(filteredFixedAssetCodes);
-    
-}, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes]);
+
+    //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+    setOptionRequestStatus(filteredRequestStatus);
+
+  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes,filteredRequestStatus]);
+  
   const searchFetchCostCenters = async () => {
     console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -409,6 +408,38 @@ React.useEffect(() => {
     } catch (error) {
       console.error("Error fetching fixed asset codes:", error);
       setError("An error occurred while fetching fixed asset codes.");
+    }
+  };
+
+  const searchFetchRequestStatus = async () => {
+    console.log('Call : searchFetchRequestStatus', moment().format('HH:mm:ss:SSS'));
+    try {
+
+      const dataset = {
+        "lov_type": "request_status"
+      };
+
+      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+      if (response && response.status === "success") {
+        // console.log(response, 'Success fetch Request Status');
+        const requestStatus = response.data.map((data: any) => ({
+          lov_code: data.lov_code,
+          lov_name: data.lov1,
+          labelRequestStatus: data.lov_code + ' (' + data.lov1 + ')'
+        }));
+        console.log(requestStatus, 'requestStatus');
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          requestStatus: requestStatus,
+        }));
+      } else {
+        setError("Failed to fetch job types.");
+      }
+    } catch (error) {
+      console.error("Error fetching job types:", error);
+      setError("An error occurred while fetching job types.");
     }
   };
 
@@ -820,6 +851,7 @@ React.useEffect(() => {
     setSelectedServiceCenter(null);
     setSelectedJobType(null);
     setSelectedAssetCode(null);
+    setSelectedRequestStatus(null)
     setRequestNo("");
     setStatus("");
     setActionType('reset');
@@ -1073,7 +1105,8 @@ React.useEffect(() => {
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
       "fixed_asset_id": selectedAssetCode?.assetCodeId,
-      "req_status": status,
+      "req_status" : selectedRequestStatus?.lov_code,
+      //"req_status": status,
       "role_id": roleId?.toString()
     };
     try {
@@ -1184,12 +1217,7 @@ React.useEffect(() => {
     console.log('Call : serviceTimeSheetStart', moment().format('HH:mm:ss:SSS'));
 
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-    updateSessionStorageCurrentAccess('event_name', 'EditStatus:Start/Change_Status');
-
-    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-    const storedAccessData = sessionStorage.getItem('current_access');
-    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-    console.log(currentAccessObject, 'currentAccessObject');
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:Start/Change_Status');
 
 
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่", "info", async () => {
@@ -1203,7 +1231,7 @@ React.useEffect(() => {
             new_status: "Start",
             app_user: ""
           },
-          currentAccessModel: currentAccessObject
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
         };
 
         dispatch(startLoadScreen());
@@ -1245,14 +1273,8 @@ React.useEffect(() => {
     console.log('Call : serviceRequestReject', draftData, moment().format('HH:mm:ss:SSS'));
     console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
 
-     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-     updateSessionStorageCurrentAccess('event_name', 'EditStatus:Reject/Change_Status');
-
-     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-     const storedAccessData = sessionStorage.getItem('current_access');
-     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-     console.log(currentAccessObject, 'currentAccessObject');
- 
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:Reject/Change_Status');
 
     const dataForValidate = {
       rejectReason: rejectReason || null,
@@ -1281,7 +1303,7 @@ React.useEffect(() => {
           req_status: "Reject Approved",
           reject_reason: rejectReason
         },
-        currentAccessModel: currentAccessObject
+        currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       };
 
       dispatch(startLoadScreen());
@@ -1329,11 +1351,6 @@ React.useEffect(() => {
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
     updateSessionStorageCurrentAccess('event_name', 'Add/Service_Time_Sheet_Add');
 
-    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-    const storedAccessData = sessionStorage.getItem('current_access');
-    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-    console.log(currentAccessObject, 'currentAccessObject');
-
     if (draftData.timeSheetData.length === 0) {
       Massengmodal.createModal(
         <div className="text-center p-4">
@@ -1368,7 +1385,7 @@ React.useEffect(() => {
 
           const payload = {
             serviceTimeSheetModels: serviceTimeSheetModels,
-            currentAccessModel: currentAccessObject
+            currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
           };
 
           //console.log("Payload:", payload);
@@ -1415,13 +1432,8 @@ React.useEffect(() => {
     console.log('Call : serviceTimeSheetJobDone', draftData, moment().format('HH:mm:ss:SSS'));
     console.log(" Time Sheet Data:", draftData.timeSheetData);
 
-     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-     updateSessionStorageCurrentAccess('event_name', 'EditStatus:JobDone/Change_Status');
-
-     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-     const storedAccessData = sessionStorage.getItem('current_access');
-     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-     console.log(currentAccessObject, 'currentAccessObject');
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:JobDone/Change_Status');
 
     if (draftData.timeSheetData.length === 0) {
       Massengmodal.createModal(
@@ -1450,7 +1462,7 @@ React.useEffect(() => {
               new_status: "Job Done",
               app_user: ""
             },
-            currentAccessModel: currentAccessObject
+            currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
           };
 
           dispatch(startLoadScreen());
@@ -1498,13 +1510,8 @@ React.useEffect(() => {
   const changeStatus = async (draftData: any, currentUser: any) => {
     console.log('Call : changeStatus', draftData, moment().format('HH:mm:ss:SSS'));
 
-     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-     updateSessionStorageCurrentAccess('event_name', 'EditStatus:OnProcess/Change_Status');
-
-     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-     const storedAccessData = sessionStorage.getItem('current_access');
-     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-     console.log(currentAccessObject, 'currentAccessObject');
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:OnProcess/Change_Status');
 
     if (draftData) {
       console.log("changeStatus Data:", draftData);
@@ -1516,7 +1523,7 @@ React.useEffect(() => {
           new_status: "On process",
           app_user: ""
         },
-        currentAccessModel: currentAccessObject
+        currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       };
 
       try {
@@ -1596,10 +1603,13 @@ React.useEffect(() => {
             />
           </div>
           <div className="col-md-3 mb-2">
-            <FullWidthTextField
+            <AutocompleteComboBox
+              value={selectedRequestStatus}
               labelName={"สถานะ"}
-              value={status}
-              onChange={(value) => setStatus(value)}
+              // options={optionsSearch?.requestStatus}
+              options={optionRequestStatus}
+              column="labelRequestStatus"
+              setvalue={handleAutocompleteChange(setSelectedRequestStatus)}
             />
           </div>
           <div className="flex justify-end pt-2">

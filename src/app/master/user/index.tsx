@@ -20,7 +20,7 @@ import { confirmModal } from '../../../components/MUI/Comfirmmodal';
 import { Massengmodal } from '../../../components/MUI/Massengmodal';
 import { endLoadScreen, startLoadScreen } from '../../../../redux/actions/loadingScreenAction';
 import { v4 as uuidv4 } from 'uuid';
-import { updateSessionStorageCurrentAccess } from '../../../service/initmain';
+import { updateSessionStorageCurrentAccess, cleanAccessData, getCurrentAccessObject } from '../../../service/initmain';
 
 //======================== OptionsState ข้อมูล Drop Down ==========================
 /*
@@ -80,42 +80,14 @@ export default function User() {
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
   const roleName = currentUser?.role_name;
-  const dispatch = useDispatch()
-
-  // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
-  function cleanAccessData(key: string) {
-    // ดึงค่าจาก session storage
-    const storedAccessData = sessionStorage.getItem(key);
-    if (storedAccessData) {
-      try {
-        // ลองแปลงข้อมูล JSON เป็นอ็อบเจกต์ทันที
-        return JSON.parse(storedAccessData);
-      } catch (error) {
-        // กรณีที่แปลงไม่ได้ ลองลบอักขระพิเศษเพิ่มเติมที่อาจเกิดขึ้น
-        const cleanedData = storedAccessData.replace(/\\/g, '').replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
-        try {
-          return JSON.parse(cleanedData);
-        } catch (error) {
-          console.error('Error parsing JSON after cleanup:', error);
-          return null; // คืนค่า null ถ้ามีข้อผิดพลาดในการแปลง
-        }
-      }
-    } else {
-      console.log(`No value found in sessionStorage for ${key}.`);
-      return null; // คืนค่า null ถ้าไม่พบข้อมูล
-    }
-  }  
+  const dispatch = useDispatch()  
+  const employeeDomain = currentUser?.employee_domain;
+  const screenName = 'User';
 
   // เริ่มใช้งาน Current Access
-  const currentAccessObject = cleanAccessData('current_access');
-  updateSessionStorageCurrentAccess('screen_name', 'User');
-  //console.log(currentAccessObject);
-
-
-  //console.log(currentAccessData, 'current_access'); // แสดงค่าที่ถูกเก็บใน session storage
-
-  //Revision
-  const [revisionMaximum, setRevisionMaximum] = useState<any>(null);
+  // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
+  cleanAccessData('current_access');
+  updateSessionStorageCurrentAccess('screen_name', screenName);
 
   //==================================== useState Validate  =====================================
   const { isValidate, setIsValidate } = useListUser()
@@ -135,7 +107,7 @@ export default function User() {
   }, []); // [] หมายถึงการรันแค่ครั้งเดียวตอนคอมโพเนนต์ถูก mount
 
   //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
-  const OPTIONS_LIMIT = 200;
+  const OPTIONS_LIMIT = 100;
   const defaultFilterOptions = createFilterOptions();
   const filterOptions = (optionsSearch: any[], state: any) => {
     return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
@@ -386,13 +358,8 @@ export default function User() {
   const UserAdd = async () => {
     console.log('Call : UserAdd', resultData, moment().format('HH:mm:ss:SSS'));
 
-     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-     updateSessionStorageCurrentAccess('event_name', 'Add/Master_User_Add');
-
-     // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-     const storedAccessData = sessionStorage.getItem('current_access');
-     const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-     console.log(currentAccessObject, 'currentAccessObject');
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Add/Master_User_Add');
 
     const dataForValidate = {
       costCenter: resultData.costCenter,
@@ -421,7 +388,7 @@ export default function User() {
             cost_center_id: resultData.costCenter?.costCenterId,
 
           },
-          currentAccessModel: currentAccessObject
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
         };
 
 
@@ -483,11 +450,6 @@ export default function User() {
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
     updateSessionStorageCurrentAccess('event_name', 'Edit/Master_User_Edit');
 
-    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-    const storedAccessData = sessionStorage.getItem('current_access');
-    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-    console.log(currentAccessObject, 'currentAccessObject');
-
     const dataForValidate = {
       costCenter: resultData.costCenter,
       userAd: resultData.userAd,
@@ -515,7 +477,7 @@ export default function User() {
             cost_center_id: resultData.costCenter?.costCenterId,
 
           },
-          currentAccessModel: currentAccessObject
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
         };
 
 
@@ -566,11 +528,6 @@ export default function User() {
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
     updateSessionStorageCurrentAccess('event_name', 'Delete/Master_User_Delete');
 
-    // ดึงข้อมูล currentAccessObject ใหม่จาก sessionStorage หลังการอัปเดต
-    const storedAccessData = sessionStorage.getItem('current_access');
-    const currentAccessObject = storedAccessData ? JSON.parse(storedAccessData) : {};
-    console.log(currentAccessObject, 'currentAccessObject');
-
     const dataForValidate = {
       costCenter: resultData.costCenter,
       userAd: resultData.userAd,
@@ -594,7 +551,7 @@ export default function User() {
           UserModel: {
             id: resultData.userId,
           },
-          currentAccessModel: currentAccessObject
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
         };
 
 
@@ -764,7 +721,7 @@ export default function User() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody 
               actions={"Update"}
-              
+
 
             />
           }

@@ -200,7 +200,7 @@ export default function ServiceRequestBody({
 
   //AutocompleteComboBox ===================================================================================================================
   //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
-  const OPTIONS_LIMIT = 200;
+  const OPTIONS_LIMIT = 100;
   const defaultFilterOptions = createFilterOptions();
 
   const filterOptions = (options: any[], state: any) => {
