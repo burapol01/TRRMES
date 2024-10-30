@@ -30,6 +30,7 @@ export default function Profile({ isOpen }: Profile) {
     // console.log(currentUser);
     dispatch(addCurrentUser(null));
     sessionStorage.removeItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY);
+    sessionStorage.removeItem('current_access');
     handleClose();
   };
   // console.log(currentUser);

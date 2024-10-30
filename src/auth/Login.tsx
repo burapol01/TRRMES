@@ -25,6 +25,7 @@ import { IconButton, InputAdornment } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import './login.css'
+import MobileDetect from 'mobile-detect';
 
 function Copyright() {
   return (
@@ -48,11 +49,11 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = React.useState("");
 
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
- 
+
   const handleClickShowPassword = () => {
     setShowPassword((prevShowPassword) => !prevShowPassword);
   };
- 
+
   const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
   };
@@ -71,19 +72,81 @@ export default function Login() {
     });
   };
 
+  const fetchPublicIP = async (): Promise<string> => {
+    try {
+      const response = await fetch("https://api.ipify.org?format=json");
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error("Error fetching public IP:", error);
+      return "";
+    }
+  };
+
+  const getBrowserInfo = (): string => {
+    const userAgent = navigator.userAgent || "";
+    let browserName = "Unknown";
+    let browserVersion = "Unknown";
+
+    if (/chrome|chromium|crios/i.test(userAgent) && !/edg/i.test(userAgent)) {
+      browserName = "Chrome";
+      browserVersion = userAgent.match(/Chrome\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/firefox|fxios/i.test(userAgent)) {
+      browserName = "Firefox";
+      browserVersion = userAgent.match(/Firefox\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/safari/i.test(userAgent) && !/chrome|chromium|crios/i.test(userAgent)) {
+      browserName = "Safari";
+      browserVersion = userAgent.match(/Version\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/edg/i.test(userAgent)) {
+      browserName = "Edge";
+      browserVersion = userAgent.match(/Edg\/([0-9.]+)/)?.[1] || "Unknown";
+    }
+
+    return `${browserName} ${browserVersion}`;
+  }; 
+
+  const getCurrentAccessData = async (response: any) => {
+    const publicIP = await fetchPublicIP();
+    const clientIP = "10.100.xx.xxx"; // Replace with backend data if available
+    const md = new MobileDetect(window.navigator.userAgent);
+    const accessType = md.mobile() ? 'MOBILE' : 'WEB';
+    console.log(accessType);
+
+    const currentAccessData = {
+      domain_id: response?.data?.auth_role_profile[0].employee_domain,
+      session_id: response?.data?.auth_role_profile[0].session_id,
+      user_id: response?.data?.auth_role_profile[0].employee_username,
+      access_type: accessType,
+      client_ip: clientIP,
+      public_ip: publicIP,
+      app_name: response?.data?.auth_role_profile[0].application_code,
+      version_no: import.meta.env.VITE_VERSION,
+      browser: getBrowserInfo(),
+      access_status: response.status,
+      status_desc: ""
+    };
+
+    sessionStorage.setItem("current_access", JSON.stringify(currentAccessData));
+  };
+
   const Login = async (datasend: any) => {
     try {
-       setTimeout(async () => {
+      setTimeout(async () => {
         const reponse = await login_auth_emp_get(datasend);
         if (reponse && reponse.status == "Success") {
           dispatch(addCurrentUser(reponse?.data?.auth_role_profile[0]));
           dispatch(addUserRoleMenu(reponse?.data?.auth_role_menu));
           dispatch(addUserRoleMenuFunc(reponse?.data?.auth_role_menu_func));
           const lsValue = JSON.stringify(reponse);
+          console.log(lsValue, 'lsValue');
+
           sessionStorage.setItem(
             import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY,
             lsValue
           );
+
+          await getCurrentAccessData(reponse);
+
           dispatch(endLoadScreen());
         }
         if (reponse && reponse.status == "Error") {
@@ -91,7 +154,7 @@ export default function Login() {
           dispatch(endLoadScreen());
           await setErrorMessage(reponse?.error_message);
         }
-       }, 2000);
+      }, 2000);
     } catch (e) {
       dispatch(endLoadScreen());
       console.log(e);
