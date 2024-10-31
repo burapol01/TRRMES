@@ -28,29 +28,15 @@ export const Request_headCells = [
         colWidth: 200
     },
     {
-        columnName: 'req_user',
-        numeric: 'center',
-        disablePadding: true,
-        label: 'คนที่สร้างคำขอ',
-        colWidth: 150
-    },
-    {
-        columnName: 'app_user',
-        numeric: 'center',
-        disablePadding: true,
-        label: 'คนที่อนุมัติ',
-        colWidth: 150
-    },
-    {
         columnName: 'cost_center_label',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
         label: 'Cost Center',
         colWidth: 300
     },
     {
         columnName: 'service_center_label',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
         label: 'Service Center',
         colWidth: 300
@@ -77,10 +63,31 @@ export const Request_headCells = [
         colWidth: 300
     },
     {
+        columnName: 'total_work_hours',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ชั่วโมงการทำงานรวม',
+        colWidth: 150
+    },
+    {
+        columnName: 'req_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'คนที่สร้างคำขอ',
+        colWidth: 150
+    },
+    {
+        columnName: 'app_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'คนที่อนุมัติ',
+        colWidth: 150
+    },
+    {
         columnName: 'count_revision',
         numeric: 'center',
         disablePadding: true,
-        label: 'Revision Count',
+        label: 'Current Revision',
         colWidth: 150
     },
     {
