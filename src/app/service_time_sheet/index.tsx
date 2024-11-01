@@ -1338,7 +1338,7 @@ export default function ServiceTimeSheet() {
           dispatch(endLoadScreen());
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      }, 2000);
+      }, 0);
     }
     //});
   };
@@ -1419,7 +1419,7 @@ export default function ServiceTimeSheet() {
               console.error('Error Submit Time Sheet:', error);
               dispatch(endLoadScreen());
             }
-          }, 2000);
+          }, 0);
         }
       });
 
@@ -1499,7 +1499,7 @@ export default function ServiceTimeSheet() {
               // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
             }
 
-          }, 2000);
+          }, 0);
 
         }
       });

@@ -1280,7 +1280,7 @@ export default function ServiceRequest() {
           }
         };
 
-
+        dispatch(startLoadScreen());
         setTimeout(async () => {
           try {
             console.log('Running model', payload);
@@ -1322,7 +1322,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 500);
+        }, 0);
       }
     });
 
@@ -1422,7 +1422,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 500);
+        }, 0);
       }
 
     });
@@ -1479,7 +1479,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 0);
       }
     });
 
@@ -1539,7 +1539,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 0);
       }
     });
   };
@@ -1596,7 +1596,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 0);
       }
     });
   };
@@ -1672,7 +1672,7 @@ export default function ServiceRequest() {
           dispatch(endLoadScreen());
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      }, 2000);
+      }, 0);
     }
 
 
@@ -1733,7 +1733,7 @@ export default function ServiceRequest() {
             dispatch(endLoadScreen());
             // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
           }
-        }, 2000);
+        }, 0);
       }
     });
   };
@@ -1827,7 +1827,7 @@ export default function ServiceRequest() {
           dispatch(endLoadScreen());
           // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
         }
-      }, 2000);
+      }, 0);
     }
     // });
   };
