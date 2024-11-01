@@ -154,7 +154,7 @@ export default function Login() {
           dispatch(endLoadScreen());
           await setErrorMessage(reponse?.error_message);
         }
-      }, 2000);
+      }, 0);
     } catch (e) {
       dispatch(endLoadScreen());
       console.log(e);
