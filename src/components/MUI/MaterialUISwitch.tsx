@@ -6,6 +6,7 @@ import Switch from '@mui/material/Switch';
 
 interface CustomizedSwitchesProps {
   labelName: string;
+  checked?: boolean | undefined;
   handleOnClick?: (checked: boolean) => void; // กำหนด callback function สำหรับ switch
   Validate?: boolean;
   required?: string; // Prop สำหรับ dynamic class
@@ -57,7 +58,7 @@ const CustomizedSwitches: React.FC<CustomizedSwitchesProps> = (props) => {
       </label>
 
       <FormControlLabel
-        control={<Android12Switch onChange={handleSwitchChange} />}
+        control={<Android12Switch checked={props.checked} onChange={handleSwitchChange} />}
         label=""
       />
       {props.Validate && (

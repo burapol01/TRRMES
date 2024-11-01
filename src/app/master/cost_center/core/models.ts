@@ -34,6 +34,6 @@ export const initialListView: CostCentersProps = {
   setReqUserOptions: () => {},
   // Validate
   isValidate: null,
-  setIsValidate: () => {}
+  setIsValidate: () => {},
 };
  
