@@ -135,10 +135,11 @@ export default function ServiceRequestBody({
 
   React.useEffect(() => {
 
+    
+    console.log(defaultValues, 'defaultValues')
     if (actions != "Create") {
 
-      console.log(options?.costCenter, 'dd')
-      console.log(defaultValues?.costCenterId, 'costCenterId')
+      // console.log(options?.costCenter, 'dd')
 
       if (defaultValues?.costCenterId != "") {
         const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
@@ -196,7 +197,7 @@ export default function ServiceRequestBody({
     }
 
 
-  }, [defaultValues])
+  }, [defaultValues, options?.fixedAssetCode])
 
   //AutocompleteComboBox ===================================================================================================================
   //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
@@ -359,7 +360,7 @@ export default function ServiceRequestBody({
     setImageList([]);
     setImageListView([]);
     const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
-    console.log(requestAttachFileList, 'requestAttachFileList');
+    //console.log(requestAttachFileList, 'requestAttachFileList');
 
     if (actions === "Reade" || actions === "Update" && requestAttachFileList.length > 0) {
       const existingFiles = requestAttachFileList.map((file: any) => ({
@@ -374,7 +375,7 @@ export default function ServiceRequestBody({
         flagNewFile: false, // รูปที่มีอยู่แล้ว
         flagDeleteFile: false // ยังไม่ได้ถูกลบ
       }));
-      console.log(existingFiles, 'existingFilesexistingFiles');
+      //console.log(existingFiles, 'existingFilesexistingFiles');
 
       setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
       setImageListView(existingFiles); // แสดงผลไฟล์

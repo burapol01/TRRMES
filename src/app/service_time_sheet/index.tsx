@@ -165,40 +165,24 @@ export default function ServiceTimeSheet() {
         searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
         searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
-        searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV       
+        searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV 
+        
+        
+        //Main
+        
+      fetchCostCenters(),
+      fetchServiceCenters(),
+      fetchJobTypes(),
+      fetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+      fetchBudgetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+      fetchRevision(),
+      fetchServiceStaff(),
+      //fetchWorkHour();  //ปิดไว้ก่อนเผื่อกลับมาใช้
+        
       ]);
     };
     fetchData();
-  }, [defaultValues]);
-
-  //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceTimeSheetBody
-  useEffect(() => {
-    console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
-
-    if (defaultValues) {
-      fetchCostCenters();
-      fetchServiceCenters();
-      fetchRevision();
-      // fetchTechnician();
-      fetchServiceStaff();
-      //fetchWorkHour();  //ปิดไว้ก่อนเผื่อกลับมาใช้
-
-    }
-
-    if (defaultValues.costCenterId != "") {
-      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
-      fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
-    }
-
-    if (defaultValues.requestId != "") {
-      console.log(defaultValues.requestId, "requestId");
-      fetchRevision();
-    }
-    fetchJobTypes();
-
-  }, [defaultValues]);
-
-
+  }, []);
 
 
   // หน้าค้นหา Search =========================================================================================================
@@ -591,40 +575,6 @@ export default function ServiceTimeSheet() {
     }
   };
 
-  //BackUp budget
-  /*-----------------------------------------------------------------------------------------------------------------
-  // const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
-  //   console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
-  //   try {
-  //     const dataset = {
-  //       "lov_type": "job_type"
-  //     };
-
-  //     const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
-
-  //     if (response && response.status === "success") {
-  //       console.log('job_type', response);
-  //       const jobTypes = response.data
-  //         .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
-  //         .map((job: any) => ({
-  //           lov_code: job.lov_code,
-  //           lov_name: job.lov1,
-  //         }));
-
-  //       setOptions((prevOptions) => ({
-  //         ...prevOptions,
-  //         jobType: jobTypes,
-  //       }));
-  //     } else {
-  //       setError("Failed to fetch job types.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching job types:", error);
-  //     setError("An error occurred while fetching job types.");
-  //   }
-  // };
-  --------------------------------------------------------------------------------------------------------------------*/
-
   const fetchFixedAssetCodes = async () => {
     console.log('Call : fetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
@@ -933,7 +883,7 @@ export default function ServiceTimeSheet() {
     setOpenJobDone(false)
     setDefaultValues(defaultVal);
     readData(null);
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
     dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
     setOpenReject(false); //ปิด Modal Reject Reason     
     setIsValidate(null);  //เคลี่ยร์ Validate

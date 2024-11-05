@@ -138,9 +138,9 @@ export default function ServiceTimeSheetBody({
 
     if (actions != "Create") {
 
-      console.log(defaultValues?.siteId, 'siteId')
-      console.log(options?.costCenter, 'dd')
-      console.log(defaultValues?.costCenterId, 'costCenterId')
+      // console.log(defaultValues?.siteId, 'siteId')
+      // console.log(options?.costCenter, 'dd')
+      // console.log(defaultValues?.costCenterId, 'costCenterId')
 
       if (defaultValues?.costCenterId != "") {
         const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
@@ -198,7 +198,7 @@ export default function ServiceTimeSheetBody({
     }
 
 
-  }, [defaultValues])
+  }, [defaultValues, options?.fixedAssetCode])
 
   //เปลี่ยนเป็นเรียกครั้งเดียว ในการ ดึงข้อมูล Revision มาแสดง
   React.useMemo(() => {

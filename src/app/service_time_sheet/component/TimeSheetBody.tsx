@@ -135,7 +135,6 @@ export default function TimeSheetBody({
 
         //Validate =================================================================
         const isValidate = checkValidate(data, []);
-        console.log(isValidate, 'isValidate');
         const isValidateAll = isCheckValidateAll(isValidate);
         if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
             setIsValidate(isValidate);
@@ -260,7 +259,7 @@ export default function TimeSheetBody({
             .toString()
             .includes(serviceCenter?.serviceCenterId || serviceCenter))
         );
-        //console.log(filterTechnician,'sssssssssssssssssssssssss');
+        console.log(filterTechnician,'sssssssssssssssssssssssss');
         setOptionTechnician(filterTechnician);
 
     }, [serviceCenter]);

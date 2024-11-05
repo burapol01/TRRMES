@@ -44,20 +44,6 @@ const initialOptions: OptionsState = {
   requestStatus: [],
 };
 
-interface SelectedData {
-  reqUser: string;
-  costCenterCode: string;
-  status: string;
-  countRevision: string;
-  serviceCenter: string;
-  site: string;
-  jobType: string;
-  budgetCode: string;
-  description: string;
-  fixedAssetCode: string;
-  fixedAssetDescription: string;
-}
-
 const defaultVal = {
   requestNo: "",
   requestDate: "",
@@ -162,37 +148,48 @@ export default function ServiceRequest() {
         searchFetchCostCenters(),
         searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
+        searchFetchFixedAssetCodes(""), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
         searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV 
         fetchRevisionMaximum(),
+
+        //Main หลัก
+        fetchCostCenters(),
+        fetchServiceCenters(),
+        fetchJobTypes(),
+        fetchBudgetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+        fetchFixedAssetCodes(),
+
       ]);
     };
     fetchData();
-  }, [defaultValues]);
+  }, []);
 
   //ดึงข้อมูลจาก User มาตรวจสอบก่อนว่ามีอยู่ในระบบหรือไม่
   useEffect(() => {
     console.log('Call : 🟢[2] fetch UserData&serviceRequest', moment().format('HH:mm:ss:SSS'));
     if (employeeUsername) {
-      fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
+      fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User      
+      fetchCostCentersForCrate(); 
     }
   }, [employeeUsername]);
 
   //ดึงข้อมูลจาก Master Data ไว้สำหรับหน้า ServiceRequestBody
-  useEffect(() => {
-    console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
-    if (defaultValues?.reqUser)
-      fetchCostCentersForCrate();
-    if (defaultValues) {
-      fetchCostCenters();
-      fetchServiceCenters();
-      fetchJobTypes();
-      fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
-      fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+  // useEffect(() => {
+  //   console.log('Call : 🟢[3] Fetch Master Data', moment().format('HH:mm:ss:SSS'));
+  //   //console.log(defaultValues,'defaultValues');
 
-    }
+  //   // if (defaultValues?.reqUser)
+  //   //   fetchCostCentersForCrate();
+  //   // if (defaultValues) {
+  //   //   fetchCostCenters();
+  //   //   fetchServiceCenters();
+  //   //   fetchJobTypes();
+  //   //   fetchBudgetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+  //   //fetchFixedAssetCodes(); // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
 
-  }, [defaultValues]);
+  //   // }
+
+  // }, [defaultValues]);
 
 
   // หน้าค้นหา Search ========================================================================================================= 
@@ -207,7 +204,7 @@ export default function ServiceRequest() {
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   // ฟังก์ชัน useMemo สำหรับกรอง Cost Center
   const filteredUniqueCostCenters = React.useMemo(() => {
-    console.log(dataList, 'dataList');
+    //console.log(dataList, 'dataList');
 
     const filterCostCenter = optionsSearch?.costCenter.filter((item: any) =>
       dataList.some((dataItem: any) =>
@@ -271,8 +268,8 @@ export default function ServiceRequest() {
     //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
     setOptionRequestStatus(filteredRequestStatus);
 
-  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes,filteredRequestStatus]);
-  
+  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes, filteredRequestStatus]);
+
   const searchFetchCostCenters = async () => {
     console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -373,11 +370,11 @@ export default function ServiceRequest() {
     }
   };
 
-  const searchFetchFixedAssetCodes = async () => {
+  const searchFetchFixedAssetCodes = async (vlue: string) => {
     console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
     const dataset = {
-
+      description: vlue,
     };
 
     try {
@@ -422,7 +419,7 @@ export default function ServiceRequest() {
           lov_name: data.lov1,
           labelRequestStatus: data.lov_code + ' (' + data.lov1 + ')'
         }));
-        console.log(requestStatus, 'requestStatus');
+        //console.log(requestStatus, 'requestStatus');
 
         setOptionsSearch((prevOptions) => ({
           ...prevOptions,
@@ -684,41 +681,6 @@ export default function ServiceRequest() {
     }
   };
 
-
-  //BackUp budget
-  /*-----------------------------------------------------------------------------------------------------------------
-  // const fetchJobTypes = async (jobTypesFromBudget: string[]) => {
-  //   console.log('Call : fetchJobTypes', moment().format('HH:mm:ss:SSS'));
-  //   try {
-  //     const dataset = {
-  //       "lov_type": "job_type"
-  //     };
-
-  //     const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
-
-  //     if (response && response.status === "success") {
-  //       console.log('job_type', response);
-  //       const jobTypes = response.data
-  //         .filter((job: any) => jobTypesFromBudget.includes(job.lov_code))  // กรองข้อมูลด้วย jobTypesFromBudget
-  //         .map((job: any) => ({
-  //           lov_code: job.lov_code,
-  //           lov_name: job.lov1,
-  //         }));
-
-  //       setOptions((prevOptions) => ({
-  //         ...prevOptions,
-  //         jobType: jobTypes,
-  //       }));
-  //     } else {
-  //       setError("Failed to fetch job types.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching job types:", error);
-  //     setError("An error occurred while fetching job types.");
-  //   }
-  // };
-  --------------------------------------------------------------------------------------------------------------------*/
-
   const fetchFixedAssetCodes = async () => {
     console.log('Call : fetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
 
@@ -793,7 +755,7 @@ export default function ServiceRequest() {
       requestId: data?.id || '',
       costCenterId: data?.cost_center_id || '',
       costCenterName: data?.cost_center_name || '',
-      reqUser: data?.req_user || '',
+      reqUser: data?.req_user || employeeUsername,
       appReqUser: appReqUser || '',
       costCenterCode: data?.cost_center_id || '',
       status: data?.req_status || '',
@@ -810,14 +772,15 @@ export default function ServiceRequest() {
       requestAttachFileList: data?.requestAttachFileList
 
     })
+
   };
 
   const handleClickView = (data: any) => {
-    //console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
+    console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
 
     setOpenView(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
@@ -828,40 +791,40 @@ export default function ServiceRequest() {
   const handleClickEdit = (data: any) => {
     setOpenEdit(true);;
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
 
   };
 
   const handleClickDelete = (data: any) => {
     setOpenDelete(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
   const handleClickSubmit = (data: any) => {
     setOpenSubmit(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
   const handleClickApproved = (data: any) => {
     setOpenApproved(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User 
 
   };
 
   const handleClickClose = (data: any) => {
     setOpenClose(true);
     readData(data)
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User
 
   };
 
   const handleClose = () => {
-
+    // alert(1)
     setOpenView(false);
     setOpenAdd(false);
     setOpenEdit(false);
@@ -869,9 +832,11 @@ export default function ServiceRequest() {
     setOpenSubmit(false)
     setOpenApproved(false);
     setOpenClose(false);
+
+
     setDefaultValues(defaultVal);
     readData(null);
-    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
+    //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
     dataTableServiceRequest_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
     setOpenReject(false); //ปิด Modal Reject Reason
     setOpenRejectJob(false); //ปิด Modal Reject Job Reason 
@@ -957,7 +922,7 @@ export default function ServiceRequest() {
 
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
-    console.log('Call : 🟢 เริ่มต้น fetchUserData ', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : 🟢 เริ่มต้น fetchUserData ',employeeUsername, moment().format('HH:mm:ss:SSS'));
 
     if (!employeeUsername) return;
 
@@ -1058,7 +1023,7 @@ export default function ServiceRequest() {
     console.log('Call : dataTableServiceRequest_GET', moment().format('HH:mm:ss:SSS'));
 
     if (!currentUser) return;
-    console.log(currentUser, 'currentUser');
+    //console.log(currentUser, 'currentUser');
 
 
     const dataset = {
@@ -1068,7 +1033,7 @@ export default function ServiceRequest() {
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
       "fixed_asset_id": selectedAssetCode?.assetCodeId,
-      "req_status" : selectedRequestStatus?.lov_code,
+      "req_status": selectedRequestStatus?.lov_code,
       //"req_status": status,
       "role_id": roleId?.toString()
     };
@@ -1189,6 +1154,9 @@ export default function ServiceRequest() {
         } else {
           newFileName = null;
         }
+
+        console.log(newFileName,'newFileName');
+        
 
         const reqUserFilename = image.name;
 
