@@ -1097,8 +1097,8 @@ export default function ServiceRequest() {
           } else if (el.req_status === "Approved") {
             el.req_status_label = <BasicChips
               label={`${el.req_status}`}
-              backgroundColor="#E4CCFF"
-              borderColor="#E4CCFF"
+              backgroundColor="#AFF4C6"
+              borderColor="#AFF4C6"
             >
             </BasicChips>
           } else if (el.req_status === "Start") {
@@ -1115,11 +1115,18 @@ export default function ServiceRequest() {
               borderColor="#FFA629"
             >
             </BasicChips>
+          } else if (el.req_status === "Pending") {
+            el.req_status_label = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#CB9DFF"
+              borderColor="#CB9DFF"
+            >
+            </BasicChips>
           } else if (el.req_status === "Job Done") {
             el.req_status_label = <BasicChips
               label={`${el.req_status}`}
-              backgroundColor="#AFF4C6"
-              borderColor="#AFF4C6"
+              backgroundColor="#2FD667"
+              borderColor="#2FD667"
             >
             </BasicChips>
           } else if (el.req_status === "Close") {
@@ -1133,6 +1140,7 @@ export default function ServiceRequest() {
           }
           newData.push(el)
         })
+
         console.log(newData, 'ค่าที่ดึงจาก ตาราง');
 
         setDataList(newData);

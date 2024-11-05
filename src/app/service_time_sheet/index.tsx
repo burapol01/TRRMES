@@ -22,6 +22,7 @@ import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingSc
 import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
 import { updateSessionStorageCurrentAccess, cleanAccessData, getCurrentAccessObject } from "../../service/initmain";
+import ManagePendingStatusBody from "./component/PendingStatusManage";
 
 interface OptionsState {
   costCenter: any[];
@@ -108,6 +109,8 @@ export default function ServiceTimeSheet() {
   const [openAcceptJob, setOpenAcceptJob] = useState<any>(false);
   const [openTimeSheet, setOpenTimeSheet] = useState<any>(false);
   const [openJobDone, setOpenJobDone] = useState<any>(false);
+  const [openPending, setOpenPending] = useState<any>(false);
+  const [openUnPending, setOpenUnPending] = useState<any>(false);
   const [dataList, setDataList] = useState<any[]>([]);
   const [draftData, setDraftData] = useState<any>(null); // State to store draft data  
   const [options, setOptions] = useState<OptionsState>(initialOptions); // State for combobox options
@@ -166,19 +169,19 @@ export default function ServiceTimeSheet() {
         searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
         searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
         searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV 
-        
-        
+
+
         //Main
-        
-      fetchCostCenters(),
-      fetchServiceCenters(),
-      fetchJobTypes(),
-      fetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
-      fetchBudgetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
-      fetchRevision(),
-      fetchServiceStaff(),
-      //fetchWorkHour();  //ปิดไว้ก่อนเผื่อกลับมาใช้
-        
+
+        fetchCostCenters(),
+        fetchServiceCenters(),
+        fetchJobTypes(),
+        fetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes     
+        fetchBudgetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล budget codes 
+        fetchRevision(),
+        fetchServiceStaff(),
+        //fetchWorkHour();  //ปิดไว้ก่อนเผื่อกลับมาใช้
+
       ]);
     };
     fetchData();
@@ -261,8 +264,8 @@ export default function ServiceTimeSheet() {
     //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
     setOptionRequestStatus(filteredRequestStatus);
 
-  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes,filteredRequestStatus]);
-  
+  }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes, filteredRequestStatus]);
+
   const searchFetchCostCenters = async () => {
     console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
 
@@ -866,6 +869,18 @@ export default function ServiceTimeSheet() {
     fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User  
   };
 
+  const handleClickPending = (data: any) => {
+    setOpenPending(true);
+    readData(data)
+
+  };
+
+  const handleClickUnPending = (data: any) => {
+    setOpenUnPending(true);
+    readData(data)
+
+  };
+
   const handleClickJobDone = (data: any) => {
     setOpenJobDone(true);
     readData(data)
@@ -879,8 +894,10 @@ export default function ServiceTimeSheet() {
     setOpenEdit(false);
     setOpenDelete(false);
     setOpenAcceptJob(false);
-    setOpenTimeSheet(false)
-    setOpenJobDone(false)
+    setOpenTimeSheet(false);
+    setOpenPending(false);
+    setOpenUnPending(false);
+    setOpenJobDone(false);
     setDefaultValues(defaultVal);
     readData(null);
     //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
@@ -1055,7 +1072,7 @@ export default function ServiceTimeSheet() {
       "req_no": requestNo?.toString(),
       "job_type": selectedJobType?.lov_code,
       "fixed_asset_id": selectedAssetCode?.assetCodeId,
-      "req_status" : selectedRequestStatus?.lov_code,
+      "req_status": selectedRequestStatus?.lov_code,
       //"req_status": status,
       "role_id": roleId?.toString()
     };
@@ -1092,6 +1109,10 @@ export default function ServiceTimeSheet() {
                   handleClickAcceptJob(el)
                 } else if (name == 'Time Sheet') {
                   handleClickTimeSheet(el)
+                } else if (name == 'Pending') {
+                  handleClickPending(el)
+                } else if (name == 'Unpending') {
+                  handleClickUnPending(el)
                 } else if (name == 'Job Done') {
                   handleClickJobDone(el)
                 }
@@ -1116,8 +1137,8 @@ export default function ServiceTimeSheet() {
           } else if (el.req_status === "Approved") {
             el.req_status_label = <BasicChips
               label={`${el.req_status}`}
-              backgroundColor="#E4CCFF"
-              borderColor="#E4CCFF"
+              backgroundColor="#AFF4C6"
+              borderColor="#AFF4C6"
             >
             </BasicChips>
           } else if (el.req_status === "Start") {
@@ -1134,11 +1155,18 @@ export default function ServiceTimeSheet() {
               borderColor="#FFA629"
             >
             </BasicChips>
+          } else if (el.req_status === "Pending") {
+            el.req_status_label = <BasicChips
+              label={`${el.req_status}`}
+              backgroundColor="#CB9DFF"
+              borderColor="#CB9DFF"
+            >
+            </BasicChips>
           } else if (el.req_status === "Job Done") {
             el.req_status_label = <BasicChips
               label={`${el.req_status}`}
-              backgroundColor="#AFF4C6"
-              borderColor="#AFF4C6"
+              backgroundColor="#2FD667"
+              borderColor="#2FD667"
             >
             </BasicChips>
           } else if (el.req_status === "Close") {
@@ -1356,7 +1384,7 @@ export default function ServiceTimeSheet() {
                   </div>,
                   'success',
                   async () => {
-                    await changeStatus(draftData, currentUser.employee_username);
+                    await changeStatus(draftData, currentUser.employee_username, "On process");
                     dispatch(endLoadScreen());
                     handleClose();
                   }
@@ -1376,6 +1404,74 @@ export default function ServiceTimeSheet() {
     }
 
   };
+
+  //Add Pending ไปลง Database
+  const ManagePendingStatus = async () => {
+    console.log('Call : ManagePendingStatus', draftData, moment().format('HH:mm:ss:SSS'));
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/ManagePendingStatus');
+
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
+      if (draftData) {
+        console.log("Pending Data:", draftData.pendingId);
+
+        // สร้างข้อมูลที่จะส่ง
+        const payload = {
+          PendingModel: {
+            pending_id: draftData.pendingId ? draftData.pendingId : uuidv4() ,
+            pending_s_date: DateToDB(draftData.pendingStartDate),
+            pending_e_date: DateToDB(draftData.pendingEndDate),
+            req_status: draftData.status,
+            req_id: draftData.requestId,
+            reason: draftData.reason
+          },
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
+        };
+
+
+        dispatch(startLoadScreen());
+        setTimeout(async () => {
+          try {
+            console.log('Pending model', payload);
+
+            // ใช้ _POST เพื่อส่งข้อมูล
+            const response = await _POST(payload, "/api_trr_mes/PendingManage/Manage_Pending_Status");
+
+            if (response && response.status === "success") {
+              console.log('Pending successfully:', response);
+
+              // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                  {/* <p className="text-lg text-gray-800">
+                    <span className="font-semibold text-gray-900">Request No:</span>
+                    <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                  </p> */}
+                </div>,
+                'success',
+                async () => {
+                  await changeStatus(draftData, currentUser.employee_username, draftData.status === "Pending" ? "On process" : "Pending");
+                  dispatch(endLoadScreen());
+                  handleClose();
+                });
+            } else {
+              console.error('Failed to Pending:', response);
+              dispatch(endLoadScreen());
+              // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+            }
+          } catch (error) {
+            console.error('Error Pending:', error);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+          }
+
+        }, 0);
+
+      }
+    });
+  };
+
 
   //Add Submit ไปลง Database
   const serviceTimeSheetJobDone = async () => {
@@ -1456,12 +1552,13 @@ export default function ServiceTimeSheet() {
     }
   };
 
+
   //Function เปลี่ยนสถานะ
-  const changeStatus = async (draftData: any, currentUser: any) => {
+  const changeStatus = async (draftData: any, currentUser: any, status: any) => {
     console.log('Call : changeStatus', draftData, moment().format('HH:mm:ss:SSS'));
 
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:OnProcess/Change_Status');
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:' + status + '/Change_Status');
 
     if (draftData) {
       console.log("changeStatus Data:", draftData);
@@ -1470,7 +1567,7 @@ export default function ServiceTimeSheet() {
       const payload = {
         changeStatusModel: {
           id: draftData.requestId,
-          new_status: "On process",
+          new_status: status,
           app_user: ""
         },
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
@@ -1644,6 +1741,42 @@ export default function ServiceTimeSheet() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceTimeSheetBody
               actions={"TimeSheet"}
+              disableOnly
+            />
+          }
+        />
+        <FuncDialog
+          open={openPending} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
+          dialogWidth="md"
+          openBottonHidden={true}
+          titlename={"รอดำเนินงาน"}
+          handleClose={handleClose}
+          handlefunction={ManagePendingStatus}
+          colorBotton="success"
+          actions={"Pending"}
+          element={
+            <ManagePendingStatusBody
+              onDataChange={handleDataChange}
+              defaultValues={defaultValues}
+              actions={"Pending"}
+              disableOnly
+            />
+          }
+        />
+        <FuncDialog
+          open={openUnPending} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
+          dialogWidth="md"
+          openBottonHidden={true}
+          titlename={"ปลดรอดำเนินงาน"}
+          handleClose={handleClose}
+          handlefunction={ManagePendingStatus}
+          colorBotton="success"
+          actions={"UnPending"}
+          element={
+            <ManagePendingStatusBody
+              onDataChange={handleDataChange}
+              defaultValues={defaultValues}
+              actions={"UnPending"}
               disableOnly
             />
           }

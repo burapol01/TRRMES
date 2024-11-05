@@ -119,7 +119,17 @@ export default function ActionManageCell(props: ActionManageCellProps) {
                 ) {
                   shouldRender = true;
                 }
+
+                // เพิ่มเงื่อนไขสำหรับ "On process"
+                if (props.reqStatus === "On process" && menuFunc.func_name === "Pending") {
+                  shouldRender = true;
+                }
                 break;
+                case "Pending":
+                  if (menuFunc.func_name === "Unpending") {
+                    shouldRender = true;
+                  }
+                  break;
 
               default:
                 break;
@@ -237,7 +247,7 @@ export default function ActionManageCell(props: ActionManageCellProps) {
 //           switch (props.reqStatus) {
 //             case "Submit":
 //               if (
-//                 menuFunc.func_name === "Approve" && 
+//                 menuFunc.func_name === "Approve" &&
 //                 props.appUser &&
 //                 props.appUser !== "" &&
 //                 props.currentUser === props.appUser

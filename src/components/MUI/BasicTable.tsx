@@ -17,11 +17,12 @@ interface BasicTableProps {
     columns: any[];
     disabled?: boolean;
     actions?: string;
+    labelHead?: string; // เพิ่ม labelHead สำหรับหัวข้อรายการ
 }
 
-export default function BasicTable({ rows, columns, disabled = false, actions }: BasicTableProps) {
+export default function BasicTable({ rows, columns, disabled = false, actions, labelHead }: BasicTableProps) {
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleChangePage = (event: unknown, newPage: number) => {
@@ -51,6 +52,10 @@ export default function BasicTable({ rows, columns, disabled = false, actions }:
     return (
         <Paper className={disabled ? 'disabled' : ''} sx={{ width: '100%', overflow: 'hidden' }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', p: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: 'Sarabun', mr: 'auto' }}>
+                    {labelHead}
+                </Typography>
+
                 <TextField
                     label="ค้นหา"
                     variant="outlined"
@@ -60,7 +65,7 @@ export default function BasicTable({ rows, columns, disabled = false, actions }:
                     sx={{ width: '200px' }}
                 />
             </Box>
-            <TableContainer sx={{ maxHeight: 400 }}>
+            <TableContainer sx={{ overflow: 'auto' }}>
                 <Table stickyHeader sx={{ minWidth: 650 }} aria-label="simple table">
                     <TableHead>
                         <TableRow>

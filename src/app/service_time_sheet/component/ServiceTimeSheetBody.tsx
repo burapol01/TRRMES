@@ -9,6 +9,11 @@ import StyleImageList from "../../../components/MUI/StandardImageList";
 // Import CSS styles
 import "../../../app/service_time_sheet/css/choose_file.css";
 import { createFilterOptions } from "@mui/material";
+import moment from "moment";
+import { _POST } from "../../../service";
+import BasicTable from "../../../components/MUI/BasicTable";
+import { Table_Pending_headCells } from "../../../../libs/columnname";
+import { dateFormatTimeEN } from "../../../../libs/datacontrol";
 
 interface ServiceTimeSheetBodyProps {
   onDataChange?: (data: any) => void;
@@ -86,6 +91,8 @@ export default function ServiceTimeSheetBody({
 
   const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
   const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
+
+  const [dataListPending, setDataListPending] = useState<any[]>([]);
 
   const handleDataChange = (data: any) => {
     settimeSheetData(data); // Store draft data
@@ -193,7 +200,7 @@ export default function ServiceTimeSheetBody({
       if (defaultValues?.appReqUser != "") {
         //console.log(defaultValues?.appReqUser, 'appReqUser')
         setheadUser(defaultValues?.appReqUser || "");
-      }     
+      }
 
     }
 
@@ -203,28 +210,28 @@ export default function ServiceTimeSheetBody({
   //เปลี่ยนเป็นเรียกครั้งเดียว ในการ ดึงข้อมูล Revision มาแสดง
   React.useMemo(() => {
     if (defaultValues?.requestId !== "") {
-        console.log(actions, 'actions');
-        console.log(options?.revision, 'revision');
-        console.log(defaultValues?.requestId, 'requestId');
+      console.log(actions, 'actions');
+      console.log(options?.revision, 'revision');
+      console.log(defaultValues?.requestId, 'requestId');
 
-        // รับค่า data จาก setValueList
-        const data: any[] = setValueList(options?.revision, defaultValues?.requestId, 'reqId') || []; // ใช้ || [] เพื่อให้ค่าเป็นอาเรย์ว่างถ้าเป็น undefined
+      // รับค่า data จาก setValueList
+      const data: any[] = setValueList(options?.revision, defaultValues?.requestId, 'reqId') || []; // ใช้ || [] เพื่อให้ค่าเป็นอาเรย์ว่างถ้าเป็น undefined
 
-        console.log(data, 'mapRevisionData');
+      console.log(data, 'mapRevisionData');
 
-        // ตรวจสอบความยาวของ data
-        if (data.length > 0) {
-            setOptionRevision(data);
-            setRevisionCurrent(data[0]);
-            console.log(revisionCurrent, "revisionCurrent");
-        } else {
-            setOptionRevision([]);
-        }
+      // ตรวจสอบความยาวของ data
+      if (data.length > 0) {
+        setOptionRevision(data);
+        setRevisionCurrent(data[0]);
+        console.log(revisionCurrent, "revisionCurrent");
+      } else {
+        setOptionRevision([]);
+      }
 
-        return data; // คืนค่า data
+      return data; // คืนค่า data
     }
     return []; // คืนค่าอาเรย์ว่างถ้า requestId ไม่ถูกตั้งค่า
-}, []); // กำหนด dependencies
+  }, []); // กำหนด dependencies
 
 
 
@@ -240,14 +247,14 @@ export default function ServiceTimeSheetBody({
 
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   React.useEffect(() => {
-   
+
     const filteredData = options?.budgetCode.filter((item: any) =>
-      // (!costCenter?.costCenterId || item.costCenterId
-      //   .toString()
-      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
-      (!jobType?.lov_code || item.jobType
-        .toString()
-        .includes(jobType?.lov_code))
+    // (!costCenter?.costCenterId || item.costCenterId
+    //   .toString()
+    //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+    (!jobType?.lov_code || item.jobType
+      .toString()
+      .includes(jobType?.lov_code))
 
     );
     //console.log(filteredData, 'filteredData');
@@ -272,8 +279,8 @@ export default function ServiceTimeSheetBody({
 
     setOptionServiceCenter(filterServiceCenter);
 
-  }, [actions, reqUser,costCenter, jobType])
-//AutocompleteComboBox ===================================================================================================================
+  }, [actions, reqUser, costCenter, jobType])
+  //AutocompleteComboBox ===================================================================================================================
 
   // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
   //=========================================== การ Upload File ==========================================
@@ -354,35 +361,46 @@ export default function ServiceTimeSheetBody({
   }, [defaultValues?.requestAttachFileList, actions]);
 
 
-  // Cleanup URLs เมื่อ component ถูกลบ
-  // useEffect(() => {
-  //   return () => {
-  //     if (Array.isArray(imageList)) {
-  //       imageList.forEach((item) => {
-  //         if (item.url.startsWith("blob:")) {
-  //           URL.revokeObjectURL(item.url);
-  //         }
-  //       });
-  //     }
+  //================================================================================================
+  const managePendingGet = async () => {
+    console.log('Call : managePendingGet', moment().format('HH:mm:ss:SSS'));
 
-  //     if (Array.isArray(imageListView)) {
-  //       imageListView.forEach((item) => {
-  //         if (item.url.startsWith("blob:")) {
-  //           URL.revokeObjectURL(item.url);
-  //         }
-  //       });
-  //     }
+    const payload = {};
 
-  //   };
-  // }, [imageList, imageListView]);
+    try {
+      const response = await _POST(payload, "/api_trr_mes/PendingManage/Manage_Pending_Get");
+
+      if (response && response.status === "success") {
+        console.log('Manage_Pending_Get successfully:', response);
+
+        // ตรวจสอบว่า response.data เป็น array หรือไม่
+        if (Array.isArray(response.data)) {
+          response.data.forEach((item: any, index: number) => {
+
+            // ใช้ index + 1 เพื่อให้ลำดับเริ่มต้นที่ 1
+            item.no = index + 1;
+            item.pending_s_date = dateFormatTimeEN(item.pending_s_date, "DD/MM/YYYY HH:mm:ss");
+            item.pending_e_date = dateFormatTimeEN(item.pending_e_date, "DD/MM/YYYY HH:mm:ss");
+            item.unpending_by = item.unpending_by === null ? "-" : item.unpending_by
+            item.unpending_date = item.unpending_date === null ? "-" : dateFormatTimeEN(item.unpending_date, "DD/MM/YYYY HH:mm:ss");
+          });
+        }
 
 
-  // Log การอัปเดตของ imageList And imageListView
+        setDataListPending(response.data);
+      } else {
+        console.error('Failed to Manage_Pending_Get:', response);
+      }
+    } catch (error) {
+      console.error('Error Manage_Pending_Get:', error);
+    }
+  };
 
-  // useEffect(() => {
-  //   console.log(imageList, "imageList");
-  //   console.log(imageListView, "imageListView");
-  // }, [imageList, imageListView]);
+
+  useEffect(() => {
+
+      managePendingGet();
+  }, [requestId]);
 
 
   return (
@@ -520,8 +538,8 @@ export default function ServiceTimeSheetBody({
             value={budgetCode}
             setvalue={setBudgetCode}
             disabled={disableOnly}
-             options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            //options={options?.budgetCode}
+            options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+          //options={options?.budgetCode}
           />
         </div>
       </div>
@@ -540,7 +558,7 @@ export default function ServiceTimeSheetBody({
               //setFixedAssetDescription(data?.assetDescription || "");
             }}
             //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
-            options={options?.fixedAssetCode || []} 
+            options={options?.fixedAssetCode || []}
           />
         </div>
 
@@ -639,6 +657,14 @@ export default function ServiceTimeSheetBody({
               />
             </div>
           </>)}
+      </div>
+      <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
+        <BasicTable
+          columns={Table_Pending_headCells}
+          rows={dataListPending}
+          actions={actions}
+          labelHead={"รายการรอดำเนินการ"}
+        />
       </div>
     </div>
   );

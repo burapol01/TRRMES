@@ -190,6 +190,62 @@ export const Time_Sheet_headCells = [
 
 ]
 
+export const Table_Pending_headCells = [
+
+    {
+        columnName: 'no',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ลำดับ',
+        colWidth: 100
+    },
+    {
+        columnName: 'pending_by',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ผู้บันทึก : รอดำเนินการ',
+        colWidth: 100
+    },
+    {
+        columnName: 'pending_s_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่เริ่มรอดำเนินการ',
+        colWidth: 150
+    },
+    {
+        columnName: 'pending_e_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่คาดว่าจะดำเนินการต่อ',
+        colWidth: 150
+    },
+    {
+        columnName: 'unpending_by',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ผู้บันทึก : ปลดรอดำเนินการ',
+        colWidth: 100
+    },
+    {
+        columnName: 'unpending_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่ปลดรอดำเนินการ',
+        colWidth: 150
+    },
+
+    {
+        columnName: 'reason',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'หมายเหตุ',
+        colWidth: 100
+    },
+
+
+]
+
 export const MasterUser_headCells = [
     {
         columnName: 'ACTION',

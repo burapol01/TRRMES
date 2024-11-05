@@ -58,6 +58,16 @@ const actionConfig = {
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
+  Pending: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  UnPending: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
   JobDone: {
     mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
