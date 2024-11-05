@@ -9,6 +9,7 @@ import { dateFormatTimeEN } from "../../../../libs/datacontrol";
 import moment from "moment";
 import { _POST } from "../../../service";
 import { log } from "console";
+import { useListServiceTimeSheet } from "../core/service_time_sheet_provider";
 
 interface ManagePendingStatusBodyProps {
     onDataChange?: (data: any) => void;
@@ -34,13 +35,14 @@ export default function ManagePendingStatusBody({
     const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
     const [status, setStatus] = useState(defaultValues?.status);
     const [pendingId, setPendingId] = useState("");
+    const { isValidate, setIsValidate } = useListServiceTimeSheet()
 
     const managePendingGet = async () => {
         console.log('Call : managePendingGet', moment().format('HH:mm:ss:SSS'));
 
-        const payload = {           
-                req_id: requestId,
-                req_status: status            
+        const payload = {
+            req_id: requestId,
+            req_status: status
         };
 
         try {
@@ -48,7 +50,7 @@ export default function ManagePendingStatusBody({
 
             if (response && response.status === "success") {
                 console.log('Manage_Pending_Get successfully:', response);
-                const { id ,pending_s_date, pending_e_date, reason } = response.data[0];
+                const { id, pending_s_date, pending_e_date, reason } = response.data[0];
 
                 console.log(response.data);
 
@@ -80,8 +82,8 @@ export default function ManagePendingStatusBody({
         const data = {
             pendingId,
             requestId,
-            pendingStartDate: dateFormatTimeEN(pendingStartDate, "DD/MM/YYYY") + moment().format('HH:mm:ss:SSS'),
-            pendingEndDate: dateFormatTimeEN(pendingEndDate, "DD/MM/YYYY") + moment().format('HH:mm:ss:SSS'),
+            pendingStartDate: pendingStartDate ? dateFormatTimeEN(pendingStartDate, "DD/MM/YYYY") + moment().format('HH:mm:ss:SSS') : null,
+            pendingEndDate: pendingEndDate ? dateFormatTimeEN(pendingEndDate, "DD/MM/YYYY") + moment().format('HH:mm:ss:SSS') : null,
             reason,
             status,
         };
@@ -90,47 +92,50 @@ export default function ManagePendingStatusBody({
 
     return (
         <div>
-        <div className="row justify-start">
-            <div className="col-12 mb-2">
-                <div className="flex flex-col md:flex-row items-start space-y-2 md:space-y-0 md:space-x-2">
-                    <div className="w-full md:w-1/2">
-                        <DatePickerBasic
-                            required="required"
-                            labelname="วันที่เริ่มรอดำเนินการ"
-                            valueStart={pendingStartDate}
-                            onchangeStart={(value) => {
-                                setPendingStartDate(value);
-                                setPendingEndDate(null);
-                            }}
-                            disabled={disableOnly}
-                            checkValidateMonth={true}
-                        />
-                    </div>
-                    <label className="pt-5 mt-5 md:pt-0 md:mt-0">ถึง</label>
-                    <div className="w-full md:w-1/2">
-                        <DatePickerBasic
-                            required="required"
-                            labelname="วันที่คาดว่าจะดำเนินการ"
-                            valueStart={pendingEndDate}
-                            disabled={actions === "UnPending" ? disableOnly : false}
-                            onchangeStart={setPendingEndDate}
-                            checkValidateMonth={true}
-                            disablePast
-                        />
+            <div className="row justify-start">
+                <div className="col-12 mb-2">
+                    <div className="flex flex-col md:flex-row items-start space-y-2 md:space-y-0 md:space-x-2">
+                        <div className="w-full md:w-1/2">
+                            <DatePickerBasic
+                                required="required"
+                                labelname="วันที่เริ่มรอดำเนินการ"
+                                valueStart={pendingStartDate}
+                                onchangeStart={(value) => {
+                                    setPendingStartDate(value);
+                                    setPendingEndDate(null);
+                                }}
+                                disabled={disableOnly}
+                                checkValidateMonth={true}
+                            />
+                        </div>
+                        <label className="pt-5 mt-5 md:pt-0 md:mt-0">ถึง</label>
+                        <div className="w-full md:w-1/2">
+                            <DatePickerBasic
+                                required="required"
+                                labelname="วันที่คาดว่าจะดำเนินการ"
+                                valueStart={pendingEndDate}
+                                disabled={actions === "UnPending" ? disableOnly : false}
+                                onchangeStart={setPendingEndDate}
+                                checkValidateMonth={true}
+                                disablePast
+                                validate={isValidate?.pendingEndDate}
+                            />
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div className="col-12 mb-2">
-                <FullWidthTextareaField
-                    labelName="หมายเหตุ"
-                    value={reason}
-                    multiline={true}
-                    disabled={actions === "UnPending" ? disableOnly : false}
-                    onChange={(value) => setReason(value)}
-                />
+                <div className="col-12 mb-2">
+                    <FullWidthTextareaField
+                        required="required"
+                        labelName="หมายเหตุ"
+                        value={reason}
+                        multiline={true}
+                        disabled={actions === "UnPending" ? disableOnly : false}
+                        onChange={(value) => setReason(value)}
+                        Validate={isValidate?.reason}
+                    />
+                </div>
             </div>
         </div>
-    </div>
-    
+
     );
 }

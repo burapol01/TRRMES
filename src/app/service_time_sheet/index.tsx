@@ -1411,6 +1411,20 @@ export default function ServiceTimeSheet() {
     // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
     updateSessionStorageCurrentAccess('event_name', 'Edit/ManagePendingStatus');
 
+    const dataForValidate = {
+      pendingStartDate: draftData.pendingStartDate,
+      pendingEndDate: draftData.pendingEndDate,
+      reason: draftData.reason
+    }
+
+    const isValidate = checkValidate(dataForValidate, ['pendingStartDate', 'pendingEndDate', 'reason']);
+    const isValidateAll = isCheckValidateAll(isValidate);
+    if (Object.keys(isValidateAll).length > 0) {
+      console.log(isValidateAll,);
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       if (draftData) {
         console.log("Pending Data:", draftData.pendingId);
@@ -1418,7 +1432,7 @@ export default function ServiceTimeSheet() {
         // สร้างข้อมูลที่จะส่ง
         const payload = {
           PendingModel: {
-            pending_id: draftData.pendingId ? draftData.pendingId : uuidv4() ,
+            pending_id: draftData.pendingId ? draftData.pendingId : uuidv4(),
             pending_s_date: DateToDB(draftData.pendingStartDate),
             pending_e_date: DateToDB(draftData.pendingEndDate),
             req_status: draftData.status,

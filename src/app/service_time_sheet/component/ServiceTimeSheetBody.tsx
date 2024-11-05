@@ -365,7 +365,9 @@ export default function ServiceTimeSheetBody({
   const managePendingGet = async () => {
     console.log('Call : managePendingGet', moment().format('HH:mm:ss:SSS'));
 
-    const payload = {};
+    const payload = {
+      req_id : requestId 
+    };
 
     try {
       const response = await _POST(payload, "/api_trr_mes/PendingManage/Manage_Pending_Get");
@@ -399,7 +401,7 @@ export default function ServiceTimeSheetBody({
 
   useEffect(() => {
 
-      managePendingGet();
+    managePendingGet();
   }, [requestId]);
 
 
@@ -659,12 +661,16 @@ export default function ServiceTimeSheetBody({
           </>)}
       </div>
       <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
-        <BasicTable
-          columns={Table_Pending_headCells}
-          rows={dataListPending}
-          actions={actions}
-          labelHead={"รายการรอดำเนินการ"}
-        />
+        {dataListPending && dataListPending.length > 0 ? (
+          <BasicTable
+            columns={Table_Pending_headCells}
+            rows={dataListPending}
+            actions={actions}
+            labelHead={"รายการรอดำเนินการ"}
+          />
+        ) : (
+          <p></p> // หรือไม่แสดงข้อความเลย
+        )}
       </div>
     </div>
   );
