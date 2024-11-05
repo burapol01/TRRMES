@@ -269,3 +269,77 @@ export const MasterUser_headCells = [
         colWidth: 200
     }
 ];
+
+export const Master_Cost_Center = [
+    {
+        columnName: 'ACTION',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'จัดการ',
+        colWidth: 150
+    },
+    {
+        columnName: 'site_code',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Site',
+        colWidth: 100
+    },
+    {
+        columnName: 'cost_center_code',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Cost Center Code',
+        colWidth: 200
+    },
+    {
+        columnName: 'cost_center_name',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ชื่อ Cost Center',
+        colWidth: 300
+    },
+    {
+        columnName: 'app_req_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ผู้อนุมัติ',
+        colWidth: 150
+    },
+    {
+        columnName: 'service_center_flag',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Service Center',
+        colWidth: 150
+    },
+    {
+        columnName: 'create_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่สร้าง',
+        colWidth: 300
+    },
+    {
+        columnName: 'create_by',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'สร้างโดย',
+        colWidth: 150
+    },
+    {
+        columnName: 'update_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่แก้ไข',
+        colWidth: 300
+    },
+    {
+        columnName: 'update_by',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'แก้ไขโดย',
+        colWidth: 150    
+    },
+    
+];
