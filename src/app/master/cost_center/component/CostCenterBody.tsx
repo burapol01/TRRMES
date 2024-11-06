@@ -6,7 +6,7 @@ import CustomizedSwitches from '../../../../components/MUI/MaterialUISwitch';
 import { debounce } from 'lodash';
 import { useListConCenter } from '../core/CostCenterProvider';
 import { Massengmodal } from '../../../../components/MUI/Massengmodal';
-import { setValueMas } from '../../../../../libs/setvaluecallback';
+import { _number } from '../../../../../libs/datacontrol';
 
 interface CostCenterBodyProps {
   onDataChange?: (data: any) => void;
@@ -112,8 +112,6 @@ export default function CostCenterBody({
     console.log(siteCode);
   },[siteCode])
 
-
-
   return (
     <div>
       <div className='row justify-start'>
@@ -134,7 +132,7 @@ export default function CostCenterBody({
           <FullWidthTextField
             required={"required"}
             labelName={"Cost Center Code"}
-            value={costcenterCode}
+            value={costcenterCode ? _number(costcenterCode) : null}
             disabled={actions === "Update" ? true : disableOnly}
             onChange={(value) => setCostCenterCode(value)}
             Validate={isValidate?.costcenterCode}
@@ -156,7 +154,7 @@ export default function CostCenterBody({
             required={"required"}
             labelName={"ผู้อนุมัติ"}
             description={"กรุณากรอกชื่อผู้ใช้ของคุณ (ตัวอย่าง: somchai.jad) เพื่อให้สามารถเข้าถึงระบบได้."}
-            value={appReqUser}
+            value={appReqUser ? handlCostCenterChange(appReqUser) : null}
             disabled={actions === "Create" || actions === "Update" ? false : disableOnly}
             onChange={handlCostCenterChange} // onChange={(value) => setCostCenterCode(value)}      
             Validate={isValidate?.appReqUser}

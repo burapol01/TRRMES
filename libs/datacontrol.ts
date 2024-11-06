@@ -14,6 +14,19 @@ export function _formatNumber(input: any) {
   }
 }
 
+// สำหรับกรอกแค่ตัวเลข
+export function _number(input: any) {
+  const value = String(input).replace(/[^0-9]/g, "");
+  const number = parseFloat(value);
+
+  if (!isNaN(number)) {
+    const formattedNumber = number;
+    return formattedNumber;
+  } else {
+    return "";
+  }
+}
+
 export function _formatNumberNotdecimal(input: any) {
   const value = String(input).replace(/[^0-9.]/g, "");
 
