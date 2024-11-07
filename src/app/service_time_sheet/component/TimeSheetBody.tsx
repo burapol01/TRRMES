@@ -89,11 +89,12 @@ export default function TimeSheetBody({
                         technician: dataSubTimeSheet.technician,
                         work_hour: dataSubTimeSheet.work_hour,
                         description: dataSubTimeSheet.description,
+                        cutoffFlag: dataSubTimeSheet.cutoff_flag,
                         rejectJobReason: dataSubTimeSheet.reject_job_reason
                     }));
 
                     setDataList(subTimeSheet);
-                    //console.log(subTimeSheet, 'subTimeSheet');
+                    console.log(subTimeSheet, 'subTimeSheet');
 
                     // ตั้งค่า rejectJobReason จากข้อมูลที่ได้มา
                     const firstRejectReason = Array.isArray(subTimeSheet) ? subTimeSheet.find(item => item.rejectJobReason)?.rejectJobReason || "" : "";
@@ -222,7 +223,7 @@ export default function TimeSheetBody({
                 work_hour: workHour, // แสดง lov_code
                 key: row.subTimeSheetId, // ใช้ subTimeSheetId เป็น key
                 delete: (
-                    actions !== "Reade" && (
+                    actions !== "Reade" && row.cutoffFlag !== true &&(
                         <FullWidthButton
                             labelName="ลบ"
                             colorname="error"
@@ -277,7 +278,7 @@ export default function TimeSheetBody({
                     actions !== "Reade" && actions !== "JobDone" && (
                         <FullWidthButton
                             key={`delete-${index}`}
-                            labelName="Delete"
+                            labelName="ลบ"
                             colorname="error"
                             handleonClick={() => handleDelete(row.subTimeSheetId, row.newRowDataFlag)}
                             variant_text="contained"
@@ -353,7 +354,7 @@ export default function TimeSheetBody({
     // Fetch Check Monthly CutOff data with useEffect
     const fetchCheckMonthlyCutOff = async (workStartDate: any) => {
         const dataset = {
-            site_id: siteId,
+            //site_id: siteId,
             work_start_date: dateFormatTimeEN(workStartDate,"YYYY-MM-DD"),
         };
 

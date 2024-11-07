@@ -23,6 +23,7 @@ import { endLoadScreen, startLoadScreen } from "../../../redux/actions/loadingSc
 import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
 import { updateSessionStorageCurrentAccess, cleanAccessData, getCurrentAccessObject } from "../../service/initmain";
+import { log } from "console";
 
 interface OptionsState {
   costCenterForCreate: any[];
@@ -145,10 +146,6 @@ export default function ServiceRequest() {
     console.log('Call : 🟢[1] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
     const fetchData = async () => {
       await Promise.all([
-        searchFetchCostCenters(),
-        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
-        searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-        searchFetchFixedAssetCodes(""), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
         searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV 
         fetchRevisionMaximum(),
 
@@ -169,7 +166,7 @@ export default function ServiceRequest() {
     console.log('Call : 🟢[2] fetch UserData&serviceRequest', moment().format('HH:mm:ss:SSS'));
     if (employeeUsername) {
       fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User      
-      fetchCostCentersForCrate(); 
+      fetchCostCentersForCrate();
     }
   }, [employeeUsername]);
 
@@ -232,6 +229,8 @@ export default function ServiceRequest() {
 
   // ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
   const filteredFixedAssetCodes = React.useMemo(() => {
+  
+
     const fixedAssetIdSet = new Set(dataList
       .filter(dataItem => dataItem.fixed_asset_id !== null)
       .map(dataItem => dataItem.fixed_asset_id.toString())
@@ -256,151 +255,21 @@ export default function ServiceRequest() {
 
   // Set state
   React.useEffect(() => {
-    //console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
-    setOptionCostCenter(filteredUniqueCostCenters);
 
-    //console.log(filteredServiceCenters, 'filterServiceCenter');
-    setOptionServiceCenter(filteredServiceCenters);
+      //console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
+      setOptionCostCenter(filteredUniqueCostCenters);
 
-    //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
-    setOptionFixedAssetCodes(filteredFixedAssetCodes);
+      //console.log(filteredServiceCenters, 'filterServiceCenter');
+      setOptionServiceCenter(filteredServiceCenters);
 
-    //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
-    setOptionRequestStatus(filteredRequestStatus);
+      console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+      setOptionFixedAssetCodes(filteredFixedAssetCodes);
+
+      //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+      setOptionRequestStatus(filteredRequestStatus);
 
   }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes, filteredRequestStatus]);
 
-  const searchFetchCostCenters = async () => {
-    console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-      //user_ad: employeeUsername
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
-
-      if (response && response.status === "success") {
-        //console.log('Cost_Center_Get', response)
-        const costCenters = response.data.map((costCenter: any) => ({
-          costCenterId: costCenter.id,
-          userAd: costCenter.user_ad,
-          appReqUser: costCenter.app_req_user,
-          costCenterCode: costCenter.cost_center_code,
-          costCenterName: costCenter.cost_center_name,
-          costCentersCodeAndName: "[" + costCenter.site_code + "] " + '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
-          siteCode: costCenter.site_code
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          costCenter: costCenters,
-        }));
-      } else {
-        setError("Failed to fetch Cost Centers.");
-      }
-    } catch (error) {
-      console.error("Error fetching Cost Centers:", error);
-      setError("An error occurred while fetching Cost Centers.");
-    }
-  };
-
-  const searchFetchServiceCenters = async () => {
-    console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
-
-      if (response && response.status === "success") {
-        const serviceCenters = response.data.map((center: any) => ({
-
-          serviceCenterId: center.id,
-          serviceCenterCode: center.cost_center_code,
-          serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
-
-        }));
-
-        // console.log(serviceCenters, 'Service Center');
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          serviceCenter: serviceCenters,
-        }));
-      } else {
-        setError("Failed to fetch service centers.");
-      }
-    } catch (error) {
-      console.error("Error fetching service centers:", error);
-      setError("An error occurred while fetching service centers.");
-    }
-  };
-
-  const searchFetchJobTypes = async () => {
-    console.log('Call : searchFetchJobTypes', moment().format('HH:mm:ss:SSS'));
-    try {
-
-      const dataset = {
-        "lov_type": "job_type"
-      };
-
-      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
-
-      if (response && response.status === "success") {
-        //console.log(response, 'Success fetch job');
-        const jobTypes = response.data.map((job: any) => ({
-          lov_code: job.lov_code,
-          lov_name: job.lov1,
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          jobType: jobTypes,
-        }));
-      } else {
-        setError("Failed to fetch job types.");
-      }
-    } catch (error) {
-      console.error("Error fetching job types:", error);
-      setError("An error occurred while fetching job types.");
-    }
-  };
-
-  const searchFetchFixedAssetCodes = async (vlue: string) => {
-    console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-      description: vlue,
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
-
-      if (response && response.status === "success") {
-        //console.log('Fixed_Asset_Get', response);
-        const fixedAssetCodes = response.data.map((asset: any) => ({
-          assetCodeId: asset.id,
-          assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description,
-          assetCodeAndDescription: "[" + asset.site_code + "] " + '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          fixedAssetCode: fixedAssetCodes,
-        }));
-      } else {
-        setError("Failed to fetch fixed asset codes.");
-      }
-    } catch (error) {
-      console.error("Error fetching fixed asset codes:", error);
-      setError("An error occurred while fetching fixed asset codes.");
-    }
-  };
 
   const searchFetchRequestStatus = async () => {
     console.log('Call : searchFetchRequestStatus', moment().format('HH:mm:ss:SSS'));
@@ -503,6 +372,12 @@ export default function ServiceRequest() {
           ...prevOptions,
           costCenter: costCenters,
         }));
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          costCenter: costCenters,
+        }));
+
       } else {
         setError("Failed to fetch Cost Centers.");
       }
@@ -538,6 +413,11 @@ export default function ServiceRequest() {
           serviceCenter: serviceCenters,
         }));
 
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          serviceCenter: serviceCenters,
+        }));
+
       } else {
         setError("Failed to fetch service centers.");
       }
@@ -568,6 +448,12 @@ export default function ServiceRequest() {
           ...prevOptions,
           jobType: jobTypes,
         }));
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          jobType: jobTypes,
+        }));
+
       } else {
         setError("Failed to fetch job types.");
       }
@@ -708,6 +594,12 @@ export default function ServiceRequest() {
           ...prevOptions,
           fixedAssetCode: fixedAssetCodes,
         }));
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          fixedAssetCode: fixedAssetCodes,
+        }));
+
       } else {
         setError("Failed to fetch fixed asset codes.");
       }
@@ -922,7 +814,7 @@ export default function ServiceRequest() {
 
   //ตรวจสอบว่ามี User ไหม ?
   const fetchUserData = async () => {
-    console.log('Call : 🟢 เริ่มต้น fetchUserData ',employeeUsername, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : 🟢 เริ่มต้น fetchUserData ', employeeUsername, moment().format('HH:mm:ss:SSS'));
 
     if (!employeeUsername) return;
 
@@ -1163,8 +1055,8 @@ export default function ServiceRequest() {
           newFileName = null;
         }
 
-        console.log(newFileName,'newFileName');
-        
+        console.log(newFileName, 'newFileName');
+
 
         const reqUserFilename = image.name;
 

@@ -164,15 +164,9 @@ export default function ServiceTimeSheet() {
     console.log('Call : 🟢[2] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
     const fetchData = async () => {
       await Promise.all([
-        searchFetchCostCenters(),
-        searchFetchServiceCenters(), // เรียกใช้ฟังก์ชันเมื่อดึงข้อมูล service centers
-        searchFetchJobTypes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล job types
-        searchFetchFixedAssetCodes(), // เรียกใช้ฟังก์ชันเพื่อดึงข้อมูล fixed asset codes
         searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV 
 
-
         //Main
-
         fetchCostCenters(),
         fetchServiceCenters(),
         fetchJobTypes(),
@@ -266,138 +260,6 @@ export default function ServiceTimeSheet() {
 
   }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes, filteredRequestStatus]);
 
-  const searchFetchCostCenters = async () => {
-    console.log('Call : searchFetchCostCenters', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-      //user_ad: employeeUsername
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
-
-      if (response && response.status === "success") {
-        //console.log('Cost_Center_Get', response)
-        const costCenters = response.data.map((costCenter: any) => ({
-          costCenterId: costCenter.id,
-          userAd: costCenter.user_ad,
-          appReqUser: costCenter.app_req_user,
-          costCenterCode: costCenter.cost_center_code,
-          costCenterName: costCenter.cost_center_name,
-          costCentersCodeAndName: "[" + costCenter.site_code + "] " + '[' + costCenter.cost_center_code + ']' + ' | ' + costCenter.cost_center_name,
-          siteCode: costCenter.site_code
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          costCenter: costCenters,
-        }));
-      } else {
-        setError("Failed to fetch Cost Centers.");
-      }
-    } catch (error) {
-      console.error("Error fetching Cost Centers:", error);
-      setError("An error occurred while fetching Cost Centers.");
-    }
-  };
-
-  const searchFetchServiceCenters = async () => {
-    console.log('Call : searchFetchServiceCenters', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Service_Center_Get");
-
-      if (response && response.status === "success") {
-        const serviceCenters = response.data.map((center: any) => ({
-
-          serviceCenterId: center.id,
-          serviceCenterCode: center.cost_center_code,
-          serviceCenterName: center.cost_center_name,
-          serviceCentersCodeAndName: "[" + center.site_code + "] " + center.cost_center_name + ' [' + center.cost_center_code + ']'
-
-        }));
-
-        // console.log(serviceCenters, 'Service Center');
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          serviceCenter: serviceCenters,
-        }));
-      } else {
-        setError("Failed to fetch service centers.");
-      }
-    } catch (error) {
-      console.error("Error fetching service centers:", error);
-      setError("An error occurred while fetching service centers.");
-    }
-  };
-
-  const searchFetchJobTypes = async () => {
-    console.log('Call : searchFetchJobTypes', moment().format('HH:mm:ss:SSS'));
-    try {
-
-      const dataset = {
-        "lov_type": "job_type"
-      };
-
-      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
-
-      if (response && response.status === "success") {
-        //console.log(response, 'Success fetch job');
-        const jobTypes = response.data.map((job: any) => ({
-          lov_code: job.lov_code,
-          lov_name: job.lov1,
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          jobType: jobTypes,
-        }));
-      } else {
-        setError("Failed to fetch job types.");
-      }
-    } catch (error) {
-      console.error("Error fetching job types:", error);
-      setError("An error occurred while fetching job types.");
-    }
-  };
-
-  const searchFetchFixedAssetCodes = async () => {
-    console.log('Call : searchFetchFixedAssetCodes', moment().format('HH:mm:ss:SSS'));
-
-    const dataset = {
-
-    };
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Fixed_Asset_Get");
-
-      if (response && response.status === "success") {
-        //console.log('Fixed_Asset_Get', response);
-        const fixedAssetCodes = response.data.map((asset: any) => ({
-          assetCodeId: asset.id,
-          assetCode: asset.fixed_asset_code,
-          assetDescription: asset.description,
-          assetCodeAndDescription: "[" + asset.site_code + "] " + '[' + asset.fixed_asset_code + ']' + ' | ' + asset.description
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          fixedAssetCode: fixedAssetCodes,
-        }));
-      } else {
-        setError("Failed to fetch fixed asset codes.");
-      }
-    } catch (error) {
-      console.error("Error fetching fixed asset codes:", error);
-      setError("An error occurred while fetching fixed asset codes.");
-    }
-  };
-
   const searchFetchRequestStatus = async () => {
     console.log('Call : searchFetchRequestStatus', moment().format('HH:mm:ss:SSS'));
     try {
@@ -430,7 +292,6 @@ export default function ServiceTimeSheet() {
     }
   };
 
-
   // ฟังก์ชันเรียก API Master Data Aotocomplete combobox options =================================================================
   /*
       ใช้สำหรับหน้า ServicesRequestBody 
@@ -460,6 +321,11 @@ export default function ServiceTimeSheet() {
         }));
 
         setOptions((prevOptions) => ({
+          ...prevOptions,
+          costCenter: costCenters,
+        }));
+
+        setOptionsSearch((prevOptions) => ({
           ...prevOptions,
           costCenter: costCenters,
         }));
@@ -500,6 +366,11 @@ export default function ServiceTimeSheet() {
           serviceCenter: serviceCenters,
         }));
 
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          serviceCenter: serviceCenters,
+        }));
+
       } else {
         setError("Failed to fetch service centers.");
       }
@@ -530,6 +401,13 @@ export default function ServiceTimeSheet() {
           ...prevOptions,
           jobType: jobTypes,
         }));
+
+        
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          jobType: jobTypes,
+        }));
+
       } else {
         setError("Failed to fetch job types.");
       }
@@ -605,6 +483,12 @@ export default function ServiceTimeSheet() {
           ...prevOptions,
           fixedAssetCode: fixedAssetCodes,
         }));
+
+        setOptionsSearch((prevOptions) => ({
+          ...prevOptions,
+          fixedAssetCode: fixedAssetCodes,
+        }));
+
       } else {
         setError("Failed to fetch fixed asset codes.");
       }
