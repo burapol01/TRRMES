@@ -211,26 +211,25 @@ export default function CostCenter() {
 
         // ---------------------------------------------------------------------------------------------------------------
 
-        // const dataForValidate = {
-        //     site_id: resultData.siteCode?.id,
-        //     cost_center_code: resultData.costcenterCode,
-        //     cost_center_name: resultData.costcenterName,
-        //     app_req_user: resultData.appReqUser,
-        //     service_center_flag: resultData.serviceCenterFlag ?? false,
-        // }
+        const dataForValidate = {
+            site_id: resultData.siteCode?.id,
+            cost_center_code: resultData.costcenterCode,
+            cost_center_name: resultData.costcenterName,
+            app_req_user: resultData.appReqUser,
+            service_center_flag: resultData.serviceCenterFlag ?? false,
+        }
        
-        // console.log("Data validation:", dataForValidate);
+        console.log("Data validation:", dataForValidate);
 
-        // const isValidate = checkValidate(dataForValidate, ['costCenter']);
-        // const isValidateAll = isCheckValidateAll(isValidate);
+        const isValidate = checkValidate(dataForValidate, ['costCenter']);
+        const isValidateAll = isCheckValidateAll(isValidate);
 
-        // if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-        //   console.log("Validation errors:", isValidateAll);
-        //   setIsValidate(isValidate);
-        //   return; // return ถ้า validation ไม่ผ่าน
-        // }
-        // setIsValidate(null); // ถ้า validation ผ่าน
-        // console.log("Validation passed, proceeding to next step."); // ตรวจสอบผ่านแล้ว ดำเนินการขั้นตอนต่อไป
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+          console.log("Validation errors:", isValidateAll);
+          setIsValidate(isValidate);
+          return; // return ถ้า validate ไม่ผ่าน
+        }
+        setIsValidate(null); // ถ้า validate ผ่าน
 
         // ---------------------------------------------------------------------------------------------------------------
         
@@ -246,7 +245,7 @@ export default function CostCenter() {
                         cost_center_code: resultData.costcenterCode,
                         cost_center_name: resultData.costcenterName,
                         app_req_user: resultData.appReqUser,
-                        service_center_flag: resultData.serviceCenterFlag,
+                        service_center_flag: resultData.serviceCenterFlag ?? false,
                     }],
                     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
                 };
@@ -301,6 +300,30 @@ export default function CostCenter() {
         // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
         updateSessionStorageCurrentAccess('evernt_name', 'Edit/Master_Cost_Center_Edit');
 
+        // ---------------------------------------------------------------------------------------------------------------
+
+        const dataForValidate = {
+            site_id: resultData.siteCode?.id,
+            cost_center_code: resultData.costcenterCode,
+            cost_center_name: resultData.costcenterName,
+            app_req_user: resultData.appReqUser,
+            service_center_flag: resultData.serviceCenterFlag ?? false,
+        }
+       
+        console.log("Data validation:", dataForValidate);
+
+        const isValidate = checkValidate(dataForValidate, ['costCenter']);
+        const isValidateAll = isCheckValidateAll(isValidate);
+
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+          console.log("Validation errors:", isValidateAll);
+          setIsValidate(isValidate);
+          return; // return ถ้า validate ไม่ผ่าน
+        }
+        setIsValidate(null); // ถ้า validate ผ่าน
+
+        // ---------------------------------------------------------------------------------------------------------------
+
         setIsValidate(null);
         confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
             if (resultData) {
@@ -314,7 +337,7 @@ export default function CostCenter() {
                         cost_center_code: resultData.costcenterCode,
                         cost_center_name: resultData.costcenterName,
                         app_req_user: resultData.appReqUser,
-                        service_center_flag: resultData.serviceCenterFlag,
+                        service_center_flag: resultData.serviceCenter ?? false,
                     }],
                     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
                 };
@@ -357,6 +380,30 @@ export default function CostCenter() {
 
         // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
         updateSessionStorageCurrentAccess('event_name', 'Delete/Master_User_Delete');
+
+        // ---------------------------------------------------------------------------------------------------------------
+
+        const dataForValidate = {
+            site_id: resultData.siteCode?.id,
+            cost_center_code: resultData.costcenterCode,
+            cost_center_name: resultData.costcenterName,
+            app_req_user: resultData.appReqUser,
+            service_center_flag: resultData.serviceCenterFlag ?? false,
+        }
+       
+        console.log("Data validation:", dataForValidate);
+
+        const isValidate = checkValidate(dataForValidate, ['costCenter']);
+        const isValidateAll = isCheckValidateAll(isValidate);
+
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+          console.log("Validation errors:", isValidateAll);
+          setIsValidate(isValidate);
+          return; // return ถ้า validate ไม่ผ่าน
+        }
+        setIsValidate(null); // ถ้า validate ผ่าน
+
+        // ---------------------------------------------------------------------------------------------------------------
 
         setIsValidate(null);
         confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
