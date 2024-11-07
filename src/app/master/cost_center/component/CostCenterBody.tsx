@@ -11,7 +11,7 @@ import { _number } from '../../../../../libs/datacontrol';
 interface CostCenterBodyProps {
   onDataChange?: (data: any) => void;
   defaultValues?: {
-    costcenterId: string,
+    id: string,
     siteCode: string,
     costcenterCode: string,
     costcenterName: string,
@@ -31,7 +31,8 @@ export default function CostCenterBody({
   actions
 }: CostCenterBodyProps) {
 
-  const [costcenterId, setCostCenterId] = useState(defaultValues?.costcenterId || "");
+  // const [costcenterId, setCostCenterId] = useState(defaultValues?.costcenterId || "");
+  const [id, setId] = useState(defaultValues?.id || "");
   const [siteCode, setSiteCode] = useState<any>(defaultValues?.siteCode ? defaultValues?.siteCode : null);
   const [costcenterCode, setCostCenterCode] = useState(defaultValues?.costcenterCode || "");
   const [costcenterName, setCostCenterName] = useState(defaultValues?.costcenterName || "");
@@ -50,16 +51,17 @@ export default function CostCenterBody({
   // useEffect เพื่อส่งการเปลี่ยนแปลงข้อมูลไปยังส่วนประกอบหลัก
   useEffect(() => {
     const data = {
-      costcenterId,
+      id,
       siteCode,
       costcenterCode,
       costcenterName,
       appReqUser,
+      serviceCenter,
     };
     // Call debounced function : เรียกใช้ฟังก์ชัน debounced
     debouncedOnDataChange(data);
   }, [
-    costcenterId, siteCode, costcenterCode, costcenterName, appReqUser, serviceCenter, onDataChange,
+    id, siteCode, costcenterCode, costcenterName, appReqUser, serviceCenter, onDataChange,
   ]);
 
   //================================== การทำงานสำหรับส่งข้อมูลกลีบไปยังหน้าหลัก ===========================================
@@ -126,6 +128,7 @@ export default function CostCenterBody({
               setSiteCode(data);
             }}
             options={siteData || []}
+            Validate={isValidate?.site_id}
           />
         </div>
         <div className="col-md-6 mb-2">
@@ -135,7 +138,7 @@ export default function CostCenterBody({
             value={costcenterCode ? _number(costcenterCode) : null}
             disabled={actions === "Update" ? true : disableOnly}
             onChange={(value) => setCostCenterCode(value)}
-            Validate={isValidate?.costcenterCode}
+            Validate={isValidate?.cost_center_code}
           />
         </div>
         <div className="col-md-6 mb-2">
@@ -146,7 +149,7 @@ export default function CostCenterBody({
             value={costcenterName}
             disabled={actions === "Create" || actions === "Update" ? false : disableOnly}
             onChange={(value) => setCostCenterName(value)}
-            Validate={isValidate?.costcenterName}
+            Validate={isValidate?.cost_center_name}
           />
         </div>
         <div className="col-md-6 mb-2">
@@ -154,10 +157,10 @@ export default function CostCenterBody({
             required={"required"}
             labelName={"ผู้อนุมัติ"}
             description={"กรุณากรอกชื่อผู้ใช้ของคุณ (ตัวอย่าง: somchai.jad) เพื่อให้สามารถเข้าถึงระบบได้."}
-            value={appReqUser ? handlCostCenterChange(appReqUser) : null}
+            value={appReqUser}
             disabled={actions === "Create" || actions === "Update" ? false : disableOnly}
-            onChange={handlCostCenterChange} // onChange={(value) => setCostCenterCode(value)}      
-            Validate={isValidate?.appReqUser}
+            onChange={handlCostCenterChange}
+            Validate={isValidate?.app_req_user}
           />
         </div>
       </div>
@@ -168,7 +171,7 @@ export default function CostCenterBody({
             labelName='Service Center'
             checked={serviceCenter}
             handleOnClick={setServiceCenter}
-            Validate={isValidate?.serviceCenter}
+            disabled={actions === "Create" || actions === "Update" ? false : disableOnly}
           />
         </div>
       </div>

@@ -8,34 +8,34 @@ type WithChildren = {
 const CostCentercontext = createContext<CostCentersProps>(initialListView);
 
 const ConstCenterProvider: FC<WithChildren> = ({ children }) => {
-  const [siteCode, setSiteCode] = useState<any[]>(initialListView.siteCode); // Site 
-  const [dataCostCenter, setDataCostCenter] = useState<any[]>(initialListView.dataCostCenter);
-  const [costcentercodeOptions, setCostCenterCodeOptions] = useState<any[]>(initialListView.costcentercodeOptions); // Cost Center Code
-  const [costcenternameOptions, setCostCenterNameOptions] = useState<any[]>(initialListView.costcenternameOptions); // ชื่อ Cost Center
-  const [requserOptions, setReqUserOptions] = useState<any[]>(initialListView.requserOptions); // ผู้อนุมัติ
+  // const [siteCode, setSiteCode] = useState<any[]>(initialListView.siteCode); // Site 
+  // const [dataCostCenter, setDataCostCenter] = useState<any[]>(initialListView.dataCostCenter);
+  // const [costcentercodeOptions, setCostCenterCodeOptions] = useState<any[]>(initialListView.costcentercodeOptions); // Cost Center Code
+  // const [costcenternameOptions, setCostCenterNameOptions] = useState<any[]>(initialListView.costcenternameOptions); // ชื่อ Cost Center
+  // const [requserOptions, setReqUserOptions] = useState<any[]>(initialListView.requserOptions); // ผู้อนุมัติ
   const [isValidate, setIsValidate] = useState<[]>(initialListView.isValidate); // Validate
 
   return (
     <CostCentercontext.Provider
       value={{
-        // Site 
-        siteCode,
-        setSiteCode,
+        // // Site 
+        // siteCode,
+        // setSiteCode,
 
-        dataCostCenter,
-        setDataCostCenter,
+        // dataCostCenter,
+        // setDataCostCenter,
         
-        // Cost Center Code
-        costcentercodeOptions,
-        setCostCenterCodeOptions,
+        // // Cost Center Code
+        // costcentercodeOptions,
+        // setCostCenterCodeOptions,
 
-        // ชื่อ Cost Center
-        costcenternameOptions,
-        setCostCenterNameOptions,
+        // // ชื่อ Cost Center
+        // costcenternameOptions,
+        // setCostCenterNameOptions,
 
-        // ผู้อนุมัติ
-        requserOptions,
-        setReqUserOptions,
+        // // ผู้อนุมัติ
+        // requserOptions,
+        // setReqUserOptions,
 
         // Validate
         isValidate,

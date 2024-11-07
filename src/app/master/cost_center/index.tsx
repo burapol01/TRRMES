@@ -3,7 +3,6 @@ import moment from 'moment'
 import { useListConCenter } from './core/CostCenterProvider'
 import { _GET, _POST } from '../../../service'
 import ActionManageCell from '../../../components/MUI/ActionManageCell'
-import CustomizedSwitches from '../../../components/MUI/MaterialUISwitch'
 import FullWidthTextField from '../../../components/MUI/FullWidthTextField'
 import FullWidthButton from '../../../components/MUI/FullWidthButton'
 import AutocompleteComboBox from '../../../components/MUI/AutocompleteComboBox'
@@ -30,7 +29,7 @@ interface OptionsState {
 }
 
 const initialCostCenterValues = { //-----สร้างหน้าใหม่ให้เปลี่ยนแค่ชื่อ
-    costcenterId: "",
+    id: "",
     siteCode: "",
     costcenterCode: "",
     costcenterName: "",
@@ -42,13 +41,13 @@ export default function CostCenter() {
 
     // =============================== SearchCostCenter ช่องค้นหาข้อมูล ===============================
     const [dataCostCenter, setDataCostCenter] = useState<any[]>([]);
-    const [selectsiteCode, setSelectSiteCode] = useState<any>(null);
+    const [selectsiteCode, setSelectSiteCode] = useState<any>([]);
     const [siteCode, setSiteCode] = useState<any>(null);
-    const [costcenterCode, setCostCenterCode] = useState("");
+    const [costcenterCode, setCostCenterCode] = useState<any>(null);
     const [costcenterName, setCostCenterName] = useState("");
     const [appReqUser, setAppReqUser] = useState("");
     const [serviceCenter, setServiceCenter] = useState<any>(null);
-    const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => {setter(value)};
+    const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => { setter(value) };
     const [error, setError] = useState<string | null>(null); // แสดงสถานะสำหรับข้อผิดพลาด
 
     // ============================== useState ข้อมูลเริ่มต้น / ข้อมูลตาราง ================================
@@ -61,7 +60,7 @@ export default function CostCenter() {
 
     // State to store default values รับและส่ง
     const [defaultValues, setDefaultValues] = useState(initialCostCenterValues);
-    const [resultData, setResultData] = useState<any>(null); // State to store draft data  
+    const [resultData, setResultData] = useState<any>(null); // State to store draft data : สถานะที่จะจัดเก็บข้อมูลฉบับร่าง
 
     // ตัวแปร ใช้ทุกที่ : ไว้จัดการสิทธิ์ให้ปุ่ม "เพิ่ม" แสดง และ ไม่แสดง
     const employeeUsername = currentUser?.employee_username.toLowerCase()
@@ -105,21 +104,26 @@ export default function CostCenter() {
 
     // ============================= เริ่มการทำงาน หน้าค้นหาข้อมูล =========================================
     useEffect(() => {
-        console.log('Call : 🟢[1] Search fetch Master Data', moment().format('HH:mm:ss:SSS'));
+        console.log('Call : 🟢[1] Search Master Site Data', moment().format('HH:mm:ss:SSS'));
 
         const initFetch = async () => {
             try {
-                // เรียกใช้ฟังก์ชันทั้งหมดพร้อมกัน
-                await Master_Site_Get(),
-                await Master_Cost_Center_Get(null);
+                await Master_Site_Get();
             } catch (error) {
-                console.error('Error in initFetch:', error);
+                console.error('Error initFetch : ', error);
             }
         };
         initFetch();
     }, []); // [] หมายถึงการรันแค่ครั้งเดียวตอน component ถูก mount
 
-    // ------------------------------------ ดึงข้อมูล Master_Site_Get จาก Database ---------------------------------------
+    useEffect(() => {
+        console.log('Call : 🟢[1] Search Master Cost Center Data', moment().format('HH:mm:ss:SSS'));
+
+        if (selectsiteCode) {
+            Master_Cost_Center_Get(null);
+        }
+    }, [selectsiteCode]);
+
     const Master_Site_Get = async () => {
         console.log('Master Site : Master_Site_Get', moment().format('YYYY-MM-DD HH:mm'));
 
@@ -153,8 +157,7 @@ export default function CostCenter() {
         }
     }
 
-    // -------------------------------- ดึงข้อมูล Master_Cost_Center_Get จาก Database ------------------------------------
-    const Master_Cost_Center_Get = async (dataset:any) => {
+    const Master_Cost_Center_Get = async (dataset: any) => {
         console.log('Master Cost Center : Master_Cost_Center_Get', serviceCenter, moment().format('YYYY-MM-DD HH:mm'));
 
         try {
@@ -162,36 +165,29 @@ export default function CostCenter() {
 
             if (response && response.status === "success") {
                 const allCostCenter = response.data;
+                const newData: any = [];
 
                 // แยกข้อมูล Master Cost Center
-                const CostCenter = allCostCenter.map((center: any) => ({
-                    "id": center.id,
-                    "site_code": center.site_code,
-                    "cost_center_code": center.cost_center_code,
-                    "cost_center_name": center.cost_center_name,
-                    "app_req_user": center.app_req_user,
-                    "service_center_flag": center.service_center_flag === true || center.service_center_flag === "1" ? "เป็น" : "ไม่เป็น",
-                    "create_by": center.create_by,
-                    "create_date": center.create_date,
-                    "update_by": center.update_by,
-                    "update_date": center.update_date,
+                Array.isArray(allCostCenter) && allCostCenter.forEach((center) => {
 
-                    // ----------- ACTION : handleClick ----------- //
-                    "ACTION": <ActionManageCell onClick={(name) => {
+                    center.service_center_flag_ = center.service_center_flag === true || center.service_center_flag === "1" ? "เป็น" : "ไม่เป็น";
+
+                    center.ACTION = <ActionManageCell onClick={(name) => {
                         if (name == 'View') {
-                            handleClickView(center)
+                            handleClickView(center);
                         } else if (name == 'Edit') {
-                            handleClickEdit(center)
+                            handleClickEdit(center);
                         } else if (name == 'Delete') {
-                            handleClickDelete(center)
+                            handleClickDelete(center);
                         }
                     }}
                         Defauft={true} //กรณีที่เป็นโหมดธรรมดาไม่มีเงื่อนไขซับซ้อน
                     />
+                    newData.push(center);
                     // -------------------------------------------- //
-                }));
+                });
 
-                await setDataCostCenter(CostCenter); // อัปเดตข้อมูลแสดงผลหลังรีเซ็ต
+                await setDataCostCenter(newData); // อัปเดตข้อมูลแสดงผลหลังรีเซ็ต
 
             } else {
                 setError("Failed to fetch master cost centers.");
@@ -202,7 +198,6 @@ export default function CostCenter() {
         }
     }
 
-    // -------------------------------- เพิ่มข้อมูล Master_Cost_Center_Add ไปลง Database ----------------------------------
     const Master_Cost_Center_Add = async () => {
         console.log('Master Cost Center : Master_Cost_Center_Add', resultData, moment().format('YYYY-MM-DD HH:mm'));
 
@@ -216,23 +211,22 @@ export default function CostCenter() {
             cost_center_code: resultData.costcenterCode,
             cost_center_name: resultData.costcenterName,
             app_req_user: resultData.appReqUser,
-            service_center_flag: resultData.serviceCenterFlag ?? false,
         }
-       
+
         console.log("Data validation:", dataForValidate);
 
         const isValidate = checkValidate(dataForValidate, ['costCenter']);
         const isValidateAll = isCheckValidateAll(isValidate);
 
         if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-          console.log("Validation errors:", isValidateAll);
-          setIsValidate(isValidate);
-          return; // return ถ้า validate ไม่ผ่าน
+            console.log("Validation errors:", isValidateAll);
+            setIsValidate(isValidate);
+            return; // return ถ้า validate ไม่ผ่าน
         }
         setIsValidate(null); // ถ้า validate ผ่าน
 
         // ---------------------------------------------------------------------------------------------------------------
-        
+
         confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
             if (resultData) {
                 console.log("Saving resultData:", resultData);
@@ -245,7 +239,7 @@ export default function CostCenter() {
                         cost_center_code: resultData.costcenterCode,
                         cost_center_name: resultData.costcenterName,
                         app_req_user: resultData.appReqUser,
-                        service_center_flag: resultData.serviceCenterFlag ?? false,
+                        service_center_flag: resultData.serviceCenter,
                     }],
                     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
                 };
@@ -293,7 +287,6 @@ export default function CostCenter() {
         });
     }
 
-    // -------------------------------- แก้ไขข้อมูล Master_Cost_Center_Edit ไปลง Database --------------------------------
     const Master_Cost_Center_Edit = async () => {
         console.log('Master Cost Center : Master_Cost_Center_Edit', resultData, moment().format('YYYY-MM-DD HH:mm'));
 
@@ -307,18 +300,17 @@ export default function CostCenter() {
             cost_center_code: resultData.costcenterCode,
             cost_center_name: resultData.costcenterName,
             app_req_user: resultData.appReqUser,
-            service_center_flag: resultData.serviceCenterFlag ?? false,
         }
-       
+
         console.log("Data validation:", dataForValidate);
 
         const isValidate = checkValidate(dataForValidate, ['costCenter']);
         const isValidateAll = isCheckValidateAll(isValidate);
 
         if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-          console.log("Validation errors:", isValidateAll);
-          setIsValidate(isValidate);
-          return; // return ถ้า validate ไม่ผ่าน
+            console.log("Validation errors:", isValidateAll);
+            setIsValidate(isValidate);
+            return; // return ถ้า validate ไม่ผ่าน
         }
         setIsValidate(null); // ถ้า validate ผ่าน
 
@@ -332,15 +324,17 @@ export default function CostCenter() {
                 // สร้างข้อมูลที่จะส่ง
                 const payload = {
                     CostCenterModel: [{
-                        id: resultData.costcenterId, // ใช้ ID เดิมในการ Edit
+                        id: resultData.id,
                         site_id: resultData.siteCode.id,
                         cost_center_code: resultData.costcenterCode,
                         cost_center_name: resultData.costcenterName,
                         app_req_user: resultData.appReqUser,
-                        service_center_flag: resultData.serviceCenter ?? false,
+                        service_center_flag: resultData.serviceCenter,
                     }],
-                    currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
+                    currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
                 };
+
+                console.log(payload, 'payload');
 
                 dispatch(startLoadScreen());
                 setTimeout(async () => {
@@ -362,7 +356,7 @@ export default function CostCenter() {
                                 }
                             );
                         } else {
-                            console.error(response, 'Failed');
+                            console.error(response, 'Failed ');
                             dispatch(endLoadScreen());
                         }
                     } catch (e) {
@@ -374,7 +368,6 @@ export default function CostCenter() {
         })
     }
 
-    // -------------------------------- ลบข้อมูล Master_Cost_Center_Delete ไปลง Database --------------------------------
     const Master_Cost_Center_Delete = async () => {
         console.log('Master Cost Center : Master_Cost_Center_Delete', resultData, moment().format('YYYY-MM-DD HH:mm'));
 
@@ -388,18 +381,17 @@ export default function CostCenter() {
             cost_center_code: resultData.costcenterCode,
             cost_center_name: resultData.costcenterName,
             app_req_user: resultData.appReqUser,
-            service_center_flag: resultData.serviceCenterFlag ?? false,
         }
-       
+
         console.log("Data validation:", dataForValidate);
 
         const isValidate = checkValidate(dataForValidate, ['costCenter']);
         const isValidateAll = isCheckValidateAll(isValidate);
 
         if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-          console.log("Validation errors:", isValidateAll);
-          setIsValidate(isValidate);
-          return; // return ถ้า validate ไม่ผ่าน
+            console.log("Validation errors:", isValidateAll);
+            setIsValidate(isValidate);
+            return; // return ถ้า validate ไม่ผ่าน
         }
         setIsValidate(null); // ถ้า validate ผ่าน
 
@@ -413,7 +405,7 @@ export default function CostCenter() {
                 // สร้างข้อมูลที่จะส่ง
                 const payload = {
                     CostCenterModel: [{
-                        id: resultData.costcenterId, // ใช้ ID เดิมในการ Delete
+                        id: resultData.id, // ใช้ ID เดิมในการ Delete
                     }],
                     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
                 };
@@ -453,41 +445,40 @@ export default function CostCenter() {
     // ------------------- SetData Reade สำหรับดึงข้อมูลกลับมาแสดง
     const readData = async (data: any) => {
         console.log('Call : 🟢[2] readData', data, moment().format('HH:mm:ss:SSS'));
-        await setDefaultValues({
+        const setData = {
             ...defaultValues,
-            costcenterId: data?.id || '',
+            id: data?.id || '',
             siteCode: data?.site_code != "" ? setValueMas(selectsiteCode, data?.site_code, "site_code") : "",
             costcenterCode: data?.cost_center_code || '',
             costcenterName: data?.cost_center_name || '',
             appReqUser: data?.app_req_user || '',
             serviceCenter: data?.service_center_flag || '',
-        })
-        console.log(setValueMas(selectsiteCode, data?.site_code, "site_code"), "Reade Data : selectsiteCode[site_code]");
+        }
+        await setDefaultValues(setData)
     };
 
     // ------------------- ค้นหาข้อมูล
     const handleSearch = () => {
         const dataset = {
-            site_code : siteCode?.site_code ? siteCode?.site_code : null,
+            site_code: siteCode?.site_code ? siteCode?.site_code : null,
             cost_center_code: costcenterCode ? costcenterCode : null,
             cost_center_name: costcenterName ? costcenterName : null,
             app_req_user: appReqUser ? appReqUser : null,
-            service_center_flag: (serviceCenter?.service_center_flag ?? false) || serviceCenter || false,
         };
         console.log('Call : 🟢[3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
         Master_Cost_Center_Get(dataset);
     };
 
     // ------------------- รีเซ็ตข้อมูล
-    const handleReset = async() => {
-        console.log('Call : 🟢[4] Dataset : Search', moment().format('HH:mm:ss:SSS'));
-        await setCostCenterCode("");
+    const handleReset = async () => {
+        console.log('Call : 🟢[4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
+        await setCostCenterCode(null);
         await setCostCenterName("");
         await setAppReqUser("");
         await setSiteCode(null);
         await setServiceCenter(null);
         await Master_Cost_Center_Get(null);
-    }; 
+    };
 
     // ------------------- ปิดการทำงาน Modals
     const handleClose = () => {
@@ -516,18 +507,18 @@ export default function CostCenter() {
     // ------------------- แก้ไขข้อมูล
     const handleClickEdit = (data: any) => {
         console.log(data, 'ตอนกดปุ่ม Edit : ข้อมูล data');
-        setOpenEdit(true);;
+        setOpenEdit(true);
         readData(data)
     };
 
     // ------------------- ลบข้อมูล
     const handleClickDelete = (data: any) => {
         console.log(data, 'ตอนกดปุ่ม Delete : ข้อมูล data');
-        setOpenDelete(true);;
+        setOpenDelete(true);
         readData(data)
     };
 
-    // ------------------- ดึงข้อมูลจาก Modals
+    // ------------------- ดึงข้อมูลจาก Models
     const handleDataChange = (data: any) => {
         setResultData(data); // ผลรับที่ได้จาก Models
     };
@@ -551,7 +542,7 @@ export default function CostCenter() {
                     <div className="col-md-3 mb-2">
                         <FullWidthTextField
                             labelName={"Cost Center Code"}
-                            value={costcenterCode ? _number(costcenterCode) : null}
+                            value={costcenterCode ? _number(costcenterCode) : ""}
                             onChange={(value) => setCostCenterCode(value)}
                         />
                     </div>
@@ -569,18 +560,10 @@ export default function CostCenter() {
                             onChange={(value) => setAppReqUser(value)}
                         />
                     </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-10 mx-10">
-                    <div className='flex justify-between items-center'>
-                        <CustomizedSwitches
-                            labelName='Service Center' 
-                            checked={serviceCenter}
-                            handleOnClick={setServiceCenter}
-                        />
-
-                        <div className="flex items-center space-x-2">
-                            <div className="">
+                    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-1 mx-1">
+                        <div className="flex justify-end pt-2">
+                            <div className="col-md-1 px-1">
                                 <FullWidthButton
                                     labelName={"ค้นหา"}
                                     handleonClick={handleSearch}
@@ -588,7 +571,7 @@ export default function CostCenter() {
                                     colorname={"success"}
                                 />
                             </div>
-                            <div className="">
+                            <div className="col-md-1 px-1">
                                 <FullWidthButton
                                     labelName={"รีเซ็ต"}
                                     handleonClick={handleReset}
@@ -646,7 +629,6 @@ export default function CostCenter() {
                             siteData={selectsiteCode} // ส่งข้อมูล Combobox ไปยัง CostCenterBody  
                             disableOnly
                             actions={"Reade"}
-                            
                         />
                     }
                 />
@@ -674,7 +656,7 @@ export default function CostCenter() {
                     openBottonHidden={true}
                     titlename={'ลบข้อมูล'}
                     handleClose={handleClose}
-                    handlefunction={Master_Cost_Center_Delete} // service
+                    handlefunction={Master_Cost_Center_Delete}
                     colorBotton="success"
                     actions={"Delete"}
                     element={
