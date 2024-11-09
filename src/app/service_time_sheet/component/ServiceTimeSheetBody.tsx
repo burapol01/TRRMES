@@ -151,7 +151,7 @@ export default function ServiceTimeSheetBody({
 
       if (defaultValues?.costCenterId != "") {
         const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
-        //console.log(mapCostCenterData, 'mapCostCenterData')
+        console.log(mapCostCenterData, 'mapCostCenterData')
         setCostCenter(mapCostCenterData)
       }
 
@@ -205,7 +205,7 @@ export default function ServiceTimeSheetBody({
     }
 
 
-  }, [defaultValues, options?.fixedAssetCode])
+  }, [ options?.fixedAssetCode])
 
   //เปลี่ยนเป็นเรียกครั้งเดียว ในการ ดึงข้อมูล Revision มาแสดง
   React.useMemo(() => {
