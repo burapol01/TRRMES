@@ -239,7 +239,7 @@ export default function CostCenter() {
                         cost_center_code: resultData.costcenterCode,
                         cost_center_name: resultData.costcenterName,
                         app_req_user: resultData.appReqUser,
-                        service_center_flag: resultData.serviceCenter,
+                        service_center_flag: resultData.serviceCenter || null,
                     }],
                     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
                 };
