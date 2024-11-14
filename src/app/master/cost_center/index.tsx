@@ -19,7 +19,7 @@ import { result } from 'lodash'
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentAccessObject, updateSessionStorageCurrentAccess } from '../../../service/initmain'
 import { setValueMas } from '../../../../libs/setvaluecallback'
-import { _number } from '../../../../libs/datacontrol'
+import { _number, dateFormatTimeEN } from '../../../../libs/datacontrol'
 
 // ======================== OptionsState ข้อมูล Drop Down ==========================
 /* --------- ให้สร้าง interface optionsState เพื่อระบุประเภท (Type) --------- */
@@ -105,7 +105,6 @@ export default function CostCenter() {
     // ============================= เริ่มการทำงาน หน้าค้นหาข้อมูล =========================================
     useEffect(() => {
         console.log('Call : 🟢[1] Search Master Site Data', moment().format('HH:mm:ss:SSS'));
-
         const initFetch = async () => {
             try {
                 await Master_Site_Get();
@@ -118,7 +117,6 @@ export default function CostCenter() {
 
     useEffect(() => {
         console.log('Call : 🟢[1] Search Master Cost Center Data', moment().format('HH:mm:ss:SSS'));
-
         if (selectsiteCode) {
             Master_Cost_Center_Get(null);
         }
@@ -169,6 +167,8 @@ export default function CostCenter() {
 
                 // แยกข้อมูล Master Cost Center
                 Array.isArray(allCostCenter) && allCostCenter.forEach((center) => {
+                    center.create_date = dateFormatTimeEN(center.create_date, "DD/MM/YYYY HH:mm:ss")
+                    center.update_date = dateFormatTimeEN(center.update_date, "DD/MM/YYYY HH:mm:ss")
 
                     center.service_center_flag_ = center.service_center_flag === true || center.service_center_flag === "1" ? "เป็น" : "ไม่เป็น";
 
@@ -251,28 +251,30 @@ export default function CostCenter() {
 
                         // ใช้ _POST เพื่อส่งข้อมูล
                         const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Cost_Center_Add");
-                        console.log("API response:", response);
 
                         if (response && response.status === "success") {
-                            console.log('Successfully:', response);
+                            console.log('Successfully :', response);
 
                             // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
                             Massengmodal.createModal(
                                 <div className="text-center p-4">
-                                    <p className="text-xl' font-semibold mb-2 text-green-600">Success</p>
+                                    <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
                                 </div>,
+
                                 'success', () => {
                                     dispatch(endLoadScreen());
                                     handleClose();
                                 }
                             );
                         } else {
-                            console.error('Failed:', response);
+                            console.error('Failed :', response);
+
                             dispatch(endLoadScreen());
                             Massengmodal.createModal(
                                 <div className="text-center p-4">
-                                    <p className="text-xl font-semibold md-2 text-green-600">{response.data[0].errorMessage}</p>
+                                    <p className="text-xl font-semibold mb-2 text-green-600">{response.data[0].errorMessage}</p>
                                 </div>,
+
                                 'error', () => {
                                     dispatch(endLoadScreen());
                                 }
