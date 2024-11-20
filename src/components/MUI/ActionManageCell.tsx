@@ -71,7 +71,7 @@ export default function ActionManageCell(props: ActionManageCellProps) {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        {menuFuncList.map((menuFunc: any, index: number) => {
+        {menuFuncList && menuFuncList.map((menuFunc: any, index: number) => { // {menuFuncList.map((menuFunc: any, index: number) => {
           let shouldRender = false;
 
           // ถ้าส่ง Defauft = true มาให้แสดงเฉพาะ func_name ที่ตรงเงื่อนไขนี้

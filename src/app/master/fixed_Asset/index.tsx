@@ -1,37 +1,35 @@
 import React, { useEffect, useState } from 'react'
-import moment from 'moment'
-import FullWidthButton from '../../../components/MUI/FullWidthButton';
-import FullWidthTextField from '../../../components/MUI/FullWidthTextField';
-import AutocompleteComboBox from '../../../components/MUI/AutocompleteComboBox';
+import moment from 'moment';
 import ActionManageCell from '../../../components/MUI/ActionManageCell';
 import FuncDialog from '../../../components/MUI/FullDialog';
-import EnhancedTable from '../../../components/MUI/DataTables'
-import BudgetBody from './component/BudgetBody';
-import { useDispatch, useSelector } from 'react-redux';
-import { useListBudget } from './core/BudgetProvider';
+import FullWidthTextField from '../../../components/MUI/FullWidthTextField';
+import AutocompleteComboBox from '../../../components/MUI/AutocompleteComboBox';
+import FullWidthButton from '../../../components/MUI/FullWidthButton';
+import EnhancedTable from '../../../components/MUI/DataTables';
+import FixedAssetBody from './component/FixedAssetBody';
+import { useListFixedAsset } from './core/FixedAssetProvider';
 import { v4 as uuidv4 } from 'uuid';
-import { _POST, _GET } from '../../../service';
-import { getCurrentAccessObject, updateSessionStorageCurrentAccess } from '../../../service/initmain';
-import { confirmModal } from '../../../components/MUI/Comfirmmodal';
-import { endLoadScreen, startLoadScreen } from '../../../../redux/actions/loadingScreenAction';
-import { Master_Budget } from '../../../../libs/columnname';
-import { Massengmodal } from '../../../components/MUI/Massengmodal';
-import { dateFormatSlashReturnMUI, dateFormatTimeEN, DateToDB } from '../../../../libs/datacontrol';
-import { createFilterOptions } from '@mui/material';
-import { checkValidate, isCheckValidateAll } from '../../../../libs/validations';
+import { _POST } from '../../../service';
 import { setValueMas } from '../../../../libs/setvaluecallback';
+import { confirmModal } from '../../../components/MUI/Comfirmmodal';
+import { Massengmodal } from '../../../components/MUI/Massengmodal';
+import { dateFormatTimeEN } from '../../../../libs/datacontrol';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCurrentAccessObject, updateSessionStorageCurrentAccess } from '../../../service/initmain';
+import { createFilterOptions } from '@mui/material';
+import { Master_Fixed_Asset } from '../../../../libs/columnname';
+import { checkValidate, isCheckValidateAll } from '../../../../libs/validations';
+import { endLoadScreen, startLoadScreen } from '../../../../redux/actions/loadingScreenAction';
 
 const initialBudgetValues = {
   id: "",
-  budgetCode: "",
+  fixedAssetCode: "",
   description: "",
   costCenterId: "",
-  jobType: "",
-  budgetStartDate: "",
-  budgetEndDate: "",
+  fixedAssetStatus: "",
 };
 
-export default function Budget() {
+export default function FixedAsset() {
 
   const {
     options,
@@ -40,31 +38,27 @@ export default function Budget() {
     setOptionsSearch,
     id,
     setId,
-    budgetCode,
-    setBudgetCode,
+    fixedAssetCode,
+    setFixedAssetCode,
     description,
     setDescription,
     costcenterId,
     setCostcenterId,
-    jobType,
-    setJobtype,
-    budgetStartDate,
-    setBudgetStartDate,
-    budgetEndDate,
-    setBudgetEndDate,
-    searchBudgetCode,
-    setSearchBudgetCode,
+    fixedAssetStatus,
+    setFixedAssetStatus,
+    searchFixedAssetCode,
+    setSearchFixedAssetCode,
     searchDescription,
     setSearchDescription,
     searchCostCenterId,
     setSearchCostcenterId,
-    searchJobType,
-    setSearchJobType,
+    searchFixedAssetStatus,
+    setSearchFixedAssetStatus,
     isValidate,
     setIsValidate,
-  } = useListBudget();
+  } = useListFixedAsset();
 
-  const [dataBudget, setDataBudget] = useState<any[]>([]);
+  const [dataFixedAsset, setDataFixedAsset] = useState<any[]>([]);
 
   const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => { setter(value) };
   const [error, setError] = useState<string | null>(null);
@@ -76,13 +70,14 @@ export default function Budget() {
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
 
+  // ตัวแปร ใช้ทุกที่ : ไว้จัดการสิทธิ์ให้ปุ่ม "เพิ่ม" แสดง และ ไม่แสดง
   const employeeUsername = currentUser?.employee_username.toLowerCase()
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true';
   const roleName = currentUser?.role_name;
   const dispatch = useDispatch();
   const employeeDomain = currentUser?.employee_domain;
-  const screenName = 'Budget';
+  const screenName = 'fixedasset';
 
   // ฟังก์ชันในการดึงและทำความสะอาดข้อมูลจาก sessionStorage
   function cleanAccessData(key: string) {
@@ -115,29 +110,26 @@ export default function Budget() {
   const defaultFilterOptions = createFilterOptions();
   const filterOptions = (optionsSearch: any[], state: any) => {
     return defaultFilterOptions(optionsSearch, state).slice(0, OPTIONS_LIMIT);
-  };
+  };   
 
   useEffect(() => {
-    console.log('Call : 🟢[1] Fetch initial data for Cost Center - Job Types', moment().format('HH:mm:ss:SSS'));
-
+    console.log('Call : 🟢[1] FetchData for Cost Center', moment().format('HH:mm:ss:SSS'));
     const fetchData = async () => {
       try {
         await fetchCostCenter();
-        await fetchJobTypes();
       } catch (error) {
-        console.log('Error FetchData : ', error);
+        console.log('Error FetchData Fixed Asset : ', error);
       }
     };
     fetchData();
   }, []);
 
   useEffect(() => {
-    console.log('Call : 🟢[1] FetchData for Budget', moment().format('HH:mm:ss:SSS'));
-
-    if (optionsSearch?.costAndServiceCenters && optionsSearch?.jobType) {
-      fetchBudget(null);
+    console.log('Call : 🟢[2] FetchData for Fixed Asset', moment().format('HH:mm:ss:SSS'));
+    if (options?.costAndServiceCenters) {
+      fetchFixedAsset(null);
     }
-  }, [optionsSearch?.costAndServiceCenters, optionsSearch?.jobType]);
+  }, [options?.costAndServiceCenters]);
 
   const fetchCostCenter = async () => {
     console.log('🌐 Master Cost Center : Master_Cost_Center_Get', moment().format('YYYY-MM-DD HH:mm'));
@@ -172,110 +164,75 @@ export default function Budget() {
           ...prevOptions,
           costAndServiceCenters: newData,
         }));
+
+        console.log('Master Data allCenters : ', allCostCenter);
+
       } else {
-        setError("Failed to fetch master cost centers.");
+        setError("Failed to fetch master cost center.");
       }
     } catch (e) {
-      console.error("Error fetching master cost centers:", e);
+      console.error("Error fetching master cost center:", e);
       setError("An error occurred while fetching master cost centers.");
     }
   }
 
-  const fetchJobTypes = async () => {
-    console.log('🌐Lov Data : Lov_Data_Get', moment().format('YYYY-MM-DD HH:mm'));
+  const fetchFixedAsset = async (dataset: any) => {
+    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     try {
-      const dataset = {
-        "lov_type": "job_type"
-      };
-
-      const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
-
-      if (response && response.status === "success") {
-        const jobTypes = response.data.map((job: any) => ({
-          lov_code: job.lov_code,
-          lov_name: job.lov1,
-        }));
-
-        setOptions((prevOptions) => ({
-          ...prevOptions,
-          jobType: jobTypes,
-        }));
-
-        setOptionsSearch((prevOptions) => ({
-          ...prevOptions,
-          jobType: jobTypes,
-        }));
-
-      } else {
-        setError("Failed to fetch job types.");
-      }
-    } catch (error) {
-      console.error("Error fetching job types:", error);
-      setError("An error occurred while fetching job types.");
-    }
-  }
-
-  const fetchBudget = async (dataset: any) => {
-    console.log('🌐 Master Budget : Master_Budget_Get', moment().format('YYYY-MM-DD HH:mm'));
-
-    try {
-      const response = await _POST(dataset, "/api_trr_mes/MasterData/Master_Budget_Get");
+      const response = await _POST(dataset, "/api_trr_mes/MasterData/Master_Fixed_Asset_Get");
 
       if (response && response.status === "success") {
         const allBudget = response.data;
         const newData: any = [];
 
-        Array.isArray(allBudget) && allBudget.forEach((budget) => {
-          budget.budget_s_date = dateFormatTimeEN(budget.budget_s_date, "DD/MM/YYYY");
-          budget.budget_e_date = dateFormatTimeEN(budget.budget_e_date, "DD/MM/YYYY");
+        Array.isArray(allBudget) && allBudget.forEach((fixedasset) => {
+          fixedasset.create_date = dateFormatTimeEN(fixedasset.create_date, "DD/MM/YYYY HH:mm:ss");
+          fixedasset.update_date = dateFormatTimeEN(fixedasset.update_date, "DD/MM/YYYY HH:mm:ss");
 
-          budget.create_date = dateFormatTimeEN(budget.create_date, "DD/MM/YYYY HH:mm:ss");
-          budget.update_date = dateFormatTimeEN(budget.update_date, "DD/MM/YYYY HH:mm:ss");
+          fixedasset.cost_center_label = "[" + fixedasset.cost_center_code + "]" + " | " + fixedasset.cost_center_name;
 
-          budget.cost_center_label = "[" + budget.cost_center_code + "]" + " | " + budget.cost_center_name;
-
-          budget.ACTION = null
-          budget.ACTION = <ActionManageCell onClick={(name) => {
+          fixedasset.ACTION = null
+          fixedasset.ACTION = <ActionManageCell onClick={(name) => {
             if (name == 'View') {
-              handleClickView(budget);
+              handleClickView(fixedasset);
             } else if (name == 'Edit') {
-              handleClickEdit(budget);
+              handleClickEdit(fixedasset);
             } else if (name == 'Delete') {
-              handleClickDelete(budget);
+              handleClickDelete(fixedasset);
             }
           }}
             Defauft={true}
           />
-          newData.push(budget);
+          newData.push(fixedasset);
         });
-        setDataBudget(newData);
+
+        setDataFixedAsset(newData);
+
       } else {
-        setError("Failed to fetch master budget.");
+        setError("Failed to fetch master fixedasset.");
       }
     } catch (error) {
-      console.error('Error Master Budget Get :', error);
-      setError("An error occurred while fetching master budget.");
+      console.error('Error Master fixedasset Get :', error);
+      setError("An error occurred while fetching master fixedasset.");
     }
   }
 
-  const BudgetAdd = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Add', moment().format('YYYY-MM-DD HH:mm'));
+  const FixedAssetAdd = async () => {
+    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Add', moment().format('YYYY-MM-DD HH:mm'));
 
-    updateSessionStorageCurrentAccess('event_name', 'Add/Master_Budget_Add');
+    updateSessionStorageCurrentAccess('event_name', 'Add/Master_Fixed_Asset_Add');
 
     const dataForValidate = {
-      budget_code: budgetCode,
+      fixed_asset_code: fixedAssetCode,
       description: description,
       cost_center_id: costcenterId?.id,
-      job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate,
-      budget_e_date: budgetEndDate,
-    };
+      fixed_asset_status: fixedAssetStatus,
+    }
 
-    console.log("💟 Data validation:", dataForValidate);
+    console.log("Data validation (Add):", dataForValidate);
 
-    const isValidate = checkValidate(dataForValidate, ['budget_code', 'description', 'cost_center_id', 'job_type', 'budget_s_date', 'budget_e_date']);
+    const isValidate = checkValidate(dataForValidate, ['Budget']);
     const isValidateAll = isCheckValidateAll(isValidate);
 
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
@@ -287,24 +244,24 @@ export default function Budget() {
 
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       const payload = {
-        BudgetModel: [{
+        FixedAssetModel: [{
           id: uuidv4(),
-          budget_code: budgetCode,
+          fixed_asset_code: fixedAssetCode,
           description: description,
           cost_center_id: costcenterId?.id,
-          job_type: jobType?.lov_code,
-          budget_s_date: dateFormatSlashReturnMUI(budgetStartDate, "DD/MM/YYYY"),
-          budget_e_date: dateFormatSlashReturnMUI(budgetEndDate, "DD/MM/YYYY"),
+          fixed_asset_status: fixedAssetStatus,
         }],
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload BudgetModel (Add) : ', payload);
+      console.log('🟢 payload FixedAssetModel (Add) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
         try {
-          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Budget_Add");
+          console.log("payload model", payload);
+
+          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Fixed_Asset_Add");
 
           if (response && response.status === "success") {
             console.log('Successfully :', response);
@@ -320,7 +277,7 @@ export default function Budget() {
               }
             );
           } else {
-            console.error('Failed BudgetAdd :', response);
+            console.error('Failed FixedAssetAdd :', response);
 
             dispatch(endLoadScreen());
             Massengmodal.createModal(
@@ -334,30 +291,28 @@ export default function Budget() {
             );
           }
         } catch (e) {
-          console.log('Error : Master budget Add', e);
+          console.log('Error : Master Fixed Asset Add', e);
           dispatch(endLoadScreen());
         }
       }, 0);
     });
   }
 
-  const BudgetEdit = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Edit', moment().format('YYYY-MM-DD HH:mm'));
+  const FixedAssetEdit = async () => {
+    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Edit', moment().format('YYYY-MM-DD HH:mm'));
 
-    updateSessionStorageCurrentAccess('evernt_name', 'Edit/Master_Budget_Edit');
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Master_Fixed_Asset_Edit');
 
     const dataForValidate = {
-      budget_code: budgetCode,
+      fixed_asset_code: fixedAssetCode,
       description: description,
       cost_center_id: costcenterId?.id,
-      job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate,
-      budget_e_date: budgetEndDate,
-    };
+      fixed_asset_status: fixedAssetStatus,
+    }
 
-    console.log("💟 Data validation:", dataForValidate);
+    console.log("Data validation (Edit):", dataForValidate);
 
-    const isValidate = checkValidate(dataForValidate, ['budget_code', 'description', 'cost_center_id', 'job_type', 'budget_s_date', 'budget_e_date']);
+    const isValidate = checkValidate(dataForValidate, ['Budget']);
     const isValidateAll = isCheckValidateAll(isValidate);
 
     if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
@@ -369,89 +324,24 @@ export default function Budget() {
 
     confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
       const payload = {
-        BudgetModel: [{
+        FixedAssetModel: [{
           id: id,
-          budget_code: budgetCode,
+          fixed_asset_code: fixedAssetCode,
           description: description,
           cost_center_id: costcenterId?.id,
-          job_type: jobType?.lov_code,
-          budget_s_date: dateFormatSlashReturnMUI(budgetStartDate, "DD/MM/YYYY"),
-          budget_e_date: dateFormatSlashReturnMUI(budgetEndDate, "DD/MM/YYYY"),
+          fixed_asset_status: fixedAssetStatus,
         }],
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
-      };     
+      }
 
-      console.log('🟢 payload BudgetModel (Edit) : ', payload);
-
-      dispatch(startLoadScreen());
-      setTimeout(async () => {
-        try {
-          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Budget_Edit")
-
-          if (response && response.status === "success") {
-            console.log('Successfully :', response);
-
-            Massengmodal.createModal(
-              <div className='text-center p-4'>
-                <p className='text-xl font-semibold mb-2 text-green-600'>Success</p>
-              </div>,
-              'success', () => {
-                dispatch(endLoadScreen());
-                handleClose();
-              }
-            );
-          } else {
-            console.error(response, 'Failed ');
-            dispatch(endLoadScreen());
-          }
-        } catch (e) {
-          console.error(error, 'Failed Edit');
-          dispatch(endLoadScreen());
-        }
-      }, 0);
-    });
-  }
-
-  const BudgetDelete = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Delete', moment().format('YYYY-MM-DD HH:mm'));
-
-    updateSessionStorageCurrentAccess('event_name', 'Delete/Master_Budget_Delete');
-
-    const dataForValidate = {
-      budget_code: budgetCode,
-      description: description,
-      cost_center_id: costcenterId?.id,
-      job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate, // budget_s_date: budgetStartDate.format("YYYY-MM-DD HH:mm:ss"),
-      budget_e_date: budgetEndDate, // budget_e_date: budgetEndDate.format("YYYY-MM-DD HH:mm:ss"),
-    }
-
-    console.log("Data validation:", dataForValidate);
-
-    const isValidate = checkValidate(dataForValidate, ['budget_code', 'description', 'cost_center_id', 'job_type', 'budget_s_date', 'budget_e_date']);
-    const isValidateAll = isCheckValidateAll(isValidate);
-
-    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-      console.log("Validation errors:", isValidateAll);
-      setIsValidate(isValidate);
-      return; // return ถ้า validate ไม่ผ่าน
-    }
-    setIsValidate(null); // ถ้า validate ผ่าน
-
-    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
-      const payload = {
-        BudgetModel: [{
-          id: id,
-        }],
-        currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
-      };
-
-      console.log('🟢 payload BudgetModel (Delete) : ', payload);
+      console.log('🟢 payload FixedAssetModel (Edit) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
         try {
-          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Budget_Delete")
+          console.log("payload model", payload);
+
+          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Fixed_Asset_Edit");
 
           if (response && response.status === "success") {
             console.log('Successfully :', response);
@@ -460,41 +350,128 @@ export default function Budget() {
               <div className="text-center p-4">
                 <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
               </div>,
+
               'success', () => {
                 dispatch(endLoadScreen());
                 handleClose();
               }
             );
           } else {
-            console.error(response, 'Failed');
+            console.error('Failed FixedAssetAdd :', response);
+
             dispatch(endLoadScreen());
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">{response.data[0].errorMessage}</p>
+              </div>,
+
+              'error', () => {
+                dispatch(endLoadScreen());
+              }
+            );
           }
         } catch (e) {
-          console.error(error, 'Failed Edit');
+          console.log('Error : Master Fixed Asset Edit', e);
           dispatch(endLoadScreen());
         }
-      }, 0)
+      }, 0);
+    });
+  }
+
+  const FixedAssetDelete = async () => {
+    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Delete', moment().format('YYYY-MM-DD HH:mm'));
+
+    updateSessionStorageCurrentAccess('event_name', 'Delete/Master_Fixed_Asset_Delete');
+
+    const dataForValidate = {
+      fixed_asset_code: fixedAssetCode,
+      description: description,
+      cost_center_id: costcenterId?.id,
+      fixed_asset_status: fixedAssetStatus,
+    }
+
+    console.log("Data validation (Delete):", dataForValidate);
+
+    const isValidate = checkValidate(dataForValidate, ['Budget']);
+    const isValidateAll = isCheckValidateAll(isValidate);
+
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      console.log("Validation errors:", isValidateAll);
+      setIsValidate(isValidate);
+      return; // return ถ้า validate ไม่ผ่าน
+    }
+    setIsValidate(null); // ถ้า validate ผ่าน
+
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
+      const payload = {
+        FixedAssetModel: [{
+          id: id,
+        }],
+        currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
+      }
+
+      console.log('🟢 payload FixedAssetModel (Delete) : ', payload);
+
+      dispatch(startLoadScreen());
+      setTimeout(async () => {
+        try {
+          console.log("payload model", payload);
+
+          const response = await _POST(payload, "/api_trr_mes/MasterData/Master_Fixed_Asset_Delete");
+
+          if (response && response.status === "success") {
+            console.log('Successfully :', response);
+
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+              </div>,
+
+              'success', () => {
+                dispatch(endLoadScreen());
+                handleClose();
+              }
+            );
+          } else {
+            console.error('Failed FixedAssetAdd :', response);
+
+            dispatch(endLoadScreen());
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">{response.data[0].errorMessage}</p>
+              </div>,
+
+              'error', () => {
+                dispatch(endLoadScreen());
+              }
+            );
+          }
+        } catch (e) {
+          console.log('Error : Master Fixed Asset Delete', e);
+          dispatch(endLoadScreen());
+        }
+      }, 0);
     });
   }
 
   const handleSearch = () => {
     const dataset = {
-      budget_code: searchBudgetCode ? searchBudgetCode : null,
+      fixed_asset_code: searchFixedAssetCode ? searchFixedAssetCode : null,
       description: searchDescription ? searchDescription : null,
       cost_center_id: searchCostCenterId?.id ? searchCostCenterId?.id : null,
-      job_type: searchJobType?.lov_code ? searchJobType?.lov_code : null,
+      fixed_asset_status: searchFixedAssetStatus ? searchFixedAssetStatus : null,
     };
     console.log('Call : 🟢[3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
-    fetchBudget(dataset);
+    fetchFixedAsset(dataset);
   }
 
   const handleReset = () => {
     console.log('Call : 🟢[4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
-    setSearchBudgetCode("");
+    setSearchFixedAssetCode("");
     setSearchDescription("");
     setSearchCostcenterId(null);
-    setSearchJobType(null);
-    fetchBudget(null);
+    setSearchFixedAssetStatus("");
+    fetchFixedAsset(null);
   };
 
   const handleClose = () => {
@@ -502,14 +479,12 @@ export default function Budget() {
     setOpenAdd(false);
     setOpenEdit(false);
     setOpenDelete(false);
-    setBudgetCode("");
+    setFixedAssetCode("");
     setDescription("");
     setCostcenterId(null);
-    setJobtype(null);
-    setBudgetStartDate("");
-    setBudgetEndDate("");
+    setFixedAssetStatus(null);
     setIsValidate(null);
-    fetchBudget(null);
+    fetchFixedAsset(null);
   };
 
   const handleClickAdd = () => {
@@ -518,41 +493,35 @@ export default function Budget() {
   };
 
   const handleClickView = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
+    console.log('ตอนกดปุ่ม View : ข้อมูล data', data);
     setOpenView(true);
 
-    setBudgetCode(data?.budget_code);
+    setFixedAssetCode(data?.fixed_asset_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
-    setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
-    setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
+    setCostcenterId(setValueMas(options?.costAndServiceCenters, data?.cost_center_id, "id"));
+    setFixedAssetStatus(data?.fixed_asset_status); // setFixedAssetStatus(setValueMas(optionsSearch.fixedAssetStatus, data?.fixed_asset_status, "fixed_asset_status"));
   };
 
   const handleClickEdit = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม Edit : ข้อมูล data');
+    console.log('ตอนกดปุ่ม Edit : ข้อมูล data', data);
     setOpenEdit(true);
 
-    setId(data?.id);
-    setBudgetCode(data?.budget_code);
+    setId(data?.id)
+    setFixedAssetCode(data?.fixed_asset_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
-    setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
-    setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
+    setCostcenterId(setValueMas(options?.costAndServiceCenters, data?.cost_center_id, "id"));
+    setFixedAssetStatus(data?.fixed_asset_status); // setFixedAssetStatus(setValueMas(optionsSearch.fixedAssetStatus, data?.fixed_asset_status, "fixed_asset_status"));
   };
 
   const handleClickDelete = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม Delete : ข้อมูล data');
+    console.log('ตอนกดปุ่ม Delete : ข้อมูล data', data);
     setOpenDelete(true);
 
-    setId(data?.id);
-    setBudgetCode(data?.budget_code);
+    setId(data?.id)
+    setFixedAssetCode(data?.fixed_asset_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
-    setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY HH:mm:ss"));
-    setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY HH:mm:ss"));
+    setCostcenterId(setValueMas(options?.costAndServiceCenters, data?.cost_center_id, "id"));
+    setFixedAssetStatus(data?.fixed_asset_status); // setFixedAssetStatus(setValueMas(optionsSearch.fixedAssetStatus, data?.fixed_asset_status, "fixed_asset_status"));
   };
 
   return (
@@ -564,9 +533,9 @@ export default function Budget() {
         <div className="row px-10 pt-0 pb-5">
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"รหัสงบประมาณ"}
-              value={searchBudgetCode}
-              onChange={(value) => setSearchBudgetCode(value)}
+              labelName={"Fixed Asset Code"}
+              value={searchFixedAssetCode}
+              onChange={(value) => setSearchFixedAssetCode(value)}
             />
           </div>
           <div className="col-md-3 mb-2">
@@ -587,12 +556,10 @@ export default function Budget() {
             />
           </div>
           <div className="col-md-3 mb-2">
-            <AutocompleteComboBox
-              labelName={"ประเภทงาน"}
-              value={searchJobType}
-              options={optionsSearch?.jobType}
-              column="lov_name"
-              setvalue={handleAutocompleteChange(setSearchJobType)}
+            <FullWidthTextField
+              labelName={"สถานะ"}
+              value={searchFixedAssetStatus}
+              onChange={(value) => setSearchFixedAssetStatus(value)}
             />
           </div>
           <div className="flex justify-end pt-2">
@@ -619,11 +586,11 @@ export default function Budget() {
       <div className="max-lg rounded overflow-hidden shadow-lg bg-white mb-5">
         <div>
           <EnhancedTable
-            rows={dataBudget}
-            buttonLabal_1={showButton ? "เพิ่มข้อมูล" : ""} // Show button label only if "Add" is found
+            rows={dataFixedAsset}
+            buttonLabal_1={showButton ? "เพิ่มข้อมูล" : ""}
             buttonColor_1="info"
-            headCells={Master_Budget}
-            tableName={"บันทึกข้อมูลงบประมาณ"}
+            headCells={Master_Fixed_Asset}
+            tableName={"บันทึกข้อมูลสินทรัพย์ถาวร"}
             handleonClick_1={handleClickAdd}
             roleName={currentUser?.role_name}
           />
@@ -634,11 +601,11 @@ export default function Budget() {
           openBottonHidden={true}
           titlename={'เพิ่มข้อมูล'}
           handleClose={handleClose}
-          handlefunction={BudgetAdd}
+          handlefunction={FixedAssetAdd}
           colorBotton="success"
           actions={"Create"}
           element={
-            <BudgetBody
+            <FixedAssetBody
               options={options}
               actions={"Create"}
             />
@@ -653,7 +620,7 @@ export default function Budget() {
           colorBotton="success"
           actions={"Reade"}
           element={
-            <BudgetBody
+            <FixedAssetBody
               options={options}
               disableOnly
               actions={"Reade"}
@@ -666,11 +633,11 @@ export default function Budget() {
           openBottonHidden={true}
           titlename={'แก้ไขข้อมูล'}
           handleClose={handleClose}
-          handlefunction={BudgetEdit}
+          handlefunction={FixedAssetEdit}
           colorBotton="success"
           actions={"Update"}
           element={
-            <BudgetBody
+            <FixedAssetBody
               options={options}
               actions={"Update"}
             />
@@ -682,11 +649,11 @@ export default function Budget() {
           openBottonHidden={true}
           titlename={'ลบข้อมูล'}
           handleClose={handleClose}
-          handlefunction={BudgetDelete} // service
+          handlefunction={FixedAssetDelete}
           colorBotton="success"
           actions={"Delete"}
           element={
-            <BudgetBody
+            <FixedAssetBody
               options={options}
               disableOnly
               actions={"Reade"}
@@ -695,5 +662,5 @@ export default function Budget() {
         />
       </div>
     </div>
-  );
+  )
 }

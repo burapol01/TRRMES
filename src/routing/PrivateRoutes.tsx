@@ -9,6 +9,9 @@ import BorderedTreeView from '../app/report';
 import UserPage from '../app/master/user/user_page';
 import CostCenterPage from '../app/master/cost_center/CostCenterPage';
 import BudgetPage from '../app/master/budget/BudgetPage';
+import FixedAssetPage from '../app/master/fixed_Asset/FixedAssetPage';
+import SitePage from '../app/master/site/SitePage';
+
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
@@ -51,14 +54,15 @@ export default function PrivateRoutes() {
 
                     <Route path='auth/*' element={<Navigate to={`/home`} />} />
                     <Route path='home' element={<Home />} />
-                    <Route path='cost_center' element={<CostCenterPage />} />
-                    {/* <Route path='budget' element={<BudgetPage />} /> */}
-                    {/* <Route path='fixed_asset' element={<FixedAssetPage />} /> */}
                     <Route path='service_request' element={<ServiceRequestPage />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheetPage />} />
                     <Route path='service_cost' element={<ServiceCost />} />
                     <Route path='user' element={<UserPage />} />
                     <Route path='report' element={<BorderedTreeView />} />
+                    <Route path='cost_center' element={<CostCenterPage />} />
+                    <Route path='budget' element={<BudgetPage />} />
+                    <Route path='fixed_asset' element={<FixedAssetPage />} />
+                    <Route path='site' element={<SitePage />} />
                     {/* Pages */}
                     {/* <Route path='dashboard' element={<DashboardWrapper />} />
                     <Route path='builder' element={<BuilderPageWrapper />} />

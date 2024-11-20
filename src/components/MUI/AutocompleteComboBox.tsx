@@ -45,7 +45,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
           width: "100%"
         }}
         disablePortal
-        value={value}
+        value={value? value : null}
         id="combo-box-demo"
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}

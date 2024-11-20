@@ -1,9 +1,13 @@
 import React from 'react'
-import CostCenter from '.'
+import Budget from '.'
+import { BudgetProvider } from './core/BudgetProvider'
 
 export default function BudgetPage() {
     return (
         <div>
+            <BudgetProvider>
+                <Budget />
+            </BudgetProvider>
         </div>
-    )
+    );
 }

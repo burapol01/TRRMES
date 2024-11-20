@@ -3,12 +3,12 @@ import moment from "moment";
 
 export function _formatNumber(input: any) {
   const value = String(input).replace(/[^0-9.-]/g, "");
-  
+
   const number = Number(value);
 
   if (!isNaN(number)) {
     const formattedNumber = number.toFixed(2);
-    return formattedNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
+    return formattedNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   } else {
     return "";
   }
@@ -27,6 +27,7 @@ export function _number(input: any) {
   }
 }
 
+// ทศนิยม
 export function _formatNumberNotdecimal(input: any) {
   const value = String(input).replace(/[^0-9.]/g, "");
 
@@ -50,8 +51,6 @@ export function removeCommas(input: any) {
 }
 
 export function stringWithCommas(input: any) {
-
-  
   const stringWithoutCommas = input.replace(/,/g, ""); // Remove commas
   const numberValue = parseInt(stringWithoutCommas, 10);
   if (!isNaN(numberValue)) {
@@ -63,21 +62,24 @@ export function stringWithCommas(input: any) {
   }
 }
 
+type Format = "DD/MM/YYYY" | "DD/MM/YYYY HH:mm:ss" | "YYYY/MM/DD" | "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss" | "YYYY-MM-DD HH:mm:ss:SSS";
 
-export const dateFormatSlashReturnMUI = (date: any) => {
-  // data DD/MM/YYYY
+export const dateFormatSlashReturnMUI = (date: any, format: Format) => {
   if (date == null) {
     return null;
   }
+
   try {
-    const newdate = dayjs(date, "DD/MM/YYYY");
-    return newdate;
+    const newDate = dayjs(date, format, true);
+    if (!newDate.isValid()) {
+      console.warn("dateFormatSlashReturnMUI : Invalasid date format. Returning null.");
+      return null;
+    }
+    return newDate;
   } catch {
     return null;
   }
 };
-
-type Format = "DD/MM/YYYY" | "DD/MM/YYYY HH:mm:ss" | "YYYY/MM/DD" | "YYYY-MM-DD" | "YYYY-MM-DD HH:mm:ss" | "YYYY-MM-DD HH:mm:ss:SSS";
 
 export const dateFormatTime = (date: any, format: Format) => {
   if (date == null) {
@@ -89,8 +91,8 @@ export const dateFormatTime = (date: any, format: Format) => {
   } catch {
     return "";
   }
-
 };
+
 export const dateFormatTimeTH = (date: any, format: Format) => {
   if (date == null) {
     return "";
@@ -104,6 +106,7 @@ export const dateFormatTimeTH = (date: any, format: Format) => {
   }
 
 };
+
 export const dateFormatTimeEN = (date: any, format: Format) => {
   if (date == null) {
     return "";
@@ -140,6 +143,3 @@ export const DateToDB = (date: any): string => {
     return ""; // Return an empty string if there is an error during conversion
   }
 };
-
-
-

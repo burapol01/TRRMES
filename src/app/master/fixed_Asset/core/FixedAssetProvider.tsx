@@ -1,73 +1,72 @@
 import { createContext, FC, useContext, useState } from "react";
-import { initialListView, BudgetProps, OptionsState } from "./models";
-import { Dayjs } from "dayjs";
+import { initialListView, FixedAssetProps, OptionsState } from "./models";
 
 type WithChildren = {
     children: React.ReactNode;
 };
 
-const Budgetcontext = createContext<BudgetProps>(initialListView);
+const FixedAssetcontext = createContext<FixedAssetProps>(initialListView);
 
-const BudgetProvider: FC<WithChildren> = ({ children }) => {
+const FixedAssetProvider: FC<WithChildren> = ({ children }) => {
     const [options, setOptions] = useState<OptionsState>(initialListView.options); // State for combobox options
     const [optionsSearch, setOptionsSearch] = useState<OptionsState>(initialListView.optionsSearch); // State for combobox options
     
     // serarch
-    const [searchBudgetCode, setSearchBudgetCode] = useState<any[]>(initialListView.budgetCode);
+    const [searchFixedAssetCode, setSearchFixedAssetCode] = useState<any[]>(initialListView.fixedAssetCode);
     const [searchDescription, setSearchDescription] = useState<any[]>(initialListView.description);
     const [searchCostCenterId, setSearchCostcenterId] = useState<any[]>(initialListView.costcenterId);
-    const [searchJobType, setSearchJobType] = useState<any[]>(initialListView.jobType);
+    const [searchFixedAssetStatus, setSearchFixedAssetStatus] = useState<any[]>(initialListView.fixedAssetStatus);
 
     // CRUD
     const [id, setId] = useState<any[]>(initialListView.id);
-    const [budgetCode, setBudgetCode] = useState<any[]>(initialListView.budgetCode);
+    const [fixedAssetCode, setFixedAssetCode] = useState<any[]>(initialListView.fixedAssetCode);
     const [description, setDescription] = useState<any[]>(initialListView.description);
     const [costcenterId, setCostcenterId] = useState<any[]>(initialListView.costcenterId);
-    const [jobType, setJobtype] = useState<any[]>(initialListView.jobType);
-    const [budgetStartDate, setBudgetStartDate] = useState<Dayjs | null>(initialListView.budgetStartDate);
-    const [budgetEndDate, setBudgetEndDate] = useState<Dayjs | null>(initialListView.budgetEndDate);
+    const [fixedAssetStatus, setFixedAssetStatus] = useState<any[]>(initialListView.fixedAssetStatus);
 
     // Validate
     const [isValidate, setIsValidate] = useState<[]>(initialListView.isValidate);
     
     return (
-        <Budgetcontext.Provider
+        <FixedAssetcontext.Provider
             value={{
                 options,
                 setOptions,
                 optionsSearch,
                 setOptionsSearch,
-                searchBudgetCode,
-                setSearchBudgetCode,
+
+                // serarch
+                searchFixedAssetCode,
+                setSearchFixedAssetCode,
                 searchDescription,
                 setSearchDescription,
                 searchCostCenterId,
                 setSearchCostcenterId,
-                searchJobType,
-                setSearchJobType,
+                searchFixedAssetStatus,
+                setSearchFixedAssetStatus,
+
+                // CRUD
                 id,
                 setId,
-                budgetCode,
-                setBudgetCode,
+                fixedAssetCode,
+                setFixedAssetCode,
                 description,
                 setDescription,
                 costcenterId,
                 setCostcenterId,
-                jobType,
-                setJobtype,
-                budgetStartDate,
-                setBudgetStartDate,
-                budgetEndDate,
-                setBudgetEndDate,
+                fixedAssetStatus,
+                setFixedAssetStatus,
+
+                // validate
                 isValidate,
                 setIsValidate,
             }}
         >
             {children}
-        </Budgetcontext.Provider>
+        </FixedAssetcontext.Provider>
     );
 };
 
-const useListBudget = () => useContext(Budgetcontext);
+const useListFixedAsset = () => useContext(FixedAssetcontext);
 
-export { BudgetProvider, useListBudget };
+export { FixedAssetProvider, useListFixedAsset };

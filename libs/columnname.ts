@@ -315,7 +315,7 @@ export const MasterUser_headCells = [
         numeric: 'center',
         disablePadding: true,
         label: 'แก้ไขโดย',
-        colWidth: 150    
+        colWidth: 150
     },
     {
         columnName: 'update_date',
@@ -395,9 +395,9 @@ export const Master_Cost_Center = [
         numeric: 'center',
         disablePadding: true,
         label: 'แก้ไขโดย',
-        colWidth: 150    
+        colWidth: 150
     },
-    
+
 ];
 
 export const Master_Budget = [
@@ -412,43 +412,43 @@ export const Master_Budget = [
         columnName: 'budget_code',
         numeric: 'center',
         disablePadding: true,
-        label: 'รหัสงบประมาณ',
-        colWidth: 200
+        label: 'รหัส',
+        colWidth: 150
     },
     {
         columnName: 'description',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
-        label: 'Description',
-        colWidth: 350
+        label: 'รายละเอียด',
+        colWidth: 300
     },
-    // {
-    //     columnName: 'cost_center_id',
-    //     numeric: 'center',
-    //     disablePadding: true,
-    //     label: 'Cost Center ID',
-    //     colWidth: 300
-    // },
     {
-        columnName: 'jop_type',
+        columnName: 'cost_center_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Cost Center & Service Center',
+        colWidth: 300
+    },
+    {
+        columnName: 'job_type_name',
         numeric: 'center',
         disablePadding: true,
-        label: 'ซ่อม / สร้าง ',
-        colWidth: 200
+        label: 'ประเภทงาน',
+        colWidth: 100
     },
     {
         columnName: 'budget_s_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่เริ่ม Budget',
-        colWidth: 300
+        label: 'วันที่เริ่มรอดำเนินการ',
+        colWidth: 200
     },
     {
         columnName: 'budget_e_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่สิ้นสุด Budget',
-        colWidth: 300
+        label: 'วันที่คาดว่าจะดำเนินการ',
+        colWidth: 200
     },
     {
         columnName: 'create_by',
@@ -456,27 +456,27 @@ export const Master_Budget = [
         disablePadding: true,
         label: 'สร้างโดย',
         colWidth: 150
-    },   
+    },
     {
         columnName: 'create_date',
         numeric: 'center',
         disablePadding: true,
         label: 'วันที่สร้าง',
-        colWidth: 300
+        colWidth: 200
     },
     {
         columnName: 'update_by',
         numeric: 'center',
         disablePadding: true,
-        label: 'อัพเดตโดย',
-        colWidth: 150    
+        label: 'แก้ไขโดย',
+        colWidth: 150
     },
     {
         columnName: 'update_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่อัพเดต',
-        colWidth: 300
+        label: 'วันที่แก้ไข',
+        colWidth: 200
     },
 ];
 
@@ -492,28 +492,28 @@ export const Master_Fixed_Asset = [
         columnName: 'fixed_asset_code',
         numeric: 'center',
         disablePadding: true,
-        label: '...........',
-        colWidth: 100
+        label: 'Fixed Asset Code',
+        colWidth: 150
     },
     {
         columnName: 'description',
-        numeric: 'center',
+        numeric: 'left',
         disablePadding: true,
-        label: 'รายละเอียดงบประมาณ',
-        colWidth: 200
+        label: 'รายละเอียด',
+        colWidth: 300
     },
     {
-        columnName: 'cost_center_id',
-        numeric: 'center',
+        columnName: 'cost_center_label',
+        numeric: 'left',
         disablePadding: true,
-        label: '...........',
+        label: 'Cost Center & Service Center',
         colWidth: 300
     },
     {
         columnName: 'fixed_asset_status',
         numeric: 'center',
         disablePadding: true,
-        label: 'New / Transfer In / Transfer Out / Disposal LOV',
+        label: 'สถานะ',
         colWidth: 150
     },
     {
@@ -522,7 +522,7 @@ export const Master_Fixed_Asset = [
         disablePadding: true,
         label: 'สร้างโดย',
         colWidth: 150
-    },   
+    },
     {
         columnName: 'create_date',
         numeric: 'center',
@@ -534,14 +534,14 @@ export const Master_Fixed_Asset = [
         columnName: 'update_by',
         numeric: 'center',
         disablePadding: true,
-        label: 'อัพเดตโดย',
-        colWidth: 150    
+        label: 'แก้ไขโดย',
+        colWidth: 150
     },
     {
         columnName: 'update_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่อัพเดต',
+        label: 'วันที่แก้ไข',
         colWidth: 300
     },
 ];
@@ -559,20 +559,20 @@ export const Master_Site = [
         numeric: 'center',
         disablePadding: true,
         label: 'Site',
-        colWidth: 150
+        colWidth: 100
     },
     {
         columnName: 'site_name',
         numeric: 'center',
         disablePadding: true,
-        label: 'ชื่อ Site',
-        colWidth: 200
+        label: 'โรงงาน',
+        colWidth: 350
     },
     {
         columnName: 'domain',
         numeric: 'center',
         disablePadding: true,
-        label: '...........',
+        label: 'Domain',
         colWidth: 300
     },
     {
@@ -581,7 +581,7 @@ export const Master_Site = [
         disablePadding: true,
         label: 'สร้างโดย',
         colWidth: 150
-    },   
+    },
     {
         columnName: 'create_date',
         numeric: 'center',
@@ -593,14 +593,14 @@ export const Master_Site = [
         columnName: 'update_by',
         numeric: 'center',
         disablePadding: true,
-        label: 'อัพเดตโดย',
-        colWidth: 150    
+        label: 'แก้ไขโดย',
+        colWidth: 150
     },
     {
         columnName: 'update_date',
         numeric: 'center',
         disablePadding: true,
-        label: 'วันที่อัพเดต',
+        label: 'วันที่แก้ไข',
         colWidth: 300
     },
 ];
