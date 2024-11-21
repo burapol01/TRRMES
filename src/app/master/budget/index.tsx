@@ -65,7 +65,6 @@ export default function Budget() {
   } = useListBudget();
 
   const [dataBudget, setDataBudget] = useState<any[]>([]);
-
   const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => { setter(value) };
   const [error, setError] = useState<string | null>(null);
 
@@ -551,8 +550,8 @@ export default function Budget() {
     setDescription(data?.description);
     setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
     setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
-    setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY HH:mm:ss"));
-    setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY HH:mm:ss"));
+    setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
+    setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
   };
 
   return (
