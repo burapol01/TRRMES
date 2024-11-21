@@ -16,7 +16,7 @@ import { confirmModal } from '../../../components/MUI/Comfirmmodal';
 import { endLoadScreen, startLoadScreen } from '../../../../redux/actions/loadingScreenAction';
 import { Master_Budget } from '../../../../libs/columnname';
 import { Massengmodal } from '../../../components/MUI/Massengmodal';
-import { dateFormatSlashReturnMUI, dateFormatTimeEN, DateToDB } from '../../../../libs/datacontrol';
+import { dateFormatSlashReturnMUI, dateFormatTime, dateFormatTimeEN, DateToDB } from '../../../../libs/datacontrol';
 import { createFilterOptions } from '@mui/material';
 import { checkValidate, isCheckValidateAll } from '../../../../libs/validations';
 import { setValueMas } from '../../../../libs/setvaluecallback';
@@ -268,11 +268,11 @@ export default function Budget() {
       description: description,
       cost_center_id: costcenterId?.id,
       job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate,
-      budget_e_date: budgetEndDate,
+      budget_s_date: (DateToDB(dateFormatTime(budgetStartDate, "DD/MM/YYYY"))),
+      budget_e_date: (DateToDB(dateFormatTime(budgetEndDate, "DD/MM/YYYY"))),
     };
 
-    console.log("💟 Data validation:", dataForValidate);
+    console.log("Data validation:", dataForValidate);
 
     const isValidate = checkValidate(dataForValidate, ['budget_code', 'description', 'cost_center_id', 'job_type', 'budget_s_date', 'budget_e_date']);
     const isValidateAll = isCheckValidateAll(isValidate);
@@ -292,8 +292,8 @@ export default function Budget() {
           description: description,
           cost_center_id: costcenterId?.id,
           job_type: jobType?.lov_code,
-          budget_s_date: dateFormatSlashReturnMUI(budgetStartDate, "DD/MM/YYYY"),
-          budget_e_date: dateFormatSlashReturnMUI(budgetEndDate, "DD/MM/YYYY"),
+          budget_s_date: (DateToDB(dateFormatTime(budgetStartDate, "DD/MM/YYYY"))),
+          budget_e_date: (DateToDB(dateFormatTime(budgetEndDate, "DD/MM/YYYY"))),
         }],
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
@@ -350,11 +350,11 @@ export default function Budget() {
       description: description,
       cost_center_id: costcenterId?.id,
       job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate,
-      budget_e_date: budgetEndDate,
+      budget_s_date: (DateToDB(dateFormatTime(budgetStartDate, "DD/MM/YYYY"))),
+      budget_e_date: (DateToDB(dateFormatTime(budgetEndDate, "DD/MM/YYYY"))),
     };
 
-    console.log("💟 Data validation:", dataForValidate);
+    console.log("Data validation:", dataForValidate);
 
     const isValidate = checkValidate(dataForValidate, ['budget_code', 'description', 'cost_center_id', 'job_type', 'budget_s_date', 'budget_e_date']);
     const isValidateAll = isCheckValidateAll(isValidate);
@@ -374,11 +374,11 @@ export default function Budget() {
           description: description,
           cost_center_id: costcenterId?.id,
           job_type: jobType?.lov_code,
-          budget_s_date: dateFormatSlashReturnMUI(budgetStartDate, "DD/MM/YYYY"),
-          budget_e_date: dateFormatSlashReturnMUI(budgetEndDate, "DD/MM/YYYY"),
+          budget_s_date: (DateToDB(dateFormatTime(budgetStartDate, "DD/MM/YYYY"))),
+          budget_e_date: (DateToDB(dateFormatTime(budgetEndDate, "DD/MM/YYYY"))),
         }],
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
-      };     
+      };
 
       console.log('🟢 payload BudgetModel (Edit) : ', payload);
 
@@ -421,8 +421,8 @@ export default function Budget() {
       description: description,
       cost_center_id: costcenterId?.id,
       job_type: jobType?.lov_code,
-      budget_s_date: budgetStartDate, // budget_s_date: budgetStartDate.format("YYYY-MM-DD HH:mm:ss"),
-      budget_e_date: budgetEndDate, // budget_e_date: budgetEndDate.format("YYYY-MM-DD HH:mm:ss"),
+      budget_s_date: (DateToDB(dateFormatTime(budgetStartDate, "DD/MM/YYYY"))),
+      budget_e_date: (DateToDB(dateFormatTime(budgetEndDate, "DD/MM/YYYY"))),
     }
 
     console.log("Data validation:", dataForValidate);

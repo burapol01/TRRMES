@@ -126,7 +126,8 @@ export default function FixedAsset() {
 
   useEffect(() => {
     console.log('Call : 🟢[2] FetchData for Fixed Asset', moment().format('HH:mm:ss:SSS'));
-    if (options?.costAndServiceCenters) {
+    if (options?.costAndServiceCenters && options?.costAndServiceCenters.length > 0) {
+      console.log('🖤 options?.costAndServiceCenters', options?.costAndServiceCenters);
       fetchFixedAsset(null);
     }
   }, [options?.costAndServiceCenters]);
