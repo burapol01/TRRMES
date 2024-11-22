@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import moment from 'moment';
+import { setValueMas } from '../../../../../libs/setvaluecallback';
 import { useListBudget } from '../core/BudgetProvider';
 import { debounce } from 'lodash';
 import FullWidthTextField from '../../../../components/MUI/FullWidthTextField';
@@ -33,6 +34,7 @@ export default function BudgetBody({
 
     const {
         options,
+        optionsSearch,
         budgetCode,
         setBudgetCode,
         description,
@@ -46,6 +48,7 @@ export default function BudgetBody({
         budgetEndDate,
         setBudgetEndDate,
         isValidate,
+        dataList,
     } = useListBudget();
 
     const debouncedOnDataChange = debounce((data: any) => {
@@ -54,6 +57,24 @@ export default function BudgetBody({
         }
     }, 300);
 
+
+    useEffect(() => {
+        if (dataList && actions !== "Create") {
+            console.log(actions, '[1] dataList', dataList.cost_center_id);
+            console.log(actions, '[2] dataList', dataList.job_type);
+    
+            setCostcenterId(setValueMas(options?.costAndServiceCenters, dataList.cost_center_id, "id"));
+            setJobtype(setValueMas(options.jobType, dataList.job_type, "lov_code"));
+        } else {
+            console.log(actions, '[1] dataList', dataList.cost_center_id);
+            console.log(actions, '[2] dataList', dataList.job_type);
+
+            setCostcenterId(null);
+            setJobtype(null);
+        }
+    }, [actions, dataList, options]);
+
+    
     return (
         <div>
             <div className='row justify-start'>
@@ -87,7 +108,7 @@ export default function BudgetBody({
                         setvalue={(data) => {
                             setCostcenterId(data);
                         }}
-                        options={options?.costAndServiceCenters || []}
+                        options={optionsSearch?.costAndServiceCenters || []}
                         column="costCentersCodeAndName"
                         Validate={isValidate?.cost_center_id}
                     />
@@ -127,9 +148,9 @@ export default function BudgetBody({
                             <DatePickerBasic
                                 required="required"
                                 labelname="วันที่คาดว่าจะดำเนินการ"
-                                startDate={budgetStartDate}
                                 valueStart={budgetEndDate}
                                 disabled={disableOnly}
+                                startDate={budgetStartDate}
                                 onchangeStart={setBudgetEndDate}
                                 // disablePast={true}
                                 // checkValidateMonth={true}

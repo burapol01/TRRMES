@@ -102,7 +102,7 @@ export default function Site() {
   };
 
   useEffect(() => {
-    console.log('Call : 🟢[1] FetchData for Site', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [1] FetchData for Site', moment().format('HH:mm:ss:SSS'));
 
     const fetchData = async () => {
       try {
@@ -115,7 +115,7 @@ export default function Site() {
   }, []);
 
   const fetchSite = async (dataset: any) => {
-    console.log('🌐 Master Site : Master_Site_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Site : Master_Site_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     try {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Master_Site_Get");
@@ -169,7 +169,7 @@ export default function Site() {
   }
 
   const SiteAdd = async () => {
-    console.log('🌐 Master Site : Master_Site_Add', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Site : Master_Site_Add', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Add/Master_Site_Add');
 
@@ -202,7 +202,7 @@ export default function Site() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload SiteModel (Add) : ', payload);
+      console.log('payload SiteModel (Add) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -247,7 +247,7 @@ export default function Site() {
   }
 
   const SiteEdit = async () => {
-    console.log('🌐 Master Site : Master_Site_Edit', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Site : Master_Site_Edit', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Edit/Master_Site_Edit');
 
@@ -280,7 +280,7 @@ export default function Site() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload SiteModel (Edit) : ', payload);
+      console.log('payload SiteModel (Edit) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -325,7 +325,7 @@ export default function Site() {
   }
 
   const SiteDelete = async () => {
-    console.log('🌐 Master Site : Master_Site_Delete', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Site : Master_Site_Delete', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Delete/Master_Site_Delete');
 
@@ -355,7 +355,7 @@ export default function Site() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload SiteModel (Delete) : ', payload);
+      console.log('payload SiteModel (Delete) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -405,12 +405,12 @@ export default function Site() {
       site_name: searchSiteName ? searchSiteName : null,
       domain: searchDomain ? searchDomain : null,
     };
-    console.log('Call : 🟢[3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
     fetchSite(dataset);
   }
 
   const handleReset = () => {
-    console.log('Call : 🟢[4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
     setSearchSiteCode(null);
     setSearchSiteName("");
     setSearchDomain("");

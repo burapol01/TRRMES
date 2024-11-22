@@ -57,6 +57,9 @@ export type BudgetProps = {
     // validate
     isValidate?: any;
     setIsValidate: Dispatch<SetStateAction<any>>;
+
+    dataList: any;
+    setDataList: Dispatch<SetStateAction<any>>;
 };
 
 export const initialListView: BudgetProps = {
@@ -94,4 +97,7 @@ export const initialListView: BudgetProps = {
     // validate
     isValidate: null,
     setIsValidate: () => {},
+
+    dataList: [],
+    setDataList: () => {},
 }

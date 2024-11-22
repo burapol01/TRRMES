@@ -113,7 +113,7 @@ export default function FixedAsset() {
   };   
 
   useEffect(() => {
-    console.log('Call : 🟢[1] FetchData for Cost Center', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [1] FetchData for Cost Center', moment().format('HH:mm:ss:SSS'));
     const fetchData = async () => {
       try {
         await fetchCostCenter();
@@ -125,15 +125,14 @@ export default function FixedAsset() {
   }, []);
 
   useEffect(() => {
-    console.log('Call : 🟢[2] FetchData for Fixed Asset', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [2] FetchData for Fixed Asset', moment().format('HH:mm:ss:SSS'));
     if (options?.costAndServiceCenters && options?.costAndServiceCenters.length > 0) {
-      console.log('🖤 options?.costAndServiceCenters', options?.costAndServiceCenters);
       fetchFixedAsset(null);
     }
   }, [options?.costAndServiceCenters]);
 
   const fetchCostCenter = async () => {
-    console.log('🌐 Master Cost Center : Master_Cost_Center_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Cost Center : Master_Cost_Center_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     const dataset = {};
 
@@ -178,7 +177,7 @@ export default function FixedAsset() {
   }
 
   const fetchFixedAsset = async (dataset: any) => {
-    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Fixed Asset : Master_Fixed_Asset_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     try {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Master_Fixed_Asset_Get");
@@ -220,7 +219,7 @@ export default function FixedAsset() {
   }
 
   const FixedAssetAdd = async () => {
-    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Add', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Fixed Asset : Master_Fixed_Asset_Add', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Add/Master_Fixed_Asset_Add');
 
@@ -255,7 +254,7 @@ export default function FixedAsset() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload FixedAssetModel (Add) : ', payload);
+      console.log('payload FixedAssetModel (Add) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -300,7 +299,7 @@ export default function FixedAsset() {
   }
 
   const FixedAssetEdit = async () => {
-    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Edit', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Fixed Asset : Master_Fixed_Asset_Edit', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Edit/Master_Fixed_Asset_Edit');
 
@@ -335,7 +334,7 @@ export default function FixedAsset() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload FixedAssetModel (Edit) : ', payload);
+      console.log('payload FixedAssetModel (Edit) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -380,7 +379,7 @@ export default function FixedAsset() {
   }
 
   const FixedAssetDelete = async () => {
-    console.log('🌐 Master Fixed Asset : Master_Fixed_Asset_Delete', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Fixed Asset : Master_Fixed_Asset_Delete', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Delete/Master_Fixed_Asset_Delete');
 
@@ -411,7 +410,7 @@ export default function FixedAsset() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload FixedAssetModel (Delete) : ', payload);
+      console.log('payload FixedAssetModel (Delete) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -462,12 +461,12 @@ export default function FixedAsset() {
       cost_center_id: searchCostCenterId?.id ? searchCostCenterId?.id : null,
       fixed_asset_status: searchFixedAssetStatus ? searchFixedAssetStatus : null,
     };
-    console.log('Call : 🟢[3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [3] Dataset : Search', dataset, moment().format('HH:mm:ss:SSS'));
     fetchFixedAsset(dataset);
   }
 
   const handleReset = () => {
-    console.log('Call : 🟢[4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [4] Dataset : Reset', moment().format('HH:mm:ss:SSS'));
     setSearchFixedAssetCode("");
     setSearchDescription("");
     setSearchCostcenterId(null);

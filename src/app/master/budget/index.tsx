@@ -62,6 +62,10 @@ export default function Budget() {
     setSearchJobType,
     isValidate,
     setIsValidate,
+
+
+    dataList,
+    setDataList,
   } = useListBudget();
 
   const [dataBudget, setDataBudget] = useState<any[]>([]);
@@ -117,7 +121,7 @@ export default function Budget() {
   };
 
   useEffect(() => {
-    console.log('Call : 🟢[1] Fetch initial data for Cost Center - Job Types', moment().format('HH:mm:ss:SSS'));
+    console.log('Call : [1] fetchData for Cost Center - Job Types', moment().format('HH:mm:ss:SSS'));
 
     const fetchData = async () => {
       try {
@@ -131,15 +135,17 @@ export default function Budget() {
   }, []);
 
   useEffect(() => {
-    console.log('Call : 🟢[1] FetchData for Budget', moment().format('HH:mm:ss:SSS'));
-
+    console.log('Call : [2] FetchData for Budget', moment().format('HH:mm:ss:SSS'));
     if (optionsSearch?.costAndServiceCenters && optionsSearch?.jobType) {
       fetchBudget(null);
     }
-  }, [optionsSearch?.costAndServiceCenters, optionsSearch?.jobType]);
+  }, []);
 
+
+
+  //==========================================================================================================================
   const fetchCostCenter = async () => {
-    console.log('🌐 Master Cost Center : Master_Cost_Center_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Cost Center : Master_Cost_Center_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     const dataset = {};
 
@@ -181,7 +187,7 @@ export default function Budget() {
   }
 
   const fetchJobTypes = async () => {
-    console.log('🌐Lov Data : Lov_Data_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Lov Data : Lov_Data_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     try {
       const dataset = {
@@ -216,7 +222,7 @@ export default function Budget() {
   }
 
   const fetchBudget = async (dataset: any) => {
-    console.log('🌐 Master Budget : Master_Budget_Get', moment().format('YYYY-MM-DD HH:mm'));
+    console.log('Master Budget : Master_Budget_Get', moment().format('YYYY-MM-DD HH:mm'));
 
     try {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Master_Budget_Get");
@@ -259,7 +265,7 @@ export default function Budget() {
   }
 
   const BudgetAdd = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Add', moment().format('YYYY-MM-DD HH:mm'));
+    console.log(' Master Budget : Master_Budget_Add', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Add/Master_Budget_Add');
 
@@ -298,7 +304,7 @@ export default function Budget() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       }
 
-      console.log('🟢 payload BudgetModel (Add) : ', payload);
+      console.log('payload BudgetModel (Add) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -341,7 +347,7 @@ export default function Budget() {
   }
 
   const BudgetEdit = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Edit', moment().format('YYYY-MM-DD HH:mm'));
+    console.log(' Master Budget : Master_Budget_Edit', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('evernt_name', 'Edit/Master_Budget_Edit');
 
@@ -380,7 +386,7 @@ export default function Budget() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
       };
 
-      console.log('🟢 payload BudgetModel (Edit) : ', payload);
+      console.log('payload BudgetModel (Edit) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -412,7 +418,7 @@ export default function Budget() {
   }
 
   const BudgetDelete = async () => {
-    console.log('🌐 Master Budget : Master_Budget_Delete', moment().format('YYYY-MM-DD HH:mm'));
+    console.log(' Master Budget : Master_Budget_Delete', moment().format('YYYY-MM-DD HH:mm'));
 
     updateSessionStorageCurrentAccess('event_name', 'Delete/Master_Budget_Delete');
 
@@ -445,7 +451,7 @@ export default function Budget() {
         currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName) // ใช้ค่า user_id จาก currentUser หรือค่าเริ่มต้น
       };
 
-      console.log('🟢 payload BudgetModel (Delete) : ', payload);
+      console.log('payload BudgetModel (Delete) : ', payload);
 
       dispatch(startLoadScreen());
       setTimeout(async () => {
@@ -517,39 +523,45 @@ export default function Budget() {
   };
 
   const handleClickView = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม View : ข้อมูล data');
+    console.log('ตอนกดปุ่ม View : ข้อมูล data', data);
+
+    setDataList(data);
     setOpenView(true);
 
     setBudgetCode(data?.budget_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
+    // setCostcenterId(setValueMas(options?.costAndServiceCenters, data?.cost_center_id, "id"));
+    // setJobtype(setValueMas(options.jobType, data?.job_type, "lov_code"));
     setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
     setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
   };
 
   const handleClickEdit = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม Edit : ข้อมูล data');
+    console.log('ตอนกดปุ่ม Edit : ข้อมูล data', data);
+
+    setDataList(data);
     setOpenEdit(true);
 
     setId(data?.id);
     setBudgetCode(data?.budget_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
+    // setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
+    // setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
     setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
     setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
   };
 
   const handleClickDelete = (data: any) => {
-    console.log(data, 'ตอนกดปุ่ม Delete : ข้อมูล data');
+    console.log('ตอนกดปุ่ม Delete : ข้อมูล data', data);
+
+    setDataList(data);
     setOpenDelete(true);
 
     setId(data?.id);
     setBudgetCode(data?.budget_code);
     setDescription(data?.description);
-    setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
-    setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
+    // setCostcenterId(setValueMas(optionsSearch?.costAndServiceCenters, data?.cost_center_id, "id"));
+    // setJobtype(setValueMas(optionsSearch.jobType, data?.job_type, "lov_code"));
     setBudgetStartDate(dateFormatSlashReturnMUI(data?.budget_s_date, "DD/MM/YYYY"));
     setBudgetEndDate(dateFormatSlashReturnMUI(data?.budget_e_date, "DD/MM/YYYY"));
   };
@@ -681,7 +693,7 @@ export default function Budget() {
           openBottonHidden={true}
           titlename={'ลบข้อมูล'}
           handleClose={handleClose}
-          handlefunction={BudgetDelete} // service
+          handlefunction={BudgetDelete}
           colorBotton="success"
           actions={"Delete"}
           element={

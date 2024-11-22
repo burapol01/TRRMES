@@ -27,6 +27,8 @@ const BudgetProvider: FC<WithChildren> = ({ children }) => {
     const [budgetStartDate, setBudgetStartDate] = useState<Dayjs | null>(initialListView.budgetStartDate);
     const [budgetEndDate, setBudgetEndDate] = useState<Dayjs | null>(initialListView.budgetEndDate);
 
+    const [dataList, setDataList] = useState<any[]>(initialListView.dataList);
+
     // Validate
     const [isValidate, setIsValidate] = useState<[]>(initialListView.isValidate);
     
@@ -61,6 +63,9 @@ const BudgetProvider: FC<WithChildren> = ({ children }) => {
                 setBudgetEndDate,
                 isValidate,
                 setIsValidate,
+                
+                dataList,
+                setDataList,
             }}
         >
             {children}
