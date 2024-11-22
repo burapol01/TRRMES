@@ -127,11 +127,12 @@ export default function BudgetBody({
                             <DatePickerBasic
                                 required="required"
                                 labelname="วันที่คาดว่าจะดำเนินการ"
+                                startDate={budgetStartDate}
                                 valueStart={budgetEndDate}
                                 disabled={disableOnly}
                                 onchangeStart={setBudgetEndDate}
-                                disablePast
-                                checkValidateMonth={true}
+                                // disablePast={true}
+                                // checkValidateMonth={true}
                                 validate={isValidate?.budget_e_date}
                             />
                         </div>
@@ -139,5 +140,5 @@ export default function BudgetBody({
                 </div>
             </div>
         </div>
-    )
+    );
 }
