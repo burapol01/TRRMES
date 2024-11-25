@@ -57,23 +57,22 @@ export default function BudgetBody({
         }
     }, 300);
 
-
     useEffect(() => {
-        if (dataList && actions !== "Create") {
-            console.log(actions, '[1] dataList', dataList.cost_center_id);
-            console.log(actions, '[2] dataList', dataList.job_type);
-    
-            setCostcenterId(setValueMas(options?.costAndServiceCenters, dataList.cost_center_id, "id"));
-            setJobtype(setValueMas(options.jobType, dataList.job_type, "lov_code"));
-        } else {
-            console.log(actions, '[1] dataList', dataList.cost_center_id);
-            console.log(actions, '[2] dataList', dataList.job_type);
+        if (dataList && actions === "Create") {
+            console.log(actions, '[1 : BudgetBody Page] dataList', dataList.cost_center_id);
+            console.log(actions, '[1 : BudgetBody Page] dataList', dataList.job_type);
 
             setCostcenterId(null);
             setJobtype(null);
+            
+        } else {
+            console.log(actions, '[2 : BudgetBody Page] dataList', dataList.cost_center_id);
+            console.log(actions, '[2 : BudgetBody Page] dataList', dataList.job_type);
+    
+            setCostcenterId(setValueMas(options?.costAndServiceCenters, dataList.cost_center_id, "id"));
+            setJobtype(setValueMas(options.jobType, dataList.job_type, "lov_code"));
         }
     }, [actions, dataList, options]);
-
     
     return (
         <div>
@@ -81,7 +80,7 @@ export default function BudgetBody({
                 <div className='col-md-6 mb-2'>
                     <FullWidthTextField
                         required={"required"}
-                        labelName={"รหัส"} // รหัสงบประมาณ
+                        labelName={"รหัส"}
                         value={budgetCode}
                         disabled={actions === "Update" ? true : disableOnly}
                         onChange={(value) => setBudgetCode(value)}
