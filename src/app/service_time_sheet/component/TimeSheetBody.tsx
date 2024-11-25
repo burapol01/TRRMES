@@ -359,7 +359,7 @@ export default function TimeSheetBody({
         };
 
         try {
-            const response = await _POST(dataset, "/api_trr_mes/CheckMonthlyCutOff/CheckMonthlyCutOff_Get");
+            const response = await _POST(dataset, "/api_trr_mes/CutOff/CheckMonthlyCutOff_Get");
 
             if (response && response.status === "success") {
                 const fetchedData = response.data.map((item: any) => ({

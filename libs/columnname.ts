@@ -240,7 +240,7 @@ export const Table_Pending_headCells = [
         numeric: 'left',
         disablePadding: true,
         label: 'หมายเหตุ',
-        colWidth: 100
+        colWidth: 300
     },
 
 
@@ -601,6 +601,62 @@ export const Master_Site = [
         numeric: 'center',
         disablePadding: true,
         label: 'วันที่แก้ไข',
+        colWidth: 300
+    },
+];
+
+export const service_cost_headCells = [
+    {
+        columnName: 'ACTION',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'จัดการ',
+        colWidth: 150
+    },
+    {
+        columnName: 'cut_off_month_and_year_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'สรุปประจำเดือน',
+        colWidth: 150
+    },
+    {
+        columnName: 'cut_off_flag_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ปิดงวด',
+        colWidth: 150
+    },
+    {
+        columnName: 'import_service_cost_flag_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'นำเข้าค่าใช้จ่าย Service Center',
+        colWidth: 150
+    },
+    {
+        columnName: 'allcate_flag_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ปันส่วนค่าใช้จ่าย',
+        colWidth: 150
+    }
+];
+
+
+export const Table_WorkHourSummary_By_ServiceCenter = [    
+    {
+        columnName: 'service_center',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Service Center',
+        colWidth: 150    
+    },
+    {
+        columnName: 'work_hour_summary',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ชั่วโมงการทำงาน (ชม.)',
         colWidth: 300
     },
 ];

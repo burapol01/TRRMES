@@ -229,7 +229,7 @@ export default function ServiceRequest() {
 
   // ฟังก์ชัน useMemo สำหรับกรอง Fixed Asset Codes
   const filteredFixedAssetCodes = React.useMemo(() => {
-  
+
 
     const fixedAssetIdSet = new Set(dataList
       .filter(dataItem => dataItem.fixed_asset_id !== null)
@@ -256,17 +256,17 @@ export default function ServiceRequest() {
   // Set state
   React.useEffect(() => {
 
-      //console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
-      setOptionCostCenter(filteredUniqueCostCenters);
+    //console.log(filteredUniqueCostCenters, 'filteredUniqueCostCenters');
+    setOptionCostCenter(filteredUniqueCostCenters);
 
-      //console.log(filteredServiceCenters, 'filterServiceCenter');
-      setOptionServiceCenter(filteredServiceCenters);
+    //console.log(filteredServiceCenters, 'filterServiceCenter');
+    setOptionServiceCenter(filteredServiceCenters);
 
-      console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
-      setOptionFixedAssetCodes(filteredFixedAssetCodes);
+    console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+    setOptionFixedAssetCodes(filteredFixedAssetCodes);
 
-      //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
-      setOptionRequestStatus(filteredRequestStatus);
+    //console.log(filteredFixedAssetCodes, 'filterFixedAssetCodes');
+    setOptionRequestStatus(filteredRequestStatus);
 
   }, [filteredUniqueCostCenters, filteredServiceCenters, filteredFixedAssetCodes, filteredRequestStatus]);
 
@@ -1047,10 +1047,13 @@ export default function ServiceRequest() {
     const imageDataListArray = await Promise.all(
       imageList.map(async (image: any, index: any) => {
         const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+        const headFolderName = 'ServiceRequest';
+        const fileType = ["png", "jpg", "jpeg"];
         let newFileName;
+        console.log(image.file, 'image.file');
 
         if (image.file != null && image.flagDeleteFile != true) {
-          newFileName = await plg_uploadFileRename(image.file, reqNo, `${reqNo}_${uuidv4()}_${timestamp}`); // ใช้ reqNo แทน Image
+          newFileName = await plg_uploadFileRename(image.file, reqNo, `${reqNo}_${uuidv4()}_${timestamp}`, headFolderName, fileType); // ใช้ reqNo แทน Image
         } else {
           newFileName = null;
         }

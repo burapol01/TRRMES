@@ -103,6 +103,11 @@ const actionConfig = {
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
+  Cutoff: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
   ImportFile: {
     mainButton: { label: "นำเข้า", show: true },
     rejectButton: { show: false },

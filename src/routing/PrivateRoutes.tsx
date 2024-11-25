@@ -9,9 +9,9 @@ import BorderedTreeView from '../app/report';
 import UserPage from '../app/master/user/user_page';
 import CostCenterPage from '../app/master/cost_center/CostCenterPage';
 import BudgetPage from '../app/master/budget/BudgetPage';
-import FixedAssetPage from '../app/master/fixed_Asset/FixedAssetPage';
+import FixedAssetPage from '../app/master/fixed_asset/FixedAssetPage'
 import SitePage from '../app/master/site/SitePage';
-
+import ServiceCostPage from '../app/service_cost/service_cost_page';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {
@@ -56,7 +56,7 @@ export default function PrivateRoutes() {
                     <Route path='home' element={<Home />} />
                     <Route path='service_request' element={<ServiceRequestPage />} />
                     <Route path='service_time_sheet' element={<ServiceTimeSheetPage />} />
-                    <Route path='service_cost' element={<ServiceCost />} />
+                    <Route path='service_cost' element={<ServiceCostPage />} />
                     <Route path='user' element={<UserPage />} />
                     <Route path='report' element={<BorderedTreeView />} />
                     <Route path='cost_center' element={<CostCenterPage />} />

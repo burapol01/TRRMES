@@ -1,66 +1,89 @@
 import axios from "axios";
 import imageCompression from "browser-image-compression";
 
-export async function plg_uploadFileRename(element: File, path: string, rename: string) {
-  // Validate the file input
+export async function plg_uploadFileRename(
+  element: File,
+  path: string,
+  rename: string,
+  headFolderName: string,
+  fileType?: string[]
+) {
   if (!(element instanceof File)) {
-    console.error("Invalid file element provided");
+    console.error("Invalid file element provided.");
     return;
   }
 
-  console.log(import.meta.env.VITE_PROD_SITE, 'import.meta.env.VITE_PROD_SITE');
+  // Get the original file name and extension
+  const originalFileName = element.name;
+  const originalFileExtension = originalFileName.split(".").pop()?.toLowerCase();
 
-  // Get the file extension from the original file name
-  const fileExtension = element.name.split(".").pop()?.toLowerCase();
-  const fullRename = `${rename}.${fileExtension}`; // Append extension to rename
+  if (!originalFileExtension) {
+    console.error("File extension could not be determined.");
+    return;
+  }
 
-  // Check if the file is an image (PNG, JPG, or JPEG) and compress it
-  const allowedExtensions = ["png", "jpg", "jpeg"];
-  let fileToUpload = element;
+  
+  let fileToUpload: File = element;
 
-  if (fileToUpload.type.startsWith("image/") && allowedExtensions.includes(fileExtension!)) {
-    const options = {
-      maxSizeMB: 1, // Set maximum file size (e.g., 1MB)
-      maxWidthOrHeight: 1024, // Set maximum width or height for images
-      useWebWorker: true,
-    };
-
+  // Compress image if it's an image file
+  const allowedImageExtensions = ["png", "jpg", "jpeg"];
+  if (
+    fileToUpload.type.startsWith("image/") &&
+    allowedImageExtensions.includes(originalFileExtension)
+  ) {
     try {
-      fileToUpload = await imageCompression(fileToUpload, options);
-      console.log("Image compressed successfully:", fileToUpload.size / 1024, "KB");
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1024,
+        useWebWorker: true,
+      };
+
+      // Compress the image
+      const compressedBlob = await imageCompression(fileToUpload, options);
+
+      // Create a new File with the original name and type
+      fileToUpload = new File([compressedBlob], originalFileName, {
+        type: element.type, // Preserve the original type
+        lastModified: element.lastModified, // Preserve original timestamp
+      });
     } catch (error) {
       console.error("Error during image compression:", error);
-      // If compression fails, continue with the original file
+      return;
     }
   }
 
-  // Prepare FormData for upload
+  if (fileType && !fileType.includes(originalFileExtension)) {
+    console.error("Invalid file type. Allowed types:", fileType.join(", "));
+    return;
+  }
+
+  // Log the files to inspect their content
+  console.log(element, "fileToUpload (processed)");
+  console.log(fileToUpload, "fileToUpload (processed)");
+
+  // Prepare the data to send
   const data = new FormData();
-  data.append("postedFile", fileToUpload);
-  data.append("renamefile", fullRename); // Use fullRename with extension
+  data.append("postedFile", fileToUpload); // Send the processed (possibly compressed) file
+  data.append("renamefile", rename); // The rename (optional)
+  data.append(
+    "viral",
+    `\\\\10.100.77.237\\it\\AppUpload\\${import.meta.env.VITE_APP_APPLICATION_CODE}\\${import.meta.env.VITE_PROD_SITE}\\${headFolderName}\\${path}\\`
+  );
 
-  const viralPath = `\\\\10.100.77.237\\it\\AppUpload\\TRR-MES\\${import.meta.env.VITE_PROD_SITE}\\ServiceRequest\\${path}\\`;
-  data.append("viral", viralPath);
-  data.append("Pro@dmin785", "");
-
-  // Define the request configuration
   const source = axios.CancelToken.source();
   const config = {
     method: "post",
     maxBodyLength: Infinity,
     url: `${import.meta.env.VITE_APP_TRR_API_URL_UPLOAD}/api_sys_tools/api_tool_upload/Upload/UploadFileRename`,
-    data: data,
-    timeout: 30000, // Increase timeout to 30 seconds or more
+    data,
+    timeout: 30000,
     cancelToken: source.token,
   };
 
   try {
-    // Start the upload
     const response = await axios.request(config);
-
-    // Check response status
     if (response.status === 200) {
-      console.log(response.data);
+      console.log("Upload successful:", response.data);
       return response.data;
     } else {
       console.error("Upload failed with status:", response.status);
@@ -68,15 +91,13 @@ export async function plg_uploadFileRename(element: File, path: string, rename: 
   } catch (error: any) {
     if (axios.isCancel(error)) {
       console.log("File upload was canceled.");
-    } else if (error.code === 'ECONNABORTED') {
+    } else if (error.code === "ECONNABORTED") {
       console.error("Request timed out.");
-      // Optionally implement retry logic or increase the timeout
     } else {
       console.error("Error during file upload:", error);
     }
   }
 
-  // Optional: Cancel the request if needed
   return () => {
     source.cancel("Operation canceled by the user.");
   };

@@ -50,7 +50,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
         renderOption={(props, option) => {
-          //console.log(option[`${column}`]); // Debugging
+          //console.log(option[`${column}`],'dsdsds'); // Debugging
           return (
             <li {...props} key={`${option[`${column}`]}`}>
               {option[`${column}`]}
@@ -61,7 +61,7 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         onChange={handleOnChange}
         disabled={disabled}
         readOnly={readonly}
-        isOptionEqualToValue={(option, value) => option?.id === value?.id} // เปรียบเทียบ option กับ value โดยใช้ id
+        isOptionEqualToValue={(option, value) => option?.value === value?.value} // เปรียบเทียบ option กับ value โดยใช้ id
         renderInput={(params) => (
           <TextField
             {...params}

@@ -16,6 +16,8 @@
     "build-deploy-uat": "tsc && vite build --mode uat && copy web.config build\\UAT\\dist && xcopy /E /I build\\UAT\\dist \\\\10.100.77.243\\web_uat\\HQ\\TRR-MES\\web\\dist",
     "build-deploy-prod": "tsc && vite build --mode prod && copy web.config build\\PROD\\dist && xcopy /E /I build\\PROD\\dist \\\\10.100.77.215\\web_prod\\HQ\\TRR-MES\\web\\dist",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "build-deploy-dev-v2": "powershell -Command \"& { $currentDate = Get-Date -Format yyyyMMdd; xcopy /E /I /Y \\\\10.100.77.240\\deploy_web_dev\\HQ\\TRR-MES\\web\\dist \\\\10.100.77.240\\deploy_web_dev\\HQ\\TRR-MES\\web\\dist_$currentDate }\" && tsc && vite build --mode dev && copy web.config build\\DEV\\dist && xcopy /E /I build\\DEV\\dist \\\\10.100.77.240\\deploy_web_dev\\HQ\\TRR-MES\\web\\dist",
+    "build-deploy-dev-v3": "powershell -Command \"& { $currentDate = Get-Date -Format yyyyMMdd; $path = '\\\\10.100.77.240\\deploy_web_dev\\HQ\\TRR-MES\\web\\dist'; $backupPath = \\\"${path}_$currentDate\\\"; xcopy /E /I /Y $path $backupPath }\"  && tsc && vite build --mode dev && copy web.config build\\DEV\\dist && xcopy /E /I build\\DEV\\dist \\\\10.100.77.240\\deploy_web_dev\\HQ\\TRR-MES\\web\\dist",
     "preview": "vite preview"
   },
   "dependencies": {

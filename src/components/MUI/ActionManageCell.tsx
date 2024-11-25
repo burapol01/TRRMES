@@ -134,6 +134,13 @@ export default function ActionManageCell(props: ActionManageCellProps) {
               default:
                 break;
             }
+
+            //============================ หน้า ปิดยอดประจำเดือน =================================
+            // ปุ่ม "Allocate Cost" จะแสดงปันส่วนค่าใช้จ่าย
+            if (menuFunc.func_name === "Allocate Cost") {
+              shouldRender = true;
+            }
+
           }
 
           if (shouldRender) {

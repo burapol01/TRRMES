@@ -48,11 +48,11 @@ export default function BasicTable({ rows, columns, disabled = false, actions, l
 
     // Paginate the filtered rows
     const displayedRows = filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-
+    
     return (
         <Paper className={disabled ? 'disabled' : ''} sx={{ width: '100%', overflow: 'hidden' }}>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', p: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: 'Sarabun', mr: 'auto' }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', fontFamily: 'Sarabun', mr: 'auto' }}>
                     {labelHead}
                 </Typography>
 
@@ -81,19 +81,29 @@ export default function BasicTable({ rows, columns, disabled = false, actions, l
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {displayedRows.map((row: any, rowIndex: number) => (
-                            <TableRow key={row.id || rowIndex}>
-                                {columns.map((column: any, cellIndex: number) => {
-                                    const value = row[column.columnName];
-                                    return (
-                                        <TableCell key={`${column.columnName}-${cellIndex}`} align={column.numeric}>
-                                            {value}
-                                        </TableCell>
-                                    );
-                                })}
+                        {displayedRows.length > 0 ? (
+                            
+                            displayedRows.map((row: any, rowIndex: number) => (
+                                <TableRow key={row.id || rowIndex}>
+                                    {columns.map((column: any, cellIndex: number) => {
+                                        const value = row[column.columnName];
+                                        return (
+                                            <TableCell key={`${column.columnName}-${cellIndex}`} align={column.numeric}>
+                                                {value}
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} align="center">
+                                    ไม่พบข้อมูล
+                                </TableCell>
                             </TableRow>
-                        ))}
+                        )}
                     </TableBody>
+
                 </Table>
             </TableContainer>
 
