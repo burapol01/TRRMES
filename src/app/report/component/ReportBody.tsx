@@ -47,7 +47,7 @@ export default function ReportBody({
     <div className="col-12 px-5 h-auto w-auto">
       {showIframe && (
         <iframe
-          height="600"
+          height="900"
           width="100%"
           src={`${VITE_APP_TRR_API_URL_REPORT}${ReportViewer}${VITE_APP_SITE}/${VITE_APP}/${VITE_SITE_PATH}/Report/${dataelement?.report_code}`}>
         </iframe>

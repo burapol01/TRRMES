@@ -349,7 +349,7 @@ export default function ServiceTimeSheetBody({
         file: null,
         name: file.req_user_filename,
         type: null,
-        url: file.file_patch,
+        url: `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}`  + file.file_patch,
         flagNewFile: false, // รูปที่มีอยู่แล้ว
         flagDeleteFile: false // ยังไม่ได้ถูกลบ
       }));

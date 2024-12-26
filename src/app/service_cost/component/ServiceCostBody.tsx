@@ -18,9 +18,11 @@ import { v4 as uuidv4 } from 'uuid';
 import * as XLSX from 'xlsx';
 import { dateFormatTimeEN } from '../../../../libs/datacontrol';
 import { CheckCircle, Cancel } from '@mui/icons-material'; // Make sure to import the icon
-import { green, grey } from '@mui/material/colors'; // Import the green color from material UI
+import { green, grey, red } from '@mui/material/colors'; // Import the green color from material UI
 import { confirmModal } from '../../../components/MUI/Comfirmmodal';
 import { checkValidate, isCheckValidateAll } from '../../../../libs/validations';
+import FuncDialog from '../../../components/MUI/FullDialog';
+import ReportBody from '../../report/component/ReportBody';
 
 interface ServiceCostBodyProps {
     onDataChange?: (data: any) => void;
@@ -31,6 +33,7 @@ interface ServiceCostBodyProps {
 
 export default function ServiceCostBody({ onDataChange, actions, handleClose }: ServiceCostBodyProps) {
     const dispatch = useDispatch()
+    const [openReport, setOpenReport] = React.useState(false);
     const [file, setFile] = useState<File[]>([]);
     const [fileDataList, setFileDataList] = useState<any[]>([]); // เก็บข้อมูลไฟล์ใน state
     const [excelData, setExcelData] = useState<any[]>([]);  // เก็บข้อมูลจาก Excel ที่จะใช้ในตาราง
@@ -43,6 +46,13 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
     const [serviceCostDataList, setServiceCostDataList] = useState<any>(null);
 
     const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
+
+    const [flagIsMatch, setFlagIsMatch] = useState<boolean | null>(null);
+
+    const handleCloseReport = () => {
+        setOpenReport(false)
+      };
+    
 
     const handleClickCloseMonthlyCutOff_Reset = () => {
         console.log('Call : handleClickCloseMonthlyCutOff_Reset', moment().format('HH:mm:ss:SSS'));
@@ -266,7 +276,7 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
 
             //const employeeUsername = path + '_Importby_' + currentAccessModel.employeeUsername.replace(".", "_");
 
-            const timestamp = moment().format("YYYYMMDD_HHmmssSSS");
+            const timestamp = moment().format("MMYY_HHmmssSSS");
 
             const fileToUpload = fileDataList[0].file; // Assuming fileDataList has a file property
 
@@ -290,8 +300,8 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                 // Return both the original file name and the new file name
                 return {
                     originalFileName: fileToUpload.name,  // ชื่อไฟล์เดิม
-                    newFileName: newFileName,              // ชื่อไฟล์ใหม่ที่ถูกสร้างขึ้น
-                    filePath: `/${headFolderName}/${path}/${newFileName}` //filePath สำหรับเก็บที่ Data Base
+                    newFileName: newFileName?.data,              // ชื่อไฟล์ใหม่ที่ถูกสร้างขึ้น
+                    filePath: `/${headFolderName}/${path}/${newFileName?.data}` //filePath สำหรับเก็บที่ Data Base
                 };
             } catch (error) {
                 console.error("Error during file upload:", error);
@@ -303,6 +313,61 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
 
     //นำไฟล์ข้อมูลเข้า Service Cost กับ Service Cost list และ เปลี่ยน import_service_cost_flag = 1
     const [isProcessing, setIsProcessing] = useState(false);
+    const validateExcelFormat = async (file: any) => {
+        try {
+            // ตรวจสอบว่าไฟล์มีชื่อและประเภทที่ถูกต้อง (.xls หรือ .xlsx)
+            if (!file || !file.name) {
+                throw new Error('ไม่พบไฟล์ที่อัปโหลด');
+            }
+
+            const allowedExtensions = ['.xls', '.xlsx'];
+            const fileName = file.name.toLowerCase();
+            const isExcelFile = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+            if (!isExcelFile) {
+                setExcelData([]);
+                throw new Error('ไฟล์ต้องเป็นประเภท Excel เท่านั้น (นามสกุล .xls หรือ .xlsx)');
+            }
+
+            // แปลงไฟล์เป็น ArrayBuffer
+            const data = await file.arrayBuffer(); // แปลงไฟล์เป็น buffer
+            const workbook = XLSX.read(data, { type: 'array' }); // อ่านไฟล์ Excel
+            const sheetName = workbook.SheetNames[0]; // เลือก Sheet แรก
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // แปลงข้อมูลเป็น Array
+
+            console.log('Excel Data:', jsonData);
+
+            // ตรวจสอบหัวคอลัมน์ที่ต้องการ
+            const requiredHeaders = ['ServiceCenterCode', 'STD Amount', 'Capacity']; // ชื่อหัวคอลัมน์ที่ต้องการ
+            const fileHeaders = jsonData[0] as string[]; // กำหนดชนิดข้อมูลให้ชัดเจน
+
+            if (!Array.isArray(fileHeaders)) {
+                setExcelData([]);
+                throw new Error('Invalid file structure. Expected an array of headers.');
+            }
+
+            const isValidFormat = requiredHeaders.every(header =>
+                fileHeaders.includes(header)
+            );
+
+            if (!isValidFormat) {
+                setExcelData([]);
+                return { isValid: false, message: 'รูปแบบไฟล์ไม่ถูกต้อง หัวคอลัมน์ไม่ครบถ้วน' };
+            }
+
+            // สามารถเพิ่มการตรวจสอบข้อมูลเพิ่มเติมได้ที่นี่
+
+            return { isValid: true }; // ถ้าผ่านเงื่อนไขทั้งหมด
+
+        } catch (error: any) {
+            console.error('Error validating Excel format:', error);
+            setExcelData([]);
+            return { isValid: false, message: error.message || 'ไม่สามารถอ่านไฟล์ได้' };
+        }
+    };
+
+
 
     const handleClickImportServiceCost = async () => {
         // if (isProcessing) {
@@ -316,19 +381,32 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
         updateSessionStorageCurrentAccess('event_name', 'Add/ไฟล์ข้อมูลนำเข้า');
         const dataForValidate = {
             fileDataList: fileDataList.length > 0
-          }
-          const isValidate = checkValidate(dataForValidate, ['fileDataList']); 
-          const isValidateAll = isCheckValidateAll(isValidate);
-      
-          console.log(isValidateAll,'testtest');
-          if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-            console.log(isValidateAll,'');
+        }
+        const isValidate = checkValidate(dataForValidate, ['fileDataList']);
+        const isValidateAll = isCheckValidateAll(isValidate);
+
+        console.log(isValidateAll, 'testtest');
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+            console.log(isValidateAll, '');
             setIsValidate(isValidate);
             return;
-          }
-          setIsValidate(null);
+        }
+        setIsValidate(null);
         console.log(fileDataList, 'fileDataList');
         if (fileDataList.length > 0) {
+            const validationResult = await validateExcelFormat(fileDataList[0].file);
+
+            if (!validationResult.isValid) {
+                console.error(validationResult.message);
+                Massengmodal.createModal(
+                    <div className="text-center p-4">
+                        <p className="text-xl font-semibold mb-2 text-red-600">{validationResult.message}</p>
+                    </div>,
+                    'error',
+                    () => { }
+                );
+                return; // หยุดกระบวนการหาก Format ไม่ถูกต้อง
+            }
 
             const dataListFileName = await handleFileUpload(fileDataList, cutOffMonthAndYear, currentAccessModel);
 
@@ -472,7 +550,13 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
         // อัปเดตการเข้าถึง
         updateSessionStorageCurrentAccess('event_name', 'Export/GLAllcationToERPExcel');
 
-        const payload = { month_year: cutOffMonthAndYear };
+        const payload = {
+            glAllcationToERPModel: {
+                month_year: cutOffMonthAndYear
+            },
+            currentAccessModel: getCurrentAccessObject(currentAccessModel.employeeUsername, currentAccessModel.employeeDomain, currentAccessModel.screenName)
+
+        };
         dispatch(startLoadScreen());
 
         try {
@@ -540,70 +624,9 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
 
     //รายงานสรุปการปันส่วน
     const handleClickTest = () => {
-        console.log('Call : handleClickImportServiceCost_Delete', moment().format('HH:mm:ss:SSS'));
-        return
-        // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-        updateSessionStorageCurrentAccess('event_name', 'Delete/ไฟล์ข้อมูลนำเข้า')
-        confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
-            // สร้างข้อมูลที่จะส่ง
-            const payload = {
-                ServiceCostModel: {
-                    cut_off_id: defaultDataList.id,
-                    month_year: cutOffMonthAndYear
-                },
-                currentAccessModel: getCurrentAccessObject(currentAccessModel.employeeUsername, currentAccessModel.employeeDomain, currentAccessModel.screenName)
-            };
-            dispatch(startLoadScreen());
-            setTimeout(async () => {
-                try {
-                    console.log('handleClickImportServiceCost_Delete model', payload);
-
-                    // ใช้ _POST เพื่อส่งข้อมูล
-                    const response = await _POST(payload, "/api_trr_mes/ServiceCost/Service_Cost_Delete");
-
-                    if (response && response.status === "success") {
-                        console.log('handleClickImportServiceCost_Delete successfully:', response);
-
-                        // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
-                        Massengmodal.createModal(
-                            <div className="text-center p-4">
-                                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
-                                {/* <p className="text-lg text-gray-800">
-                            <span className="font-semibold text-gray-900">Request No:</span>
-                            <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-                          </p> */}
-                            </div>,
-                            'success',
-                            async () => {
-                                dispatch(endLoadScreen());
-                                handleClose();
-
-                            });
-                    } else {
-                        console.error('Failed to handleClickImportServiceCost_Delete:', response);
-                        dispatch(endLoadScreen());
-                        // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
-                        Massengmodal.createModal(
-                            <div className="text-center p-4">
-                                <p className="text-xl font-semibold mb-2 text-green-600">{response.data[0].errorMessage}</p>
-                                {/* <p className="text-lg text-gray-800">
-                            <span className="font-semibold text-gray-900">Request No:</span>
-                            <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-                          </p> */}
-                            </div>,
-                            'error',
-                            async () => {
-                                dispatch(endLoadScreen());
-                            });
-                    }
-                } catch (error) {
-                    console.error('Error handleClickImportServiceCost_Delete:', error);
-                    dispatch(endLoadScreen());
-                    // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
-                }
-
-            }, 0);
-        });
+        console.log('Call : handleClickTest', moment().format('HH:mm:ss:SSS'));
+        setOpenReport(true);
+        
     };
 
 
@@ -634,7 +657,7 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
             const isTotalRow = row.service_center_code === "รวม" || row.ServiceCenterCode === "รวม";
             const serviceCenterCode = isServiceCost ? row.service_center_code : row.ServiceCenterCode;
             const serviceCenterCode_label = isServiceCost
-                ? "[" + row.service_center_code + "]" + " | " + (row.service_center_name ? row.service_center_name : "ไม่พบในฐานข้อมูล")
+                ? "[" + row.service_center_code + "]" + " | " + (row.flag_Is_match ? row.service_center_name : "ไม่พบในฐานข้อมูล")
                 : row.ServiceCenterCode;
             const capacity = isServiceCost ? row.capacity : row.Capacity;
             const stdAmount = isServiceCost ? row.std_amount : row.STD_Amount;
@@ -658,7 +681,7 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                                     row.flag_Is_match ? (
                                         <CheckCircle style={{ color: green[500], marginRight: '8px' }} />
                                     ) : (
-                                        <Cancel style={{ color: grey[400], marginRight: '8px' }} />
+                                        <Cancel style={{ color: red[400], marginRight: '8px' }} />
                                     )
                                 )}
                                 {serviceCenterCode_label}
@@ -673,8 +696,9 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
         });
     };
     // Function to handle file selection and Excel processing
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = event.target.files;
+
         if (selectedFiles && selectedFiles.length > 0) {
             const filesArray = Array.from(selectedFiles);
             setFileDataList(filesArray.map((fileItem) => ({
@@ -685,6 +709,22 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
             })));
 
             const file = filesArray[0];
+
+            const validationResult = await validateExcelFormat(file);
+
+            if (!validationResult.isValid) {
+                console.error(validationResult.message);
+                Massengmodal.createModal(
+                    <div className="text-center p-4">
+                        <p className="text-xl font-semibold mb-2 text-red-600">{validationResult.message}</p>
+                    </div>,
+                    'error',
+                    () => { }
+                );
+                return; // หยุดกระบวนการหาก Format ไม่ถูกต้อง
+            }
+
+
             const reader = new FileReader();
 
             reader.onload = (e: ProgressEvent<FileReader>) => {
@@ -726,6 +766,15 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
     //นำข้อมูลที่ประมวลผลลัพธ์ที่ได้จาก Excel ไปใช้
     const processedData = processExcelData(excelData);
 
+    //ตรวจสอบว่า Service Center Code ตรงกันกับที่มีในฐานข้อมูลหรือไม่
+    useEffect(() => {
+        if (serviceCostDataList && serviceCostDataList.serviceCostList) {
+            const unmatchedRow = serviceCostDataList.serviceCostList.find((row: any) => row.flag_Is_match === false);
+            setFlagIsMatch(!unmatchedRow);
+        }
+    }, [serviceCostDataList]);
+
+
     // Step 2 : ดึงข้อมูล Data Base แมพข้อมูลและแสดงในตาราง
     //================================================================================================
     // Fetch service cost data
@@ -733,7 +782,15 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
         const fetchServiceCostData = async () => {
             if (defaultDataList.import_service_cost_flag) {
                 const payload = {
-                    cut_off_id: defaultDataList.id,
+                    ServiceCostModel: {
+                        cut_off_id: defaultDataList.id
+                    },
+                    currentAccessModel: getCurrentAccessObject(
+                        currentAccessModel.employeeUsername,
+                        currentAccessModel.employeeDomain,
+                        currentAccessModel.screenName
+                    )
+
                 };
 
                 try {
@@ -815,7 +872,11 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
             >
                 <Tab label="สรุปบันทึกชั่วโมงการทำงาน" />
                 <Tab label="สรุปค่าใช้จ่ายหน่วยงานบริการ" />
-                <Tab label="ปันส่วนค่าใช้จ่าย" />
+
+                {(defaultDataList.import_service_cost_flag && flagIsMatch) && (
+                    <Tab label="ปันส่วนค่าใช้จ่าย" />
+                )}
+
             </Tabs>
 
             {/* Tabs Content */}
@@ -830,14 +891,16 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                                     disabled={true}
                                 />
                             </div>
-                            <div className="col-md-3 pt-9 ms-auto w-auto">
-                                <FullWidthButton
-                                    labelName={"สรุปปิดงวดใหม่"}
-                                    handleonClick={handleClickCloseMonthlyCutOff_Reset} // เรียกใช้ฟังก์ชันที่ปรับปรุง
-                                    variant_text="contained"
-                                    colorname={"success"}
-                                />
-                            </div>
+                            {actions != "Reade" && (
+                                <div className="col-md-3 pt-9 ms-auto w-auto">
+                                    <FullWidthButton
+                                        labelName={"สรุปปิดงวดใหม่"}
+                                        handleonClick={handleClickCloseMonthlyCutOff_Reset} // เรียกใช้ฟังก์ชันที่ปรับปรุง
+                                        variant_text="contained"
+                                        colorname={"success"}
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <BasicTable
@@ -872,6 +935,7 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                                             file={file}
                                             setFile={setFile}
                                             labelname="นำเข้าข้อมูลสรุปค่าใช้จ่ายหน่วยงานบริการ"
+                                            fileAcceptMessage="รองรับเฉพาะไฟล์ .xls, .xlsx เท่านั้น"
                                             required="required"
                                             validate={isValidate?.fileDataList}
                                             onChange={handleFileChange}
@@ -981,7 +1045,7 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                                 />
                             </div>
                             {/* ถ้า defaultDataList.allcate_flag === false จะแสดง ปุ่มคำนวณปันส่วน */}
-                            {defaultDataList.allcate_flag === false && (
+                            {actions != "AllocateCost" || defaultDataList.allcate_flag === false && (
                                 <div className="col-md-3 pt-9 w-auto">
                                     <FullWidthButton
                                         labelName={"คำนวณปันส่วน"}
@@ -1025,6 +1089,26 @@ export default function ServiceCostBody({ onDataChange, actions, handleClose }: 
                 )}
 
             </Box>
+
+            <FuncDialog
+                open={openReport}
+                dialogWidth=""
+                openBottonHidden={false}
+                titlename={""}
+                handleClose={handleCloseReport}
+                //handlefunction={ticket_Delete}
+                colorBotton="success"
+                element={
+                    <ReportBody
+                        dataelement={{
+                            "report_code": "IT_Test_GL_Allcation"
+                          }}
+                    />}
+            >
+            </FuncDialog>
+
         </Box>
+
+
     );
 }

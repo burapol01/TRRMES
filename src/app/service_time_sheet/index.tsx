@@ -107,6 +107,7 @@ export default function ServiceTimeSheet() {
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [openAcceptJob, setOpenAcceptJob] = useState<any>(false);
+  const [openRejectStart, setOpenRejectStart] = useState<any>(false);
   const [openTimeSheet, setOpenTimeSheet] = useState<any>(false);
   const [openJobDone, setOpenJobDone] = useState<any>(false);
   const [openPending, setOpenPending] = useState<any>(false);
@@ -132,6 +133,7 @@ export default function ServiceTimeSheet() {
 
   //For Reject Reasons
   const [openReject, setOpenReject] = useState(false);
+  const [openRejectStartReason, setOpenRejectStartReason] = useState(false);
   const [rejectReason, setRejectReason] = useState<string>("");
 
   //ตัวแปร ใช้ทุกที่
@@ -402,7 +404,7 @@ export default function ServiceTimeSheet() {
           jobType: jobTypes,
         }));
 
-        
+
         setOptionsSearch((prevOptions) => ({
           ...prevOptions,
           jobType: jobTypes,
@@ -747,6 +749,14 @@ export default function ServiceTimeSheet() {
 
   };
 
+  const handleClickRejectStart = (data: any) => {
+    console.log('data', data);
+    setOpenRejectStart(true)
+    readData(data)
+    fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User   
+
+  };
+
   const handleClickTimeSheet = (data: any) => {
     setOpenTimeSheet(true);
     readData(data)
@@ -778,6 +788,7 @@ export default function ServiceTimeSheet() {
     setOpenEdit(false);
     setOpenDelete(false);
     setOpenAcceptJob(false);
+    setOpenRejectStart(false)
     setOpenTimeSheet(false);
     setOpenPending(false);
     setOpenUnPending(false);
@@ -787,6 +798,7 @@ export default function ServiceTimeSheet() {
     //fetchUserData(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล User ใหม่หลังเคลียร์  
     dataTableServiceTimeSheet_GET(); // เรียกใช้ฟังก์ชันเพื่อดึงงข้อมูล serviceRequest ใหม่หลังเคลียร์ 
     setOpenReject(false); //ปิด Modal Reject Reason     
+    setOpenRejectStartReason(false); //ปิด Modal Reject Start Reason     
     setIsValidate(null);  //เคลี่ยร์ Validate
     //Cleanup URLs เมื่อ component ถูกลบ
     if (Array.isArray(draftData.imageList)) {
@@ -991,6 +1003,8 @@ export default function ServiceTimeSheet() {
                   handleClickView(el)
                 } else if (name == 'Accept Job') {
                   handleClickAcceptJob(el)
+                } else if (name == 'Reject Start') {
+                  handleClickRejectStart(el)
                 } else if (name == 'Time Sheet') {
                   handleClickTimeSheet(el)
                 } else if (name == 'Pending') {
@@ -1128,6 +1142,81 @@ export default function ServiceTimeSheet() {
         }
       }
     });
+  };
+
+  //Reject Start Data ไปลง Database
+  const serviceRejectStart = async () => {
+    console.log('Call : serviceRejectStart', draftData, moment().format('HH:mm:ss:SSS'));
+    console.log('Call : rejectReason', rejectReason, moment().format('HH:mm:ss:SSS'));
+
+    // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Status:RejectStart/Change_Status');
+
+    const dataForValidate = {
+      rejectReason: rejectReason || null,
+    }
+
+    console.log(dataForValidate, 'dataForValidate');
+
+    const isValidate = checkValidate(dataForValidate, []);
+    const isValidateAll = isCheckValidateAll(isValidate);
+
+    if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+      //console.log(isValidateAll,'sasasasa');
+      setIsValidate(isValidate);
+      return;
+    }
+    setIsValidate(null);
+
+    //confirmModal.createModal("Reject Data ?", "info", async () => {
+    if (draftData && rejectReason) {
+      console.log(" Reject Data:", draftData);
+
+      // สร้างข้อมูลที่จะส่ง
+      const payload = {
+        rejectActionModel: {
+          req_id: draftData.requestId,
+          req_status: "Reject Start",
+          reject_reason: rejectReason
+        },
+        currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
+      };
+
+      dispatch(startLoadScreen());
+      setTimeout(async () => {
+        try {
+
+          // ใช้ _POST เพื่อส่งข้อมูล
+          const response = await _POST(payload, "/api_trr_mes/RejectAction/Reject_Action");
+
+          if (response && response.status === "success") {
+            console.log('Reject successfully:', response);
+            // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+            Massengmodal.createModal(
+              <div className="text-center p-4">
+                <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                {/* <p className="text-lg text-gray-800">
+                  <span className="font-semibold text-gray-900">Request No:</span>
+                  <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+                </p> */}
+              </div>,
+              'success', () => {
+                dispatch(endLoadScreen());
+                handleClose();
+              });
+          } else {
+            console.error('Failed to Reject:', response);
+            dispatch(endLoadScreen());
+            // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาด
+          }
+        } catch (error) {
+          console.error('Error Submit Reject:', error);
+          dispatch(endLoadScreen());
+          // เพิ่มโค้ดที่ต้องการเมื่อเกิดข้อผิดพลาดในการส่งข้อมูล
+        }
+      }, 0);
+    }
+    //});
   };
 
   //Reject Data ไปลง Database
@@ -1625,6 +1714,26 @@ export default function ServiceTimeSheet() {
           }
         />
         <FuncDialog
+          open={openRejectStart} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
+          dialogWidth="xl"
+          openBottonHidden={true}
+          titlename={"ยกเลิกเริ่มต้นการทำงาน"}
+          handleClose={handleClose}
+          handlefunction={serviceRejectStart}
+          handleRejectAction={() => setOpenRejectStartReason(true)}
+          colorBotton="success"
+          actions={"RejectStart"}
+          element={
+            <ServiceTimeSheetBody
+              onDataChange={handleDataChange}
+              defaultValues={defaultValues}
+              options={options} // ส่งข้อมูล Combobox ไปยัง ServiceTimeSheetBody
+              actions={"Reade"}
+              disableOnly
+            />
+          }
+        />
+        <FuncDialog
           open={openTimeSheet} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
           dialogWidth="xl"
           openBottonHidden={true}
@@ -1712,6 +1821,27 @@ export default function ServiceTimeSheet() {
           <FullWidthTextareaField
             required="*"
             labelName={"โปรดระบุเหตุผลที่ไม่รับงาน"}
+            value={rejectReason}
+            multiline={true}
+            onChange={(value) => setRejectReason(value)}
+            Validate={isValidate}
+          />
+
+        }
+      />
+      {/*Reject Start Reason*/}
+      <FuncDialog
+        open={openRejectStartReason}
+        dialogWidth='sm'
+        openBottonHidden={true}
+        titlename={'ยืนยันการยกเลิก'}
+        handleClose={() => setOpenRejectStartReason(false)}
+        handlefunction={serviceRejectStart}
+        actions="RejectReason"
+        element={
+          <FullWidthTextareaField
+            required="*"
+            labelName={"โปรดระบุเหตุผลที่ยกเลิกเริ่มต้นการทำงาน"}
             value={rejectReason}
             multiline={true}
             onChange={(value) => setRejectReason(value)}

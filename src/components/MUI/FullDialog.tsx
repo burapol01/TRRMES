@@ -32,25 +32,30 @@ interface FuncDialog {
 }
 
 const actionConfig = {
-  
+
   Draft: {
-    mainButton: { label: "บันทึก", show: true },
+    mainButton: { label: "บันทึก", show: true},
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Submit: {
-    mainButton: { label: "ส่งข้อมูล", show: true },
+    mainButton: { label: "ส่งข้อมูล", show: true},
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
- Approved: {
-    mainButton: { label: "อนุมัติ", show: true },
+  Approved: {
+    mainButton: { label: "อนุมัติ", show: true},
     rejectButton: { label: "ไม่อนุมัติ", show: true },
     cancelButton: { show: true },
   },
   AcceptJob: {
     mainButton: { label: "เริ่มงาน", show: true },
     rejectButton: { label: "ปฏิเสธ", show: true },
+    cancelButton: { show: true },
+  },
+  RejectStart: {
+    mainButton: { show: false },
+    rejectButton: { label: "ยืนยันการยกเลิก", show: true , color: "success"},
     cancelButton: { show: true },
   },
   TimeSheet: {
@@ -166,7 +171,7 @@ export default function FuncDialog(props: FuncDialog) {
                 handleonClick={props.handleRejectAction}
                 labelName={config.rejectButton.label || "Reject"}
                 variant_text="contained"
-                colorname="error"
+                colorname={config.rejectButton.color || "error"} // กำหนดสีจาก config
               />
             </div>
           )}
@@ -180,7 +185,7 @@ export default function FuncDialog(props: FuncDialog) {
                 colorname="error"
               />
             </div>
-          )}         
+          )}
         </DialogActions>
       </BootstrapDialog>
     </React.Fragment>

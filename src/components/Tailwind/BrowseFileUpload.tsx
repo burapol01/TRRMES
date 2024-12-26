@@ -9,6 +9,7 @@ interface BrowseFileUploadProps {
     required?: string;
     validate?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    fileAcceptMessage?: string; // เพิ่ม prop สำหรับข้อความไฟล์ที่รองรับ
 }
 
 export default function BrowseFileUpload({
@@ -17,7 +18,8 @@ export default function BrowseFileUpload({
     labelname,
     required,
     validate,
-    onChange
+    onChange,
+    fileAcceptMessage = "รองรับเฉพาะไฟล์ Excel" // กำหนดค่า default ให้กับข้อความ
 }: BrowseFileUploadProps) {
     const inputFile = React.useRef<HTMLInputElement>(null);
     const [fileName, setFileName] = React.useState<string | undefined>("");
@@ -51,7 +53,9 @@ export default function BrowseFileUpload({
     return (
         <div className="my-3 w-full">
             <label className={`${required} fs-5 sarabun-regular text-gray-800`}>
-                {labelname}
+                {labelname} 
+                  {/* แสดงข้อความไฟล์ที่รองรับจาก props */}
+                  <span className="text-red-500 text-sm font-bold"> (*{fileAcceptMessage})</span>               
             </label>
             <div className="relative grid grid-cols-12 gap-2 items-center w-full">
                 {/* ช่องสำหรับแสดงชื่อไฟล์ */}

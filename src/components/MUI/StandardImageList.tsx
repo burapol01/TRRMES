@@ -3,7 +3,9 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import Modal from '@mui/material/Modal'; // นำเข้า Modal
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import { CircularProgress, useMediaQuery } from '@mui/material';
 
@@ -14,8 +16,8 @@ interface Item {
 
 interface StyleImageListProps {
   itemData: Item[];
-  onRemoveImage: (img: string) => void; // ฟังก์ชันสำหรับลบรูปภาพ
-  actions?: string; // เพิ่ม props สำหรับ actions
+  onRemoveImage: (img: string) => void;
+  actions?: string;
 }
 
 const modalStyle = {
@@ -23,68 +25,82 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: '70%', // ปรับความกว้างของ modal
-  maxWidth: '500px', // ปรับความกว้างสูงสุด
-  bgcolor: 'background.paper',
+  width: '90%', // ใช้ความกว้าง 90% สำหรับมือถือ
+  height: '80%', // ความสูง 80% ของหน้าจอ
+  maxWidth: '700px', // ขนาดสูงสุด 900px
+  maxHeight: '700px', // ขนาดสูงสุด 800px
+  bgcolor: 'black',
   borderRadius: '8px',
   boxShadow: 24,
-  p: 1, // ปรับ padding ให้เล็กลง
   textAlign: 'center',
+  overflow: 'hidden',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
 };
 
 export default function StyleImageList({ itemData, onRemoveImage, actions }: StyleImageListProps) {
-  const [open, setOpen] = React.useState(false); // สเตทสำหรับเปิด modal
-  const [selectedImage, setSelectedImage] = React.useState<string | null>(null); // สเตทสำหรับเก็บรูปภาพที่เลือก
+  const [open, setOpen] = React.useState(false);
+  const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const [imageLoading, setImageLoading] = React.useState(true);
+
   const handleImageLoad = () => setImageLoading(false);
 
-  
-  const handleOpen = React.useCallback((img: string) => {
-    setSelectedImage(img); // กำหนดรูปภาพที่เลือก
-    setOpen(true); // เปิด modal
+  const handleOpen = React.useCallback((index: number) => {
+    setSelectedIndex(index);
+    setOpen(true);
   }, []);
-  
+
   const handleClose = React.useCallback(() => {
-    setOpen(false); // ปิด modal
-    setSelectedImage(null); // ลบรูปภาพที่เลือก
+    setOpen(false);
+    setSelectedIndex(null);
   }, []);
-  
+
+  const handlePrevImage = React.useCallback(() => {
+    if (selectedIndex !== null && selectedIndex > 0) {
+      setImageLoading(true);
+      setSelectedIndex(selectedIndex - 1);
+    }
+  }, [selectedIndex]);
+
+  const handleNextImage = React.useCallback(() => {
+    if (selectedIndex !== null && selectedIndex < itemData.length - 1) {
+      setImageLoading(true);
+      setSelectedIndex(selectedIndex + 1);
+    }
+  }, [selectedIndex, itemData.length]);
+
+  // ใช้ useMediaQuery เพื่อตรวจสอบขนาดหน้าจอ
   const isLargeScreen = useMediaQuery('(min-width:600px)');
   const isMediumScreen = useMediaQuery('(min-width:700px)');
 
   return (
     <div
-      className="image-list-container" // ใช้คลาส CSS ที่สร้างขึ้น
       style={{
         width: '100%',
         margin: '0 auto',
-        height: '400px', // กำหนดความสูงของ container (สามารถปรับเปลี่ยนได้)
-        overflowY: 'scroll', // เพิ่ม Scrollbar แนวตั้ง
-        padding: '10px', // เพิ่ม padding สำหรับการเลื่อน
+        height: '400px',
+        overflowY: 'scroll',
+        padding: '10px',
       }}
     >
-      <ImageList
-        cols={isLargeScreen ? 4 : isMediumScreen ? 3 : 2} // ปรับจำนวนคอลัมน์ตามขนาดหน้าจอ   
-        gap={8} // ระยะห่างระหว่างรูปภาพ
-      >
-        {itemData.map((item) => (
+      <ImageList cols={isLargeScreen ? 4 : isMediumScreen ? 3 : 2} gap={8}>
+        {itemData.map((item, index) => (
           <ImageListItem key={item.img} sx={{ position: 'relative' }}>
             <img
-              src={item.img} // ใช้ URL Blob ตรง ๆ
+              src={item.img}
               alt={item.title}
               loading="lazy"
-              className="hover-image" // เพิ่ม class ใหม่เพื่อให้ได้เอฟเฟกต
               style={{
                 width: '100%',
                 height: 'auto',
                 borderRadius: 8,
                 objectFit: 'cover',
                 boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-                cursor: 'pointer', // เปลี่ยน cursor เมื่อ hover
+                cursor: 'pointer',
               }}
-              onClick={() => handleOpen(item.img)} // เปิด modal เมื่อคลิกที่รูป
+              onClick={() => handleOpen(index)}
             />
-            {/* ปุ่มกากบาทสำหรับลบรูป */}
             <IconButton
               sx={{
                 position: 'absolute',
@@ -92,11 +108,11 @@ export default function StyleImageList({ itemData, onRemoveImage, actions }: Sty
                 right: 8,
                 bgcolor: 'white',
                 borderRadius: '50%',
-                opacity: actions === "Reade" ? 0 : 1, // ทำให้ปุ่มโปร่งใสถ้าเป็น Reade
-                pointerEvents: actions === "Reade" ? "none" : "auto", // ปิดการคลิกเมื่อเป็น Reade
+                opacity: actions === 'Reade' ? 0 : 1,
+                pointerEvents: actions === 'Reade' ? 'none' : 'auto',
               }}
               onClick={() => {
-                if (actions !== "Reade") {
+                if (actions !== 'Reade') {
                   onRemoveImage(item.img);
                 }
               }}
@@ -107,24 +123,60 @@ export default function StyleImageList({ itemData, onRemoveImage, actions }: Sty
         ))}
       </ImageList>
 
-      {/* Modal สำหรับแสดงรูปภาพขนาดใหญ่ */}
-      {/* Modal Image */}
       <Modal open={open} onClose={handleClose}>
         <Box sx={modalStyle}>
-          {selectedImage && (
+          {selectedIndex !== null && (
             <>
-              {imageLoading && <CircularProgress />} {/* แสดงตัวโหลด */}
+              {imageLoading && <CircularProgress />}
               <img
-                src={selectedImage}
+                src={itemData[selectedIndex].img}
                 alt="Expanded view"
-                onLoad={handleImageLoad}  // เรียกใช้เมื่อรูปโหลดเสร็จ
+                onLoad={handleImageLoad}
                 style={{
                   width: '100%',
-                  height: 'auto',
-                  borderRadius: '8px',
+                  height: '100%',
+                  objectFit: 'contain', // ปรับขนาดให้แสดงภาพทั้งหมด
                   display: imageLoading ? 'none' : 'block',
                 }}
               />
+              <IconButton
+                onClick={handlePrevImage}
+                disabled={selectedIndex === 0}
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '10px',
+                  transform: 'translateY(-50%)',
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  },
+                  zIndex: 10,
+                }}
+              >
+                <ArrowBackIosIcon />
+              </IconButton>
+              <IconButton
+                onClick={handleNextImage}
+                disabled={selectedIndex === itemData.length - 1}
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '10px',
+                  transform: 'translateY(-50%)',
+                  bgcolor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  borderRadius: '50%',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  },
+                  zIndex: 10,
+                }}
+              >
+                <ArrowForwardIosIcon />
+              </IconButton>
             </>
           )}
         </Box>

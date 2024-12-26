@@ -1046,20 +1046,25 @@ export default function ServiceRequest() {
   const createImageDataListArray = async (imageList: any, reqNo: any, req_id: any) => {
     const imageDataListArray = await Promise.all(
       imageList.map(async (image: any, index: any) => {
-        const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
-        const headFolderName = 'ServiceRequest';
+        const timestamp = moment().format("YYYYMMDD_HHmmssSSS"); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+        const headFolderName = "ServiceRequest";
         const fileType = ["png", "jpg", "jpeg"];
         let newFileName;
-        console.log(image.file, 'image.file');
+        console.log(image.file, "image.file");
 
         if (image.file != null && image.flagDeleteFile != true) {
-          newFileName = await plg_uploadFileRename(image.file, reqNo, `${reqNo}_${uuidv4()}_${timestamp}`, headFolderName, fileType); // ใช้ reqNo แทน Image
+          newFileName = await plg_uploadFileRename(
+            image.file,
+            reqNo,
+            `${reqNo}_${uuidv4()}_${timestamp}`,
+            headFolderName,
+            fileType
+          );
         } else {
           newFileName = null;
         }
 
-        console.log(newFileName, 'newFileName');
-
+        console.log(newFileName, "newFileName");
 
         const reqUserFilename = image.name;
 
@@ -1067,27 +1072,87 @@ export default function ServiceRequest() {
         return {
           request_attach_file_id: image.requestAttachFileId || uuidv4(),
           req_id: image.reqId || req_id,
-          file_patch: newFileName === null ? image.filePatch : `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}/ServiceRequest/${reqNo}/${newFileName}`, // ใช้ reqNo แทน Image
+          file_patch: newFileName?.data === null || newFileName === null ? image.filePatch : `/ServiceRequest/${reqNo}/${newFileName?.data}`, // ใช้ reqNo แทน Image
           req_user_filename: reqUserFilename,
-          req_sys_filename: newFileName === null ? image.reqSysFilename : newFileName,
-          flag_delete_file: image.flagDeleteFile
+          req_sys_filename: newFileName?.data === null || newFileName === null ? image.reqSysFilename : newFileName?.data,
+          flag_delete_file: image.flagDeleteFile,
+          error_message: newFileName?.message,
+          error_flag: newFileName?.data === null || newFileName === null ? true : newFileName?.success ?? false, // ใช้ `false` เป็นค่าเริ่มต้นหาก `success` เป็น undefined
         };
       })
     );
 
+    // ตรวจสอบว่ามีรายการใดที่ error_flag: false หรือไม่
+    const hasError = imageDataListArray.some((item) => item.error_flag === false);
+
+    if (hasError) {
+      console.error("Some files failed to upload:", imageDataListArray.filter((item) => item.error_flag === false));
+      return { success: false, data: imageDataListArray };
+    }
+
     const payload = {
       RequestAttachFileList: imageDataListArray,
-      currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
-
+      currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName),
     };
-    console.log('imageDataListArray:', imageDataListArray);
+
+    console.log("imageDataListArray:", imageDataListArray);
 
     // อัปโหลดไฟล์โดยใช้ API Request_Attach_File_Add
     const attachFileResponse = await _POST(payload, "/api_trr_mes/ServiceRequest/Request_Attach_File_Add");
-    console.log('Attach file response:', attachFileResponse);
+    console.log("Attach file response:", attachFileResponse);
+
+
 
     return attachFileResponse;
   };
+
+  // const createImageDataListArray = async (imageList: any, reqNo: any, req_id: any) => {
+  //   const imageDataListArray = await Promise.all(
+  //     imageList.map(async (image: any, index: any) => {
+  //       const timestamp = moment().format('YYYYMMDD_HHmmssSSS'); // กำหนดรูปแบบเป็น 20240101_เวลา_วินาที
+  //       const headFolderName = 'ServiceRequest';
+  //       const fileType = ["png", "jpg", "jpeg"];
+  //       let newFileName;
+  //       console.log(image.file, 'image.file');
+
+  //       if (image.file != null && image.flagDeleteFile != true) {
+  //         newFileName = await plg_uploadFileRename(image.file, reqNo, `${reqNo}_${uuidv4()}_${timestamp}`, headFolderName, fileType); // ใช้ reqNo แทน Image
+  //       } else {
+  //         newFileName = null;
+  //       }
+
+  //       console.log(newFileName?.success == true, 'newFileName');
+
+
+  //       const reqUserFilename = image.name;
+
+  //       // สร้างข้อมูล imageDataList สำหรับแต่ละรูป
+  //       return {
+  //         request_attach_file_id: image.requestAttachFileId || uuidv4(),
+  //         req_id: image.reqId || req_id,
+  //         file_patch: newFileName?.data === null ? image.filePatch : `/ServiceRequest/${reqNo}/${newFileName?.data}`, // ใช้ reqNo แทน Image
+  //         req_user_filename: reqUserFilename,
+  //         req_sys_filename: newFileName?.data === null ? image.reqSysFilename : newFileName?.data,
+  //         flag_delete_file: image.flagDeleteFile,
+  //         error_message: newFileName?.message,
+  //         error_flag: newFileName?.success
+  //       };
+  //     })
+  //   );
+
+  //   const payload = {
+  //     RequestAttachFileList: imageDataListArray,
+  //     currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
+
+  //   };
+  //   console.log('imageDataListArray:', imageDataListArray);
+
+  //   // อัปโหลดไฟล์โดยใช้ API Request_Attach_File_Add
+  //   const attachFileResponse = await _POST(payload, "/api_trr_mes/ServiceRequest/Request_Attach_File_Add");
+  //   console.log('Attach file response:', attachFileResponse);
+
+  //   return attachFileResponse;
+  // };
 
   //Add Data ไปลง Database
   const serviceRequestDraftAdd = async () => {
@@ -1164,6 +1229,8 @@ export default function ServiceRequest() {
 
               // เรียกใช้ฟังก์ชัน createImageDataListArray โดยส่ง imageList และ req_no ไป
               const attachFileResponse = await createImageDataListArray(draftData.imageList, response.req_no, response.req_id);
+              console.log(attachFileResponse, 'attachFileResponse');
+
 
               // ตรวจสอบผลลัพธ์การอัปโหลดไฟล์
               if (attachFileResponse && attachFileResponse.status === "success") {
@@ -1181,6 +1248,30 @@ export default function ServiceRequest() {
                     dispatch(endLoadScreen());
                     handleClose();
                   });
+              } else {
+
+
+                // สร้างข้อมูลที่จะส่ง
+                const payload = {
+                  RollbackRequestModel: { req_id: response.req_id },
+                  currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName),
+                };
+                const responseRollback = await _POST(payload, "/api_trr_mes/Rollback/Rollback_Request");
+                if (responseRollback && responseRollback.status === "success") {
+                  console.log('response Rollback successfully:', responseRollback);
+
+                  // มีข้อผิดพลาดในกระบวนการอัปโหลดไฟล์
+                  console.error("Failed to upload files:", attachFileResponse.data);
+                  dispatch(endLoadScreen());
+                  // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+                  Massengmodal.createModal(
+                    <div className="text-center p-4">
+                      <p className="text-xl font-semibold mb-2 text-green-600">มีข้อผิดพลาดในกระบวนการอัปโหลดไฟล์</p>
+                    </div>,
+                    'error', () => {
+                      dispatch(endLoadScreen());
+                    });
+                };
               }
 
             } else {
@@ -1261,8 +1352,9 @@ export default function ServiceRequest() {
             if (response && response.status === "success") {
               console.log('Draft saved successfully:', response);
 
-              // เรียกใช้ฟังก์ชัน createImageDataListArray โดยส่ง imageList และ requestNo ไป
+              // เรียกใช้ฟังก์ชัน createImageDataListArray โดยส่ง imageList และ req_no ไป
               const attachFileResponse = await createImageDataListArray(draftData.imageList, draftData.requestNo, draftData.requestId);
+              console.log(attachFileResponse, 'attachFileResponse');
 
               // ตรวจสอบผลลัพธ์การอัปโหลดไฟล์
               if (attachFileResponse && attachFileResponse.status === "success") {
@@ -1281,7 +1373,50 @@ export default function ServiceRequest() {
                     handleClose();
                   });
 
+              } else {
+
+
+                // สร้างข้อมูลที่จะส่ง
+                const payload = {
+                  RollbackRequestModel: { req_id: response.req_id },
+                  currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName),
+                };
+                const responseRollback = await _POST(payload, "/api_trr_mes/Rollback/Rollback_Request");
+                if (responseRollback && responseRollback.status === "success") {
+                  console.log('response Rollback successfully:', responseRollback);
+
+                  // มีข้อผิดพลาดในกระบวนการอัปโหลดไฟล์
+                  console.error("Failed to upload files:", attachFileResponse.data);
+                  dispatch(endLoadScreen());
+                  // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+                  Massengmodal.createModal(
+                    <div className="text-center p-4">
+                      <p className="text-xl font-semibold mb-2 text-green-600">มีข้อผิดพลาดในกระบวนการอัปโหลดไฟล์</p>
+                    </div>,
+                    'error', () => {
+                      dispatch(endLoadScreen());
+                    });
+                };
               }
+
+              // ตรวจสอบผลลัพธ์การอัปโหลดไฟล์
+              // if (attachFileResponse && attachFileResponse.status === "success") {
+
+              //   // เพิ่มโค้ดที่ต้องการเมื่อบันทึกสำเร็จ
+              //   Massengmodal.createModal(
+              //     <div className="text-center p-4">
+              //       <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+              //       {/* <p className="text-lg text-gray-800">
+              //     <span className="font-semibold text-gray-900">Request No:</span>
+              //     <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+              //   </p> */}
+              //     </div>,
+              //     'success', () => {
+              //       dispatch(endLoadScreen());
+              //       handleClose();
+              //     });
+
+              // }
 
             } else {
               console.error('Failed to save draft:', response);

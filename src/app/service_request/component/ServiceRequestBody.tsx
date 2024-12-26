@@ -12,6 +12,13 @@ import { plg_uploadFileRename } from "../../../service/upload";
 import "../../../app/service_request/css/choose_file.css";
 import { createFilterOptions } from "@mui/material";
 import { Massengmodal } from "../../../components/MUI/Massengmodal";
+import { _POST } from "../../../service/mas";
+
+interface LovData {
+  lov1: string; // ประเภทไฟล์
+  lov2: string; // จำนวนสูงสุด
+}
+
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -135,7 +142,7 @@ export default function ServiceRequestBody({
 
   React.useEffect(() => {
 
-    
+
     console.log(defaultValues, 'defaultValues')
     if (actions != "Create") {
 
@@ -275,19 +282,110 @@ export default function ServiceRequestBody({
     flagNewFile?: boolean;    // Flag สำหรับระบุว่ารูปนี้เป็นรูปใหม่
   }
   // Image Upload handling
+  const [allowedExtensions, setAllowedExtensions] = useState<string[]>([]);
+  // const [maxFileCount, setMaxFileCount] = useState<number>(0);
   const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
   const [imageListView, setImageListView] = useState<ImageItem[]>([]); // เก็บข้อมูลสำหรับการแสดงผล
+  const [isLov2Enabled, setIsLov2Enabled] = useState<boolean>(false); // สถานะการเปิดใช้งาน lov2
+
+
+
+  //จัดการรูปภาพ ประเภทไฟล์ ต่างๆ =================================
+  useEffect(() => {
+    // ดึงค่าคอนฟิกจาก API
+    const fetchConfig = async () => {
+      try {
+        const dataset = {
+          lov_type: "config_file",
+          lov_code: "CheckTypeFileImage",
+        };
+
+        const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+        if (response.status === "success" && Array.isArray(response.data) && response.data.length > 0) {
+          const config = response.data[0];
+
+          setAllowedExtensions(
+            config.lov1 ? config.lov1.split(",").map((ext: string) => ext.trim()) : []
+          );
+          // ถ้า lov2 ไม่มีหรือเท่ากับ 0 จะตั้งค่า default เป็น Number.MAX_SAFE_INTEGER
+          // setMaxFileCount(config.lov2 ? parseInt(config.lov2, 10) : Number.MAX_SAFE_INTEGER);
+
+          // ตรวจสอบค่าของ lov2
+          setIsLov2Enabled(config.lov2 === "Y");
+
+        } else {
+          console.warn("Invalid data format or no configuration found.");
+        }
+      } catch (error) {
+        console.error("Error fetching file config:", error);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
 
   // การอัปโหลดไฟล์
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const allowedTypes = ['image/png']; // ชนิดไฟล์ที่อนุญาต ['image/jpeg', 'image/png', 'image/gif']; 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     const uploadedFiles: ImageItem[] = [];
 
+    // // กรณี maxFileCount = 0 ให้ถือว่าไม่จำกัดจำนวนไฟล์
+    // const isUnlimited = maxFileCount === 0;
+
+    // // ตรวจสอบจำนวนไฟล์ (ถ้าไม่จำกัดจะข้ามการตรวจสอบนี้)
+    // if (!isUnlimited && imageList.length + files.length > maxFileCount) {
+    //   const errorMessage = `คุณสามารถอัปโหลดได้สูงสุด ${isUnlimited ? "ไม่จำกัด" : maxFileCount
+    //     } ไฟล์เท่านั้น`;
+    //   Massengmodal.createModal(
+    //     <div className="text-center p-4">
+    //       <p className="text-xl font-semibold mb-2 text-red-600">{errorMessage}</p>
+    //     </div>,
+    //     "error",
+    //     async () => {
+
+    //     }
+    //   );
+    //   return;
+    // }
+
     files.forEach((file) => {
-      // ตรวจสอบว่าไฟล์ตรงตามประเภทที่อนุญาตหรือไม่
-      if (allowedTypes.includes(file.type)) {
+
+      // ถ้า lov2 เป็น "Y" จะอนุญาตทุกไฟล์ ไม่ต้องตรวจสอบประเภทไฟล์
+      if (isLov2Enabled) {
+
+         // ตรวจสอบว่าไฟล์ตรงตามประเภทที่อนุญาตหรือไม่
+         const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+         if (fileExtension && allowedExtensions.includes(fileExtension)) {
+           const url = URL.createObjectURL(file);
+           uploadedFiles.push({
+             file: file,
+             name: file.name,
+             type: file.type,
+             url: url,
+             flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+             flagDeleteFile: false  // รูปนี้ยังไม่ได้ถูกลบ
+           });
+         } else {
+           console.warn(`File type "${file.type}" or extension "${fileExtension}" is not allowed.`);
+           Massengmodal.createModal(
+             <div className="text-center p-4">
+               <p className="text-xl font-semibold mb-2 text-green-600">ปัจจุบันระบบรองรับแค่ไฟล์ {allowedExtensions.map(ext => `.${ext}`).join(', ')} เท่านั้น</p>
+               {/* <p className="text-lg text-gray-800">
+               <span className="font-semibold text-gray-900">Request No:</span>
+               <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+             </p> */}
+             </div>,
+             'error',
+             async () => {
+ 
+             }
+           );
+         }
+
+      } else {
         const url = URL.createObjectURL(file);
         uploadedFiles.push({
           file: file,
@@ -297,21 +395,7 @@ export default function ServiceRequestBody({
           flagNewFile: true,  // รูปนี้เป็นรูปใหม่
           flagDeleteFile: false  // รูปนี้ยังไม่ได้ถูกลบ
         });
-      } else {
-        console.warn(`File type "${file.type}" is not allowed.`);
-        Massengmodal.createModal(
-          <div className="text-center p-4">
-            <p className="text-xl font-semibold mb-2 text-green-600">ปัจจุบันระบบรองรับแค่ไฟล์ .png เท่านั้น</p>
-            {/* <p className="text-lg text-gray-800">
-              <span className="font-semibold text-gray-900">Request No:</span>
-              <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
-            </p> */}
-          </div>,
-          'error',
-          async () => {
-
-          }
-        );
+       
       }
     });
 
@@ -320,23 +404,6 @@ export default function ServiceRequestBody({
       setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
     }
   };
-  // const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = Array.from(event.target.files || []);
-  //   const uploadedFiles: ImageItem[] = files.map((file) => {
-  //     const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
-  //     return {
-  //       file: file,
-  //       name: file.name,
-  //       type: file.type,
-  //       url: url,
-  //       flagNewFile: true,  // รูปนี้เป็นรูปใหม่
-  //       flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
-  //     };
-  //   });
-
-  //   setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
-  //   setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
-  // };
 
   // ฟังก์ชันจัดการการลบภาพ
   const handleRemoveImage = (url: string) => {
@@ -371,11 +438,11 @@ export default function ServiceRequestBody({
         file: null,
         name: file.req_user_filename,
         type: null,
-        url: file.file_patch,
+        url: `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}` + file.file_patch,
         flagNewFile: false, // รูปที่มีอยู่แล้ว
         flagDeleteFile: false // ยังไม่ได้ถูกลบ
       }));
-      //console.log(existingFiles, 'existingFilesexistingFiles');
+      console.log(existingFiles, 'existingFilesexistingFiles');
 
       setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
       setImageListView(existingFiles); // แสดงผลไฟล์
@@ -600,9 +667,10 @@ export default function ServiceRequestBody({
                 <input
                   type="file"
                   multiple
-                  accept="image/*"
-                  onChange={handleImageUpload}
+                  accept={allowedExtensions.map((ext) => `.${ext}`).join(",")}
+                  onChange={handleFileUpload}
                   className="upload-input"
+                  disabled={allowedExtensions.length === 0} // ปิดการทำงานถ้าไม่มีประเภทไฟล์ที่อนุญาต
                 />
                 <span className="upload-button">
                   <span className="upload-text">เพิ่มรูปภาพ</span>
@@ -610,7 +678,12 @@ export default function ServiceRequestBody({
                 </span>
                 {/* คำอธิบายเกี่ยวกับไฟล์ที่รองรับ */}
                 <p className="file-type-info">
-                  (*รองรับเฉพาะไฟล์ .png เท่านั้น)
+                  ( *รองรับไฟล์:{" "}
+                  {allowedExtensions.length > 0
+                    ? allowedExtensions.map((ext) => `.${ext}`).join(", ")
+                    : "ไม่พบไฟล์ที่รองรับ"}{" "})
+                  {/* จำนวนไฟล์สูงสุดที่อนุญาต:{" "}
+                  {maxFileCount === 0 ? "ไม่จำกัด" : maxFileCount}) */}
                 </p>
               </label>
             </div>

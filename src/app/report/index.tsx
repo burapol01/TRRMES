@@ -126,7 +126,7 @@ export default function BorderedTreeView() {
     // window.open(reportUrl, "_blank");
     setOpenReport(true);
     setdataelement(data)
-    //console.log("Selected Report:", data.report_code);
+    console.log("Selected Report:", data);
   };
 
   const handleClose = () => {
@@ -192,7 +192,7 @@ const handleReset = () => {
       </div>
       <FuncDialog
         open={openReport}
-        dialogWidth="string"
+        dialogWidth=""
         openBottonHidden={false}
         titlename={""}
         handleClose={handleClose}

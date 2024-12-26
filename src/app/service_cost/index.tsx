@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import ServiceCostBody from './component/ServiceCostBody';
 import { useListServiceCost } from './core/service_cost_provider';
 import '../service_cost/css/styles.css';  // นำเข้าไฟล์ CSS
+import { checkValidate, isCheckValidateAll } from '../../../libs/validations';
 
 interface OptionsState {
 
@@ -61,16 +62,19 @@ export default function ServiceCost() {
     const currentUser = useSelector((state: any) => state?.user?.user);
 
     //========================= useState ช่องค้นหาข้อมูล ==============================================
-    const currentYear = new Date().getFullYear();
+    // const currentYear = new Date().getFullYear();
 
-    const monthYearOptions = Array.from({ length: 12 }, (_, i) => ({
-        id: uuidv4(),
-        label: `${String(i + 1).padStart(2, "0")}/${currentYear}`,
-        value: `${String(i + 1).padStart(2, "0")}/${currentYear}`
-    }));
-    //
-    const [selectedStart, setSelectedStart] = useState<any>(monthYearOptions[0]);
-    const [selectedEnd, setSelectedEnd] = useState<any>(monthYearOptions[11]);
+    // const monthYearOptions = Array.from({ length: 12 }, (_, i) => ({
+    //     id: uuidv4(),
+    //     label: `${String(i + 1).padStart(2, "0")}/${currentYear}`,
+    //     value: `${String(i + 1).padStart(2, "0")}/${currentYear}`
+    // }));
+    // //
+    // const [selectedStart, setSelectedStart] = useState<any>(monthYearOptions[0]);
+    // const [selectedEnd, setSelectedEnd] = useState<any>(monthYearOptions[11]);
+
+    const [dateStart, setDateStart] = useState("");
+    const [dateEnd, setDateEnd] = useState("");
 
 
     //ตัวแปร ใช้ทุกที่
@@ -106,7 +110,7 @@ export default function ServiceCost() {
     }, [actionType]);
 
     //============================= เริ่มการทำงาน handleClick =============================================
-   
+
     //------------------- ค้นหาข้อมูล
     const handleSearch = () => {
         setActionType('search');
@@ -114,8 +118,10 @@ export default function ServiceCost() {
 
     //------------------- รีเซ็ตข้อมูล
     const handleReset = () => {
-        setSelectedStart(monthYearOptions[0])
-        setSelectedEnd(monthYearOptions[11])
+        // setSelectedStart(monthYearOptions[0])
+        // setSelectedEnd(monthYearOptions[11])
+        setDateStart("");
+        setDateEnd("");
         setActionType('reset');
     };
 
@@ -174,21 +180,38 @@ export default function ServiceCost() {
 
     //-------------------- Get ดึงข้อมูลใส่ ตาราง
     const dataTableCutOff_GET = async () => {
-        console.log('Call : dataTableCutOff_GET', selectedStart.value, moment().format('HH:mm:ss:SSS'));
+        console.log('Call : dataTableCutOff_GET', moment().format('HH:mm:ss:SSS'));
 
         if (!currentUser) return;
 
         // ตรวจสอบว่าเดือนเริ่มต้นมากกว่าหรือเท่ากับเดือนสิ้นสุด
-        if (selectedStart.value && selectedEnd.value && selectedStart.value > selectedEnd.value) {
-            alert('กรุณาตรวจสอบรูปแบบเดือนให้ถูกต้อง: เดือนเริ่มต้นไม่สามารถมากกว่าหรือเท่ากับเดือนสิ้นสุด');
+        // if (selectedStart.value && selectedEnd.value && selectedStart.value > selectedEnd.value) {
+        if (dateStart && dateEnd && dateStart > dateEnd) {
+            // alert('กรุณาตรวจสอบรูปแบบเดือนให้ถูกต้อง: เดือนเริ่มต้นไม่สามารถมากกว่าหรือเท่ากับเดือนสิ้นสุด');
+            Massengmodal.createModal(
+                <div className="text-center p-4">
+                    <p className="text-xl font-semibold mb-2 text-green-600">กรุณาตรวจสอบรูปแบบเดือนให้ถูกต้อง: เดือนเริ่มต้นไม่สามารถมากกว่าหรือเท่ากับเดือนสิ้นสุด</p>
+                </div>,
+                'error',
+                async () => {
+                    dispatch(endLoadScreen());
+                    setDateStart("");
+                    setDateEnd("");
+                    // setSelectedStart(monthYearOptions[0])
+                    // setSelectedEnd(monthYearOptions[11])
+
+                }
+            );
             return; // ออกจากฟังก์ชันหากตรวจพบข้อผิดพลาด
         }
 
         const dataset = {
 
             cutOffModel: {
-                start_month: selectedStart.value || null,
-                end_month: selectedEnd.value || null
+                // start_month: selectedStart.value || null,
+                // end_month: selectedEnd.value || null          
+                start_month: dateStart || null,
+                end_month: dateEnd || null
             },
             currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
         };
@@ -207,19 +230,22 @@ export default function ServiceCost() {
                     el.cut_off_flag_label = el.cut_off_flag ? (
                         <CheckCircleIcon style={{ color: green[500] }} />
                     ) : (
-                        <CancelIcon style={{ color: grey[400] }} />
+                        // <CancelIcon style={{ color: grey[400] }} />
+                         "-"
                     );
 
                     el.import_service_cost_flag_label = el.import_service_cost_flag ? (
                         <CheckCircleIcon style={{ color: green[500] }} />
                     ) : (
-                        <CancelIcon style={{ color: grey[400] }} />
+                        // <CancelIcon style={{ color: grey[400] }} />
+                        "-"
                     );
 
                     el.allcate_flag_label = el.allcate_flag ? (
                         <CheckCircleIcon style={{ color: green[500] }} />
                     ) : (
-                        <CancelIcon style={{ color: grey[400] }} />
+                        // <CancelIcon style={{ color: grey[400] }} />
+                         "-"
                     );
 
                     el.cut_off_month_and_year_label = el.cut_off_month + "/" + el.cut_off_year
@@ -256,30 +282,21 @@ export default function ServiceCost() {
         // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
         updateSessionStorageCurrentAccess('event_name', 'Add/serviceCostAdd')
 
-        // const dataForValidate = {
-        //     costCenter: draftData.costCenter,
-        //     serviceCenter: draftData.serviceCenter,
-        //     jobType: draftData.jobType,
-        //     budgetCode: draftData?.jobType?.lov_code === "Repair" ? false : draftData.budgetCode,
-        // }
-        // const isValidate = checkValidate(dataForValidate, ['costCenter', 'serviceCenter', 'jobType', 'budgetCode', 'fixedAssetCode']);
+        const dataForValidate = {
+            asOfMonth: resultData?.selectedMonth ? `${resultData?.selectedMonth?.value}/${resultData?.selectedYear?.value}` : null,
+            asOfYear: resultData?.selectedYear ? `${resultData?.selectedMonth?.value}/${resultData?.selectedYear?.value}` : null
+        }
+        const isValidate = checkValidate(dataForValidate, ['asOfMonth', 'asOfYear'],);
 
-        // if (draftData?.jobType?.lov_code === "Repair") {
-        //     isValidate.budgetCode = false;
-        // }
+        const isValidateAll = isCheckValidateAll(isValidate);
 
-        // const isValidateAll = isCheckValidateAll(isValidate);
-
-        // if (isDuplicate && isValidationEnabled) {
-        //     return;
-        // }
-        // console.log(isValidateAll,);
-        // if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
-        //     console.log(isValidateAll,);
-        //     setIsValidate(isValidate);
-        //     return;
-        // }
-        // setIsValidate(null);
+        console.log(dataForValidate, 'test');
+        if (Object.keys(isValidateAll).length > 0 && isValidationEnabled) {
+            console.log(isValidateAll,);
+            setIsValidate(isValidate);
+            return;
+        }
+        setIsValidate(null);
         // console.log('Call : isValidate', isValidate, moment().format('HH:mm:ss:SSS'));
         // console.log('Call : isValidateAll', isValidateAll, moment().format('HH:mm:ss:SSS'));
         confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
@@ -486,29 +503,31 @@ export default function ServiceCost() {
                     <div className="px-10 pt-0 pb-5">
                         <div className="flex items-center space-x-4">
                             {/* ฟิลด์เลือกเดือน/ปีเริ่มต้น */}
-                            <div className="w-full md:w-2/12">
-                                <AutocompleteComboBox
+                            <div className="w-full md:w-3/12">
+                                <FullWidthTextField
+                                    labelName={"เดือน/ปี (Ex.01/2024)"}
+                                    value={dateStart}
+                                    onChange={(value) => setDateStart(value)}
+                                />
+                                {/* <AutocompleteComboBox
                                     required="required"
                                     labelName="เดือนเริ่มต้น"
                                     column="label"
                                     setvalue={setSelectedStart}
                                     options={monthYearOptions}
                                     value={selectedStart}
-                                />
+                                /> */}
                             </div>
                             {/* ป้ายกำกับ "ถึง" */}
-                            <label className="text-lg pt-10">ถึง</label>
+                            {/* <label className="text-lg pt-10">ถึง</label> */}
                             {/* ฟิลด์เลือกเดือน/ปีสิ้นสุด */}
-                            <div className="w-full md:w-2/12">
-                                <AutocompleteComboBox
-                                    required="required"
-                                    labelName="เดือนสิ้นสุด"
-                                    column="label"
-                                    setvalue={setSelectedEnd}
-                                    options={monthYearOptions}
-                                    value={selectedEnd}
+                            {/* <div className="w-full md:w-2/12">
+                                <FullWidthTextField
+                                    labelName={"เดือนสิ้นสุด"}
+                                    value={dateEnd}
+                                    onChange={(value) => setDateEnd(value)}
                                 />
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                     <div className="flex justify-end pt-2">

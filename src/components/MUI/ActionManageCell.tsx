@@ -119,17 +119,22 @@ export default function ActionManageCell(props: ActionManageCellProps) {
                 ) {
                   shouldRender = true;
                 }
+                // เพิ่มเงื่อนไขสำหรับสถานะ "Start" เพื่อแสดง "Reject Start"
+                if (props.reqStatus === "Start" && menuFunc.func_name === "Reject Start") {
+                  shouldRender = true;
+                }
+
 
                 // เพิ่มเงื่อนไขสำหรับ "On process"
                 if (props.reqStatus === "On process" && menuFunc.func_name === "Pending") {
                   shouldRender = true;
                 }
                 break;
-                case "Pending":
-                  if (menuFunc.func_name === "Unpending") {
-                    shouldRender = true;
-                  }
-                  break;
+              case "Pending":
+                if (menuFunc.func_name === "Unpending") {
+                  shouldRender = true;
+                }
+                break;
 
               default:
                 break;
