@@ -24,7 +24,7 @@ interface FuncDialog {
   handleRejectAction?: any;
   titlename?: string;
   open: boolean;
-  dialogWidth?: string;
+  dialogWidth?: string | false;
   openBottonHidden?: boolean;
   colorBotton?: string;
   actions?: string;

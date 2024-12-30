@@ -192,7 +192,7 @@ const handleReset = () => {
       </div>
       <FuncDialog
         open={openReport}
-        dialogWidth=""
+        dialogWidth={false}
         openBottonHidden={false}
         titlename={""}
         handleClose={handleClose}
