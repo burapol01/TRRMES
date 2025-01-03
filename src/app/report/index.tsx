@@ -13,6 +13,10 @@ import { Box, Divider } from '@mui/material';
 import TopicIcon from '@mui/icons-material/Topic';
 import FullWidthTextField from '../../components/MUI/FullWidthTextField';
 import FullWidthButton from '../../components/MUI/FullWidthButton';
+import AutocompleteComboBox from '../../components/MUI/AutocompleteComboBox';
+import { useListReport } from './core/ListReportContext';
+import moment from 'moment';
+import { _POST } from '../../service';
 
 const CustomTreeItem = styled(TreeItem)(({ theme }) => ({
   [`& .${treeItemClasses.content}`]: {
@@ -46,6 +50,11 @@ function EndIcon(props: React.PropsWithoutRef<typeof DisabledByDefaultRoundedIco
 }
 
 export default function BorderedTreeView() {
+
+  const {
+  } = useListReport();
+  const handleAutocompleteChange = (setter: React.Dispatch<React.SetStateAction<any>>) => (value: any) => { setter(value) };
+  const [error, setError] = React.useState<string | null>(null);
   const current = useSelector((state: any) => state?.user.user);
   const [dataOrgReport, setDataOrgReport] = React.useState([])
   const [reportList, setReportList] = React.useState([])
@@ -54,9 +63,13 @@ export default function BorderedTreeView() {
   const [dataelement, setdataelement] = React.useState<null>(null);
   const [actionType, setActionType] = React.useState<string | null>(null);
 
+  const [selectorgReportData, setSelectorgReportData] = React.useState<any>([]);
+  const [reportGroupname, setReportGroupname] = React.useState<any>(null);
+  const [reportName, setReportName] = React.useState(null);
+
   //------------Start Get service refresh -------------//
   React.useEffect(() => {
-    Org_Report_Get();
+    Org_Report_Get(null, null);
   }, [current]);
 
   React.useEffect(() => {
@@ -64,10 +77,13 @@ export default function BorderedTreeView() {
   }, [dataOrgReport]);
 
   //----------------Call : Org_Report_Get -----------------//
-  const Org_Report_Get = async () => {
+  const Org_Report_Get = async (ReportGroupList: any, reportName: any) => {
     const dataset = {
       "application_code": import.meta.env.VITE_APP_APPLICATION_CODE,
-      "role_id": current?.role_id
+      "role_id": current?.role_id,
+      "report_group": ReportGroupList?.report_group || null,
+      "report_name": reportName || null
+
     }
 
     try {
@@ -75,12 +91,35 @@ export default function BorderedTreeView() {
       console.log(response, "response_Get");
       if (response) {
         setDataOrgReport(response)
+
+
+        const OrgReport = response;
+
+        // แยกข้อมูล OrgReport Data
+        const orgReportData = OrgReport.map((OrgReport: any) => ({
+          "id": OrgReport.id,
+          "report_code": OrgReport.report_code,
+          "report_group": OrgReport.report_group,
+          "report_groupname": OrgReport.report_groupname,
+        }));
+
+
+        console.log(orgReportData, 'orgReportData');
+
+        setSelectorgReportData(orgReportData);
+
+        console.log(selectorgReportData, 'selectorgReportData');
+
       }
     } catch (e) {
       console.log("error");
     }
   };
 
+  // React.useEffect(() => {
+  // console.log(optionsSearch,'optionsSearch');
+
+  // }, [optionsSearch]);
 
   const setDataReport = () => {
     let idGroup: any = []
@@ -108,7 +147,7 @@ export default function BorderedTreeView() {
       }
       newDataName.push(`${index}`)
       newData.push(setdata)
-      
+
     })
 
     setReportListName(newDataName)
@@ -134,14 +173,69 @@ export default function BorderedTreeView() {
   };
 
   const handleSearch = () => {
+    console.log(reportGroupname, 'reportGroupname');
+    Org_Report_Get(reportGroupname, reportName);
     setActionType('search');
-};
+  };
 
-const handleReset = () => {
+  const handleReset = () => {
+    console.log(reportName, 'reportName');
+
+    Org_Report_Get(null, null);
+    setReportName(null);
+    setReportGroupname(null);
     setActionType('reset');
-};
+  };
+
+
+
+
   return (
     <div>
+
+      <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
+        <div className="px-6 pt-4">
+          <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">ค้นหาข้อมูล</label>
+        </div>
+        <div className="row px-10 pt-0 pb-5">
+          <div className="col-md-3 mb-2">
+            <AutocompleteComboBox
+              //filterOptions={filterOptions}
+              labelName={"Report Group:"}
+              column="report_groupname"
+              value={reportGroupname}
+              options={selectorgReportData}
+              setvalue={handleAutocompleteChange(setReportGroupname)}
+            />
+          </div>
+          <div className="col-md-3 mb-2">
+            <FullWidthTextField
+              labelName={"Report Name:"}
+              value={reportName ? reportName : ""}
+              onChange={(value) => setReportName(value)}
+            />
+          </div>
+          <div className="flex justify-end pt-2">
+            <div className="col-md-1 px-1">
+              <FullWidthButton
+                labelName={"ค้นหา"}
+                handleonClick={handleSearch}
+                variant_text="contained"
+                colorname={"success"}
+              />
+            </div>
+            <div className="col-md-1 px-1">
+              <FullWidthButton
+                labelName={"รีเซ็ต"}
+                handleonClick={handleReset}
+                variant_text="contained"
+                colorname={"inherit"}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="max-lg rounded overflow-hidden shadow-xl bg-white mt-5 mb-5">
         <div className="px-6 pt-4">
           <label className="text-2xl ml-2 mt-3 mb-5 sarabun-regular">Report</label>
@@ -161,11 +255,11 @@ const handleReset = () => {
 
               >
                 {reportList.map((el: any, index: number) => (
-                  <CustomTreeItem 
-                    key={index} 
+                  <CustomTreeItem
+                    key={index}
                     itemId={`${index}`}
                     label={<span className="bold-label sarabun-regular">{el.haedName}</span>}
-                    >
+                  >
                     {el?.sub_report?.map((file: any, index: number) => (
                       <CustomTreeItem
                         //key={`${file.id}-${index}`}
@@ -177,7 +271,7 @@ const handleReset = () => {
                               alt="icon"
                               style={{ width: '16px', height: '16px', marginRight: '8px' }}
                             />
-                             <span className="sarabun-regular">{`[ ${file.report_code} ] ${file.report_name}`}</span>
+                            <span className="sarabun-regular">{`[ ${file.report_code} ] ${file.report_name}`}</span>
                           </div>
                         }
                         onClick={() => hadleOnclickReport(file)}
@@ -205,30 +299,6 @@ const handleReset = () => {
       >
       </FuncDialog>
     </div>
-    // <SimpleTreeView
-    //   aria-label="customized"
-    //   defaultExpandedItems={['1', '3']}
-    //   slots={{
-    //     expandIcon: ExpandIcon,
-    //     collapseIcon: CollapseIcon,
-    //     endIcon: EndIcon,
-    //   }}
-    //   sx={{ overflowX: 'hidden', minHeight: 270, flexGrow: 1, maxWidth: 300 }}
-    // >
-    //   <CustomTreeItem itemId="1" label="Main">
-    //     <CustomTreeItem itemId="2" label="Hello" />
-    //     <CustomTreeItem itemId="3" label="Subtree with children">
-    //       <CustomTreeItem itemId="6" label="Hello" />
-    //       <CustomTreeItem itemId="7" label="Sub-subtree with children">
-    //         <CustomTreeItem itemId="9" label="Child 1" />
-    //         <CustomTreeItem itemId="10" label="Child 2" />
-    //         <CustomTreeItem itemId="11" label="Child 3" />
-    //       </CustomTreeItem>
-    //       <CustomTreeItem itemId="8" label="Hello" />
-    //     </CustomTreeItem>
-    //     <CustomTreeItem itemId="4" label="World" />
-    //     <CustomTreeItem itemId="5" label="Something something" />
-    //   </CustomTreeItem>
-    // </SimpleTreeView>
+   
   );
 }
