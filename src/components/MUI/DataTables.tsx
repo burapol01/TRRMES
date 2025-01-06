@@ -221,7 +221,8 @@ interface EnhancedTable {
   handleonClick_1?: () => void;
   handleonClick_2?: () => void;
   handleonClick_3?: () => void;
-
+  handleonClick_4?: () => void;
+  
   headCells: any;
   rows: any;
   setDataSelect?: (val: any) => void;
@@ -241,6 +242,7 @@ export default function EnhancedTable({
   handleonClick_1,
   handleonClick_2,
   handleonClick_3,
+  handleonClick_4,
   setDataSelect,
   roleName,
 }: EnhancedTable) {
@@ -391,6 +393,15 @@ export default function EnhancedTable({
                 />
               </div>
             )}
+            {/* <div className="">
+                <FullWidthButton
+                  iconAdd={true}
+                  labelName={"Test"}
+                  handleonClick={handleonClick_4}
+                  colorname={buttonColor_1}
+                  variant_text="contained"
+                />
+              </div> */}
           </div>
 
           {/* } */}
