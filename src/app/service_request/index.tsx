@@ -24,6 +24,7 @@ import { plg_uploadFileRename } from "../../service/upload";
 import { v4 as uuidv4 } from 'uuid';
 import { updateSessionStorageCurrentAccess, cleanAccessData, getCurrentAccessObject } from "../../service/initmain";
 import { log } from "console";
+import ApprovedListBody from "./component/ApprovedListBody";
 
 interface OptionsState {
   costCenterForCreate: any[];
@@ -85,6 +86,7 @@ export default function ServiceRequest() {
   const [selectedAssetCode, setSelectedAssetCode] = useState<any>(null);
   const [selectedRequestStatus, setSelectedRequestStatus] = useState<any>(null);
   const [openAdd, setOpenAdd] = useState(false);
+  const [openApprovedList, setOpenApprovedList] = useState(false);
   const [openView, setOpenView] = useState<any>(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -680,6 +682,10 @@ export default function ServiceRequest() {
     setOpenAdd(true);
   };
 
+  const handleClickApprovedList = () => {
+    setOpenApprovedList(true);
+  };
+
   const handleClickEdit = (data: any) => {
     setOpenEdit(true);;
     readData(data)
@@ -719,6 +725,7 @@ export default function ServiceRequest() {
     // alert(1)
     setOpenView(false);
     setOpenAdd(false);
+    setOpenApprovedList(false);
     setOpenEdit(false);
     setOpenDelete(false);
     setOpenSubmit(false)
@@ -1933,6 +1940,10 @@ export default function ServiceRequest() {
             headCells={Request_headCells}
             tableName={"บันทึกขอใช้บริการ"}
             handleonClick_1={handleClickAdd}
+
+            buttonLabal_2={showButton ? "อนุมัติแบบหลายรายการ" : ""} // Show button label only if "Add" is found
+            buttonColor_2="info"
+            handleonClick_2={handleClickApprovedList}
             roleName={currentUser?.role_name}
           />
         </div>
@@ -1951,6 +1962,21 @@ export default function ServiceRequest() {
               defaultValues={defaultValues}
               options={options} // ส่งข้อมูล Combobox ไปยัง ServiceRequestBody   
               actions={"Create"}
+
+            />
+          }
+        />
+        <FuncDialog
+          open={openApprovedList} // เปิด dialog ถ้า openAdd, openView, openEdit หรือ openDelete เป็น true
+          dialogWidth="xl"
+          openBottonHidden={true}
+          titlename={'อนุมัติแบบหลายรายการ'}
+          handleClose={handleClose}
+          handlefunction={serviceRequestDraftAdd}
+          colorBotton="success"
+          actions={"Test"}
+          element={
+            <ApprovedListBody
 
             />
           }
