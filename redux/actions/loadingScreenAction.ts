@@ -8,7 +8,7 @@ export function startLoadScreen() {
     }
 }
 
-export function EndLoadScreen() {
+export function endLoadScreen() {
     return {
         type: END_LOAD
     }

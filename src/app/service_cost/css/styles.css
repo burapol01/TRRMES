@@ -1,0 +1,39 @@
+/* สไตล์สำหรับตาราง */
+.table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+/* สไตล์ของเส้นขอบของตาราง */
+.table th, .table td {
+    border: 1px solid #000000; /* สีเส้นขอบเป็นสีดำ */
+    padding: 8px 12px; /* เพิ่มช่องว่างให้เซลล์ */
+    text-align: right; /* ข้อความในเซลล์จะชิดขวา */
+}
+
+/* สีพื้นหลังของแถวหัวตาราง */
+.table thead {
+    background-color: #f8f9fa; /* สีพื้นหลังของหัวตารางเป็นสีอ่อน */
+    color: black; /* สีตัวอักษรเป็นสีดำ */
+}
+
+/* สีพื้นหลังของแถวเมื่อ hover */
+.table tr:hover {
+    background-color: #f1f1f1; /* เปลี่ยนสีพื้นหลังของแถวเมื่อเอาเมาส์ไปวาง */
+}
+
+/* สีของเส้นขอบในแถวสุดท้าย (รวม) */
+.table .total-row td {
+    background-color: #e9ecef; /* สีพื้นหลังสำหรับแถวรวม */
+    font-weight: bold; /* ตัวหนา */
+}
+
+/* เส้นขอบของตาราง */
+.table-bordered {
+    border: 1px solid #000000; /* เส้นขอบของตารางเป็นสีดำ */
+}
+
+/* ปรับเส้นขอบของแต่ละเซลล์ */
+.table-bordered th, .table-bordered td {
+    border: 1px solid #000000; /* สีเส้นขอบของเซลล์เป็นสีดำ */
+}

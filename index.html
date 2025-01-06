@@ -2,12 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="#" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>TRRDXMES | TRR Dynamic AX Manufacturing Execution System</title>
+    <link rel="shortcut icon" href="%VITE_FAVICON_URL%"/>
+    <link rel="stylesheet" id="layout-styles-anchor" href="./splash-screen.css"/>  
   </head>
-  <body>
+  <body class="page-loading">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+     <!--begin::Loading markup-->
+     <div id="splash-screen" class="splash-screen">
+      <img
+        src="https://trr-web.trrgroup.com/storage/INTRANET/PROD/Asset/LoadingGIF/loadingWhite.gif"
+        class="dark-logo "
+        alt="Metronic dark logo"
+      />
+      <img
+        src="https://trr-web.trrgroup.com/storage/INTRANET/PROD/Asset/LoadingGIF/loading.gif"
+        class="light-logo"
+        alt="Metronic light logo"
+      />
+      <!-- <span>Loading ...</span> -->
   </body>
 </html>

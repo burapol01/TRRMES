@@ -2,8 +2,23 @@ import React, { useState, useEffect } from "react";
 import FullWidthTextField from "../../../components/MUI/FullWidthTextField";
 import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
+import StyleImageList from "../../../components/MUI/StandardImageList";
 import debounce from 'lodash/debounce';
-import { setValueMas } from "../../../../libs/setvaluecallback"
+import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
+import { useListServiceRequest } from "../core/service_request_provider";
+import moment from "moment";
+import { plg_uploadFileRename } from "../../../service/upload";
+// Import CSS styles
+import "../../../app/service_request/css/choose_file.css";
+import { createFilterOptions } from "@mui/material";
+import { Massengmodal } from "../../../components/MUI/Massengmodal";
+import { _POST } from "../../../service/mas";
+
+interface LovData {
+  lov1: string; // ประเภทไฟล์
+  lov2: string; // จำนวนสูงสุด
+}
+
 
 interface ServiceRequestBodyProps {
   onDataChange?: (data: any) => void;
@@ -12,7 +27,7 @@ interface ServiceRequestBodyProps {
     requestDate: string;
     requestId?: string;
     reqUser?: string;
-    headUser?: string;
+    appReqUser?: string;
     costCenterId?: string;
     costCenterCode?: string;
     costCenterName?: string;
@@ -25,8 +40,13 @@ interface ServiceRequestBodyProps {
     description?: string;
     fixedAssetId?: string;
     fixedAssetDescription?: string;
+    rejectSubmitReason?: string,
+    rejectStartReason?: string,
+    requestAttachFileList?: any[];
   };
   options?: {
+    costCenterForCreate: any[];
+    costCenter: any[];
     serviceCenter: any[];
     jobType: any[];
     budgetCode: any[];
@@ -36,6 +56,11 @@ interface ServiceRequestBodyProps {
   actions?: string;
 }
 
+interface ImageItem {
+  img: string;
+  title: string;
+}
+
 export default function ServiceRequestBody({
   onDataChange,
   defaultValues,
@@ -43,16 +68,22 @@ export default function ServiceRequestBody({
   disableOnly,
   actions
 }: ServiceRequestBodyProps) {
+  const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
+  const [optionCostCenter, setOptionCostCenter] = useState<any>(options?.costCenter || []);
+  const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
+  const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
+  const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
   const [reqUser, setEmployee] = useState(defaultValues?.reqUser || "");
-  const [headUser, setheadUser] = useState(defaultValues?.headUser || "");
+  const [appReqUser, setheadUser] = useState(defaultValues?.appReqUser || "");
   const [costCenterId, setCostCenterId] = useState(defaultValues?.costCenterId || "");
-  const [costCenterCode, setCostCenter] = useState(defaultValues?.costCenterCode || "");
+  const [costCenterCode, setCostCenterCode] = useState(defaultValues?.costCenterCode || "");
   const [costCenterName, setCostCenterName] = useState(defaultValues?.costCenterName || "");
   const [status, setStatus] = useState(defaultValues?.status || "Draft");
   const [serviceCenterId, setServiceCenterId] = useState(defaultValues?.serviceCenterId || "");
+  const [costCenter, setCostCenter] = useState<any>(null);
   const [serviceCenter, setServiceCenter] = useState<any>(null);
   const [serviceName, setServiceName] = useState("");
   const [site, setSite] = useState(defaultValues?.site || "");
@@ -62,6 +93,11 @@ export default function ServiceRequestBody({
   const [fixedAssetCode, setFixedAssetCode] = useState<any>(null);
   const [fixedAssetDescription, setFixedAssetDescription] = useState("");
   const [countRevision, setCountRevision] = useState(defaultValues?.countRevision || "1");
+
+  const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
+  const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
+
+
 
   // Function to handle data change with debounce
   const debouncedOnDataChange = debounce((data: any) => {
@@ -77,12 +113,13 @@ export default function ServiceRequestBody({
       requestNo,
       requestDate,
       reqUser,
-      headUser,
+      appReqUser,
       costCenterId,
       costCenterCode,
       costCenterName,
       status,
       serviceCenterId,
+      costCenter,
       serviceCenter,
       serviceName,
       site,
@@ -91,28 +128,43 @@ export default function ServiceRequestBody({
       description,
       fixedAssetCode,
       fixedAssetDescription,
-      countRevision
+      countRevision,
+      imageList // เพิ่ม imageList เข้าไปใน data
     };
     // Call debounced function
     debouncedOnDataChange(data);
   }, [
-    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenterCode, costCenterName,
-    status, serviceCenterId, serviceCenter, serviceName, site, jobType, budgetCode, description,
+    requestId, requestNo, requestDate, reqUser, appReqUser, costCenterId, costCenterCode, costCenterName,
+    status, serviceCenterId, costCenter, serviceCenter, serviceName, site, jobType, budgetCode, description,
     fixedAssetCode, fixedAssetDescription,
     countRevision, onDataChange,
   ]);
 
   React.useEffect(() => {
-    
+
+
+    console.log(defaultValues, 'defaultValues')
     if (actions != "Create") {
 
-      //console.log(options, 'dd')
-      //console.log(defaultValues?.serviceCenterId, 'dsdsd')
+      // console.log(options?.costCenter, 'dd')
+
+      if (defaultValues?.costCenterId != "") {
+        const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
+        //console.log(mapCostCenterData, 'mapCostCenterData')
+        setCostCenter(mapCostCenterData)
+      }
+
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
-       // console.log(mapCostCenterData, 'mapCostCenterData')
+        // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
         setServiceName(mapCostCenterData?.serviceCenterName)
+      }
+
+      if (defaultValues?.jobType != "") {
+        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
+        //console.log(mapJobTypeData, 'mapJobTypeData')
+        setJobType(mapJobTypeData)
       }
 
       if (defaultValues?.budgetCode != "") {
@@ -120,12 +172,6 @@ export default function ServiceRequestBody({
         //console.log(mapBudgetData, 'mapBudgetData')
         setBudgetCode(mapBudgetData)
 
-      }
-
-      if (defaultValues?.jobType != "") {
-        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
-        //console.log(mapJobTypeData, 'mapJobTypeData')
-        setJobType(mapJobTypeData)
 
       }
 
@@ -146,26 +192,303 @@ export default function ServiceRequestBody({
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
         //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData?.assetDescription)
+        //setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
-     
-      if (defaultValues?.headUser != "") {
-        //console.log(defaultValues?.headUser, 'headUser')
-        setheadUser(defaultValues?.headUser || "");
+
+      if (defaultValues?.appReqUser != "") {
+        //console.log(defaultValues?.appReqUser, 'appReqUser')
+        setheadUser(defaultValues?.appReqUser || "");
       }
 
     }
 
 
-  }, [defaultValues])
+  }, [defaultValues, options?.fixedAssetCode])
+
+  //AutocompleteComboBox ===================================================================================================================
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 100;
+  const defaultFilterOptions = createFilterOptions();
+
+  const filterOptions = (options: any[], state: any) => {
+    return defaultFilterOptions(options, state).slice(0, OPTIONS_LIMIT);
+  };
+
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
+  React.useEffect(() => {
+
+    console.log(actions, 'actions');
+    if (actions === "Create") {
+      setOptionCostCenter(options?.costCenterForCreate)
+
+    } else {
+      setOptionCostCenter(options?.costCenter)
+
+    }
+
+    const filteredData = options?.budgetCode.filter((item: any) =>
+      // (!costCenter?.costCenterId || item.costCenterId
+      //   .toString()
+      //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+      (!costCenter?.siteCode || item.siteCode
+        .toString()
+        .includes(costCenter?.siteCode)) &&
+      (!jobType?.lov_code || item.jobType
+        .toString()
+        .includes(jobType?.lov_code))
+
+    );
+    //console.log(filteredData, 'filteredData');
+    //ใส่ useState ใหม่ 
+    setOptionBudgetCode(filteredData);
+
+    const filterFixedAssetCode = options?.fixedAssetCode.filter((item: any) =>
+    // (!costCenter?.costCenterId || item.costCenterId
+    //   .toString()
+    //   .includes(costCenter?.costCenterId || costCenter)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+    (!costCenter?.siteCode || item.siteCode
+      .toString()
+      .includes(costCenter?.siteCode))
+    );
+
+    //ใส่ useState ใหม่ 
+    setOptionFixedAssetCode(filterFixedAssetCode)
+    //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
+
+    const filterServiceCenter = options?.serviceCenter
+      // .filter((item: any) =>
+      // (!costCenter?.siteCode || item.siteCode
+      //   .toString()
+      //   .includes(costCenter?.siteCode || costCenter))
+      // )
+      .sort((a: any, b: any) =>
+        (b.siteCode === costCenter?.siteCode ? 1 : 0) - (a.siteCode === costCenter?.siteCode ? 1 : 0)
+      );
+
+    setOptionServiceCenter(filterServiceCenter);
+
+  }, [costCenter, jobType])
+  //AutocompleteComboBox ===================================================================================================================
+
+  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
+  //=========================================== การ Upload File ==========================================
+  interface ImageItem {
+    file: File | null; // เก็บข้อมูลไฟล์
+    name: string;      // ชื่อไฟล์
+    type: string | null;      // ประเภทไฟล์
+    url: string;       // URL สำหรับแสดง Preview
+    flagDeleteFile?: boolean; // Flag สำหรับระบุว่ารูปนี้ถูกลบหรือไม่
+    flagNewFile?: boolean;    // Flag สำหรับระบุว่ารูปนี้เป็นรูปใหม่
+  }
+  // Image Upload handling
+  const [allowedExtensions, setAllowedExtensions] = useState<string[]>([]);
+  // const [maxFileCount, setMaxFileCount] = useState<number>(0);
+  const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
+  const [imageListView, setImageListView] = useState<ImageItem[]>([]); // เก็บข้อมูลสำหรับการแสดงผล
+  const [isLov2Enabled, setIsLov2Enabled] = useState<boolean>(false); // สถานะการเปิดใช้งาน lov2
+
+
+
+  //จัดการรูปภาพ ประเภทไฟล์ ต่างๆ =================================
+  useEffect(() => {
+    // ดึงค่าคอนฟิกจาก API
+    const fetchConfig = async () => {
+      try {
+        const dataset = {
+          lov_type: "config_file",
+          lov_code: "CheckTypeFileImage",
+        };
+
+        const response = await _POST(dataset, "/api_trr_mes/LovData/Lov_Data_Get");
+
+        if (response.status === "success" && Array.isArray(response.data) && response.data.length > 0) {
+          const config = response.data[0];
+
+          setAllowedExtensions(
+            config.lov1 ? config.lov1.split(",").map((ext: string) => ext.trim()) : []
+          );
+          // ถ้า lov2 ไม่มีหรือเท่ากับ 0 จะตั้งค่า default เป็น Number.MAX_SAFE_INTEGER
+          // setMaxFileCount(config.lov2 ? parseInt(config.lov2, 10) : Number.MAX_SAFE_INTEGER);
+
+          // ตรวจสอบค่าของ lov2
+          setIsLov2Enabled(config.lov2 === "Y");
+
+        } else {
+          console.warn("Invalid data format or no configuration found.");
+        }
+      } catch (error) {
+        console.error("Error fetching file config:", error);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+
+  // การอัปโหลดไฟล์
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const uploadedFiles: ImageItem[] = [];
+
+    // // กรณี maxFileCount = 0 ให้ถือว่าไม่จำกัดจำนวนไฟล์
+    // const isUnlimited = maxFileCount === 0;
+
+    // // ตรวจสอบจำนวนไฟล์ (ถ้าไม่จำกัดจะข้ามการตรวจสอบนี้)
+    // if (!isUnlimited && imageList.length + files.length > maxFileCount) {
+    //   const errorMessage = `คุณสามารถอัปโหลดได้สูงสุด ${isUnlimited ? "ไม่จำกัด" : maxFileCount
+    //     } ไฟล์เท่านั้น`;
+    //   Massengmodal.createModal(
+    //     <div className="text-center p-4">
+    //       <p className="text-xl font-semibold mb-2 text-red-600">{errorMessage}</p>
+    //     </div>,
+    //     "error",
+    //     async () => {
+
+    //     }
+    //   );
+    //   return;
+    // }
+
+    files.forEach((file) => {
+
+      // ถ้า lov2 เป็น "Y" จะอนุญาตทุกไฟล์ ไม่ต้องตรวจสอบประเภทไฟล์
+      if (isLov2Enabled) {
+
+         // ตรวจสอบว่าไฟล์ตรงตามประเภทที่อนุญาตหรือไม่
+         const fileExtension = file.name.split('.').pop()?.toLowerCase();
+
+         if (fileExtension && allowedExtensions.includes(fileExtension)) {
+           const url = URL.createObjectURL(file);
+           uploadedFiles.push({
+             file: file,
+             name: file.name,
+             type: file.type,
+             url: url,
+             flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+             flagDeleteFile: false  // รูปนี้ยังไม่ได้ถูกลบ
+           });
+         } else {
+           console.warn(`File type "${file.type}" or extension "${fileExtension}" is not allowed.`);
+           Massengmodal.createModal(
+             <div className="text-center p-4">
+               <p className="text-xl font-semibold mb-2 text-green-600">ปัจจุบันระบบรองรับแค่ไฟล์ {allowedExtensions.map(ext => `.${ext}`).join(', ')} เท่านั้น</p>
+               {/* <p className="text-lg text-gray-800">
+               <span className="font-semibold text-gray-900">Request No:</span>
+               <span className="font-bold text-indigo-600 ml-1">{response.req_no}</span>
+             </p> */}
+             </div>,
+             'error',
+             async () => {
+ 
+             }
+           );
+         }
+
+      } else {
+        const url = URL.createObjectURL(file);
+        uploadedFiles.push({
+          file: file,
+          name: file.name,
+          type: file.type,
+          url: url,
+          flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+          flagDeleteFile: false  // รูปนี้ยังไม่ได้ถูกลบ
+        });
+       
+      }
+    });
+
+    if (uploadedFiles.length > 0) {
+      setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+      setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+    }
+  };
+
+  // ฟังก์ชันจัดการการลบภาพ
+  const handleRemoveImage = (url: string) => {
+    setImageList((prevList) =>
+      prevList.map((image) =>
+        image.url === url ? { ...image, flagDeleteFile: true } : image
+      )
+    ); // ตั้งค่า flagDeleteFile เป็น true ใน imageList
+
+    // ลบภาพจากการแสดงผลใน imageListView
+    setImageListView((prevList) =>
+      prevList.filter((image) => image.url !== url)); // ลบภาพจากการแสดงผลใน imageListView
+
+
+
+  };
+
+  // โหลดไฟล์ที่มีอยู่แล้ว
+  useEffect(() => {
+    // ล้างค่า imageList และ imageListView ทุกครั้งก่อนที่จะโหลดไฟล์ใหม่
+    setImageList([]);
+    setImageListView([]);
+    const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
+    //console.log(requestAttachFileList, 'requestAttachFileList');
+
+    if (actions === "Reade" || actions === "Update" && requestAttachFileList.length > 0) {
+      const existingFiles = requestAttachFileList.map((file: any) => ({
+        requestAttachFileId: file.id,
+        reqId: file.req_id,
+        reqSysFilename: file.req_sys_filename,
+        filePatch: file.file_patch,
+        file: null,
+        name: file.req_user_filename,
+        type: null,
+        url: `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}` + file.file_patch,
+        flagNewFile: false, // รูปที่มีอยู่แล้ว
+        flagDeleteFile: false // ยังไม่ได้ถูกลบ
+      }));
+      console.log(existingFiles, 'existingFilesexistingFiles');
+
+      setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
+      setImageListView(existingFiles); // แสดงผลไฟล์
+    }
+  }, [defaultValues?.requestAttachFileList, actions]);
+
+
+  // Cleanup URLs เมื่อ component ถูกลบ
+  // useEffect(() => {
+  //   return () => {
+  //     if (Array.isArray(imageList)) {
+  //       imageList.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
+
+  //     if (Array.isArray(imageListView)) {
+  //       imageListView.forEach((item) => {
+  //         if (item.url.startsWith("blob:")) {
+  //           URL.revokeObjectURL(item.url);
+  //         }
+  //       });
+  //     }
+
+  //   };
+  // }, [imageList, imageListView]);
+
+
+  // Log การอัปเดตของ imageList And imageListView
+
+  // useEffect(() => {
+  //   console.log(imageList, "imageList");
+  //   console.log(imageListView, "imageListView");
+  // }, [imageList, imageListView]);
+
+
+
 
   return (
     <div>
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Request No."}
+            labelName={"เลขที่ใบคำขอ"}
             value={requestNo}
             onChange={(value) => setRequestNo(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -175,7 +498,7 @@ export default function ServiceRequestBody({
         {actions !== "Create" && (
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Date"}
+              labelName={"วันที่สร้างใบคำขอ"}
               value={requestDate}
               onChange={(value) => setRequestDate(value)}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -185,23 +508,45 @@ export default function ServiceRequestBody({
         )}
       </div>
       <div className="row justify-start">
-       
+
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Employee"}
+            labelName={"พนักงาน"}
             value={reqUser}
             onChange={(value) => setEmployee(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
           />
         </div>
         <div className="col-md-3 mb-2">
-          <FullWidthTextField
-            labelName={"Cost center"}
+          <AutocompleteComboBox
+            required={"required"}
+            labelName={"Cost Center"}
+            column="costCentersCodeAndName"
+            value={costCenter}
+            disabled={disableOnly}
+            setvalue={(data) => {
+              setCostCenter(data);
+              setSite(data?.siteCode || "");
+
+              setServiceCenter(null)
+              setServiceName("")
+              setJobType(null)
+              setBudgetCode(null)
+              setFixedAssetCode(null)
+              //setFixedAssetDescription("")
+            }}
+            options={optionCostCenter || []}
+            Validate={isValidate?.costCenter}
+
+
+          />
+          {/* <FullWidthTextField
+            labelName={"Cost Center"}
             value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
 
-          />
+          /> */}
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
@@ -213,7 +558,7 @@ export default function ServiceRequestBody({
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Status"}
+            labelName={"สถานะ"}
             value={status}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setStatus(value)}
@@ -230,68 +575,138 @@ export default function ServiceRequestBody({
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            required={"required"}
             labelName={"Service Center"}
             column="serviceCentersCodeAndName"
             value={serviceCenter}
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
+              //เก็บ Validate นี้ไว้ก่อนเผื่อสักวันได้กลับมาใช้
+              // console.log(costCenter,'costCenter💥💥💥💥',data);
+              // if (costCenter?.costCenterCode == data?.serviceCenterCode) {
+              //   setIsDuplicate(true);
+              // } else {
+              setIsDuplicate(false);
+              // }
+
+              //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
-            options={options?.serviceCenter || []}
+            //options={optionServiceCenter || []}
+            options={optionServiceCenter || []}
+            Validate={isValidate?.serviceCenter}
+            ValidateDuplicate={isDuplicate}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        {/* <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Service Name"}
             value={serviceName}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setServiceName(value)}
           />
-        </div>  
-        <div className="col-md-3 mb-2">
+        </div> */}
+        <div className="col-md-2 mb-2">
           <AutocompleteComboBox
-            // required={true}
-            labelName={"Budget Code"}
-            column="budgetCode"
-            value={budgetCode}
-            setvalue={setBudgetCode}
-            disabled={disableOnly}
-            options={options?.budgetCode || []}
-          />
-        </div>
-        <div className="col-md-3 mb-2">
-          <AutocompleteComboBox
-            // required={true}
-            labelName={"Jobtype"}
+            required={"required"}
+            labelName={"ประเภทงาน"}
             column="lov_name"
             value={jobType}
-            setvalue={setJobType}
+            setvalue={(data) => {
+              //console.log(data, "job");
+              setJobType(data)
+              setBudgetCode(null)
+            }}
             disabled={disableOnly}
             options={options?.jobType || []}
+            Validate={isValidate?.jobType}
           />
         </div>
-      </div>     
-      <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-10 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            filterOptions={filterOptions}
+            required={"required"}
+            labelName={"Budget Code"}
+            column="budgetCodeAndJobType"
+            value={budgetCode}
+            setvalue={setBudgetCode}
+            disabled={jobType?.lov_code === "Repair" ? true : disableOnly}
+            options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+            //options={options?.budgetCode}
+            Validate={jobType?.lov_code === "Repair" ? false : isValidate?.budgetCode}
+          />
+        </div>
+      </div>
+      <div className="row justify-start">
+        <div className="col-md-12 mb-2">
+          <AutocompleteComboBox
+            filterOptions={filterOptions}
+            //required={"required"}
             labelName={"Fixed Asset Code"}
-            column="assetCode"
+            column="assetCodeAndDescription"
             value={fixedAssetCode}
             disabled={disableOnly}
             setvalue={(data) => {
-              // console.log(data,'data');              
+              // console.log(data,'data');
               setFixedAssetCode(data);
-              setFixedAssetDescription(data?.assetDescription || ""); 
+              //setFixedAssetDescription(data?.assetDescription || "");
             }}
-            options={options?.fixedAssetCode || []}
+            options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+          //options={options?.fixedAssetCode || []}
           />
         </div>
-        <div className="col-md-9 mb-2">
+
+
+        <div className="gallery-container">
+          {/* เงื่อนไขในการแสดงปุ่มเลือกไฟล์ */}
+          {actions !== "Reade" && (
+            <div className="upload-container">
+              <label className="upload-label">
+                <input
+                  type="file"
+                  multiple
+                  accept={allowedExtensions.map((ext) => `.${ext}`).join(",")}
+                  onChange={handleFileUpload}
+                  className="upload-input"
+                  disabled={allowedExtensions.length === 0} // ปิดการทำงานถ้าไม่มีประเภทไฟล์ที่อนุญาต
+                />
+                <span className="upload-button">
+                  <span className="upload-text">เพิ่มรูปภาพ</span>
+                  <i className="fas fa-file-image"></i> {/* ไอคอนโฟลเดอร์ */}
+                </span>
+                {/* คำอธิบายเกี่ยวกับไฟล์ที่รองรับ */}
+                <p className="file-type-info">
+                  ( *รองรับไฟล์:{" "}
+                  {allowedExtensions.length > 0
+                    ? allowedExtensions.map((ext) => `.${ext}`).join(", ")
+                    : "ไม่พบไฟล์ที่รองรับ"}{" "})
+                  {/* จำนวนไฟล์สูงสุดที่อนุญาต:{" "}
+                  {maxFileCount === 0 ? "ไม่จำกัด" : maxFileCount}) */}
+                </p>
+              </label>
+            </div>
+          )}
+
+          {imageListView.length === 0 ? (
+            <div className="no-image-container">
+              <p style={{ fontSize: '24px', color: '#999' }}>No Image</p>
+            </div>
+          ) : (
+            <StyleImageList
+              itemData={imageListView.map((image) => ({
+                img: image.url,
+                title: image.name,
+              }))}
+              onRemoveImage={handleRemoveImage}
+              actions={actions}
+            />
+          )}
+        </div>
+
+
+        {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}
             value={fixedAssetDescription}
@@ -299,12 +714,12 @@ export default function ServiceRequestBody({
             multiline={false}
             onChange={(value) => setFixedAssetDescription(value)}
           />
-        </div>
+        </div> */}
       </div>
-      <div className="row justify-start">        
+      <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <FullWidthTextareaField
-            labelName={"Description"}
+            labelName={"รายละเอียด"}
             value={description}
             disabled={disableOnly}
             multiline={true}
@@ -312,6 +727,34 @@ export default function ServiceRequestBody({
           />
         </div>
       </div>
+      {/* ช่อง เหตุผล Reject ================================================ */}
+      {rejectSubmitReason !== "" && (
+        <div className="row justify-start">
+          <div className="col-md-12 mb-2">
+            <FullWidthTextareaField
+              labelName={"เหตุผลปฎิเสธการส่งข้อมูล"}
+              value={rejectSubmitReason}
+              disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
+              multiline={true}
+              onChange={(value) => setRejectSubmitReason(value)}
+            />
+          </div>
+        </div>
+      )}
+      {rejectStartReason !== "" && (
+        <div className="row justify-start">
+          <div className="col-md-12 mb-2">
+            <FullWidthTextareaField
+              labelName={"เหตุผลปฎิเสธเริ่มงาน"}
+              value={rejectStartReason}
+              disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
+              multiline={true}
+              onChange={(value) => setRejectStartReason(value)}
+            />
+          </div>
+        </div>
+      )}
     </div>
+
   );
 }

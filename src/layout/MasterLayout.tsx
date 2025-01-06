@@ -5,7 +5,7 @@ import SideBar from './components/sidebar';
 import Footer from './components/footer';
 
 export default function MasterLayout() {
-    const [open, setOpen] = React.useState(false)
+    const [open, setOpen] = React.useState(true)
 
 
     const headleOpen = (val:boolean) => {

@@ -127,7 +127,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.columnName ? order : false}
             className={`py-5`}
-            style={{ backgroundColor: '#DCCCBD' }}
+            style={{ backgroundColor: '#DCCCBD', minWidth: headCell.colWidth }}
           //sx={{backgroundColor:'bg-gray-300',color:'red'}}
           >
             <TableSortLabel
@@ -225,6 +225,7 @@ interface EnhancedTable {
   headCells: any;
   rows: any;
   setDataSelect?: (val: any) => void;
+  roleName?: string;
 }
 
 export default function EnhancedTable({
@@ -241,6 +242,7 @@ export default function EnhancedTable({
   handleonClick_2,
   handleonClick_3,
   setDataSelect,
+  roleName,
 }: EnhancedTable) {
   const [order, setOrder] = React.useState<Order>("asc");
   const [orderBy, setOrderBy] = React.useState<string>("calories");
@@ -350,13 +352,13 @@ export default function EnhancedTable({
         <Divider className="mb-5" sx={{ my: 0.1, borderWidth: "1px" }} />
         <div
           className={`flex items-center ${handleonClick_1 || handleonClick_2 || handleonClick_3
-              ? `justify-between`
-              : `justify-end`
+            ? `justify-between`
+            : `justify-end`
             }`}
         >
           {/* {handleonClick_1 ||handleonClick_2 ||handleonClick_3 && */}
           <div className="flex pl-2 px-8">
-            {buttonLabal_1 && buttonColor_1 && handleonClick_1 && (
+            {buttonLabal_1 && buttonColor_1 && handleonClick_1 && roleName !== "Approver" && (
               <div className="">
                 <FullWidthButton
                   iconAdd={true}
@@ -394,7 +396,7 @@ export default function EnhancedTable({
           {/* } */}
           <div className={`flex mr-2 py-5 px-8`}>
             <TextField
-              placeholder="Search"
+              placeholder="ค้นหา"
               variant="outlined"
               size="small"
               onChange={(e) => {

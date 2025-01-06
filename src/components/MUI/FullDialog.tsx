@@ -24,7 +24,7 @@ interface FuncDialog {
   handleRejectAction?: any;
   titlename?: string;
   open: boolean;
-  dialogWidth?: string;
+  dialogWidth?: string | false;
   openBottonHidden?: boolean;
   colorBotton?: string;
   actions?: string;
@@ -32,39 +32,55 @@ interface FuncDialog {
 }
 
 const actionConfig = {
+
   Draft: {
-    mainButton: { label: "Draft", show: true },
+    mainButton: { label: "บันทึก", show: true},
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Submit: {
-    mainButton: { label: "Submit", show: true },
+    mainButton: { label: "ส่งข้อมูล", show: true},
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Approved: {
-    mainButton: { label: "Approved", show: true },
-    rejectButton: { label: "Submit Reject", show: true },
-    cancelButton: { show: false },
+    mainButton: { label: "อนุมัติ", show: true},
+    rejectButton: { label: "ไม่อนุมัติ", show: true },
+    cancelButton: { show: true },
   },
   AcceptJob: {
-    mainButton: { label: "Start", show: true },
-    rejectButton: { label: "Reject", show: true },
-    cancelButton: { show: false },
+    mainButton: { label: "เริ่มงาน", show: true },
+    rejectButton: { label: "ปฏิเสธ", show: true },
+    cancelButton: { show: true },
+  },
+  RejectStart: {
+    mainButton: { show: false },
+    rejectButton: { label: "ยืนยันการยกเลิก", show: true , color: "success"},
+    cancelButton: { show: true },
   },
   TimeSheet: {
-    mainButton: { label: "Save", show: true },
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  Pending: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  UnPending: {
+    mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   JobDone: {
-    mainButton: { label: "Job Done", show: true },
+    mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Close: {
-    mainButton: { label: "Close", show: true },
-    rejectButton: { label: "Reject Job", show: true },
+    mainButton: { label: "ปิดงาน", show: true },
+    rejectButton: { label: "ปฏิเสธงาน", show: true },
     cancelButton: { show: true },
   },
   Read: {
@@ -73,17 +89,32 @@ const actionConfig = {
     cancelButton: { show: true },
   },
   Create: {
-    mainButton: { label: "Create", show: true },
+    mainButton: { label: "บันทึก", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Update: {
-    mainButton: { label: "Edit", show: true },
+    mainButton: { label: "แก้ไขข้อมูล", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
   Delete: {
-    mainButton: { label: "Delete", show: true },
+    mainButton: { label: "ลบข้อมูล", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  RejectReason: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  Cutoff: {
+    mainButton: { label: "บันทึก", show: true },
+    rejectButton: { show: false },
+    cancelButton: { show: true },
+  },
+  ImportFile: {
+    mainButton: { label: "นำเข้า", show: true },
     rejectButton: { show: false },
     cancelButton: { show: true },
   },
@@ -99,7 +130,7 @@ export default function FuncDialog(props: FuncDialog) {
     <React.Fragment>
       <BootstrapDialog
         fullWidth
-        maxWidth={props.dialogWidth}
+        maxWidth={props.dialogWidth} // สามารถกำหนดขนาดตรงนี้ เช่น "xs", "sm", "md", "lg", "xl"
         onClose={props.handleClose}
         // aria-labelledby="customized-dialog-title"
         open={props.open}
@@ -140,7 +171,7 @@ export default function FuncDialog(props: FuncDialog) {
                 handleonClick={props.handleRejectAction}
                 labelName={config.rejectButton.label || "Reject"}
                 variant_text="contained"
-                colorname="error"
+                colorname={config.rejectButton.color || "error"} // กำหนดสีจาก config
               />
             </div>
           )}
@@ -149,59 +180,12 @@ export default function FuncDialog(props: FuncDialog) {
             <div className="pr-5">
               <FullWidthButton
                 handleonClick={props.handleClose}
-                labelName="Cancel"
+                labelName="ยกเลิก"
                 variant_text="contained"
                 colorname="error"
               />
             </div>
           )}
-
-          {/* {props.actions === "AcceptJob" || props.actions === "TimeSheet" ? (
-            <div className="py-3">
-              {props.openBottonHidden && (
-                <FullWidthButton
-                  handleonClick={props.handlefunction}
-                  labelName={props.actions === "AcceptJob" ? "Start" : "Save"}
-                  variant_text="contained"
-                  colorname={props.colorBotton}>
-                </FullWidthButton>
-              )}
-            </div>
-          ) : (
-
-            <div className="py-3">
-              {props.openBottonHidden && (
-                <FullWidthButton
-                  handleonClick={props.handlefunction}
-                  labelName={props.titlename}
-                  variant_text="contained"
-                  colorname={props.colorBotton}>
-                </FullWidthButton>
-              )}
-            </div>
-
-
-          )}
-
-          {props.actions === "Approved" || props.actions === "AcceptJob" ? (
-            <div className="pr-5">
-              <FullWidthButton
-                handleonClick={props.handleRejectAction}
-                labelName={props.actions === "Approved" ? "Submit Reject" : "Reject" }
-                variant_text="contained"
-                colorname="error"
-              />
-            </div>
-          ) : (
-            <div className="pr-5">
-              <FullWidthButton
-                handleonClick={props.handleClose}
-                labelName="Cancel"
-                variant_text="contained"
-                colorname="error"
-              />
-            </div>
-          )} */}
         </DialogActions>
       </BootstrapDialog>
     </React.Fragment>

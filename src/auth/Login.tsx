@@ -17,10 +17,15 @@ import {
   addUserRoleMenuFunc,
 } from "../../redux/actions/userAction";
 import {
-  EndLoadScreen,
+  endLoadScreen,
   startLoadScreen,
 } from "../../redux/actions/loadingScreenAction";
 import { login_auth_emp_get } from "../service/login";
+import { IconButton, InputAdornment } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import './login.css'
+import MobileDetect from 'mobile-detect';
 
 function Copyright() {
   return (
@@ -30,12 +35,7 @@ function Copyright() {
       align="center"
       sx={{ mt: 5 }}
     >
-      {"Copyright © "}
-      <Link color="inherit" href="https://mui.com/">
-        Rodbenz Website
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
+      {import.meta.env.VITE_COPYRIGHT}
     </Typography>
   );
 }
@@ -47,6 +47,16 @@ const defaultTheme = createTheme();
 export default function Login() {
   const dispatch = useDispatch();
   const [errorMessage, setErrorMessage] = React.useState("");
+
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+
+  const handleClickShowPassword = () => {
+    setShowPassword((prevShowPassword) => !prevShowPassword);
+  };
+
+  const handleMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
 
   const handleSubmit = (event: any) => {
     dispatch(startLoadScreen());
@@ -62,6 +72,63 @@ export default function Login() {
     });
   };
 
+  const fetchPublicIP = async (): Promise<string> => {
+    try {
+      const response = await fetch("https://api.ipify.org?format=json");
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error("Error fetching public IP:", error);
+      return "";
+    }
+  };
+
+  const getBrowserInfo = (): string => {
+    const userAgent = navigator.userAgent || "";
+    let browserName = "Unknown";
+    let browserVersion = "Unknown";
+
+    if (/chrome|chromium|crios/i.test(userAgent) && !/edg/i.test(userAgent)) {
+      browserName = "Chrome";
+      browserVersion = userAgent.match(/Chrome\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/firefox|fxios/i.test(userAgent)) {
+      browserName = "Firefox";
+      browserVersion = userAgent.match(/Firefox\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/safari/i.test(userAgent) && !/chrome|chromium|crios/i.test(userAgent)) {
+      browserName = "Safari";
+      browserVersion = userAgent.match(/Version\/([0-9.]+)/)?.[1] || "Unknown";
+    } else if (/edg/i.test(userAgent)) {
+      browserName = "Edge";
+      browserVersion = userAgent.match(/Edg\/([0-9.]+)/)?.[1] || "Unknown";
+    }
+
+    return `${browserName} ${browserVersion}`;
+  }; 
+
+  const getCurrentAccessData = async (response: any) => {
+    const publicIP = await fetchPublicIP();
+    const clientIP = "10.100.xx.xxx"; // Replace with backend data if available
+    const md = new MobileDetect(window.navigator.userAgent);
+    const accessType = md.mobile() ? 'MOBILE' : 'WEB';
+    console.log(accessType);
+
+    const currentAccessData = {
+      domain_id: response?.data?.auth_role_profile[0].employee_domain,
+      session_id: response?.data?.auth_role_profile[0].session_id,
+      user_id: response?.data?.auth_role_profile[0].employee_username,
+      access_type: accessType,
+      client_ip: clientIP,
+      public_ip: publicIP,
+      app_name: response?.data?.auth_role_profile[0].application_code,
+      version_no: import.meta.env.VITE_VERSION,
+      browser: getBrowserInfo(),
+      access_status: response.status,
+      status_desc: ""
+    };
+
+    sessionStorage.setItem("current_access", JSON.stringify(currentAccessData));
+  };
+
   const Login = async (datasend: any) => {
     try {
       setTimeout(async () => {
@@ -71,20 +138,25 @@ export default function Login() {
           dispatch(addUserRoleMenu(reponse?.data?.auth_role_menu));
           dispatch(addUserRoleMenuFunc(reponse?.data?.auth_role_menu_func));
           const lsValue = JSON.stringify(reponse);
-          localStorage.setItem(
+          console.log(lsValue, 'lsValue');
+
+          sessionStorage.setItem(
             import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY,
             lsValue
           );
-          dispatch(EndLoadScreen());
+
+          await getCurrentAccessData(reponse);
+
+          dispatch(endLoadScreen());
         }
         if (reponse && reponse.status == "Error") {
           console.log(reponse);
-          dispatch(EndLoadScreen());
+          dispatch(endLoadScreen());
           await setErrorMessage(reponse?.error_message);
         }
-      }, 4000);
+      }, 0);
     } catch (e) {
-      dispatch(EndLoadScreen());
+      dispatch(endLoadScreen());
       console.log(e);
     }
   };
@@ -98,7 +170,7 @@ export default function Login() {
           sm={4}
           md={7}
           sx={{
-            backgroundImage: `url(./public/media/slider/image.png)`,
+            backgroundImage: `url(./media/slider/image.png)`,
             backgroundRepeat: "no-repeat",
             backgroundColor: (t) =>
               t.palette.mode === "light"
@@ -147,8 +219,23 @@ export default function Login() {
                 fullWidth
                 name="password"
                 label="Password"
-                type="password"
+                className="inputPass"
+                type={showPassword ? "text" : "password"}
                 id="password"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
                 autoComplete="current-password"
                 error={errorMessage != ""}
               />
@@ -165,7 +252,7 @@ export default function Login() {
               >
                 Sign In
               </Button>
-              <Grid container>
+              {/* <Grid container>
                 <Grid item xs>
                   <Link href="#" variant="body2">
                     Forgot password?
@@ -176,7 +263,7 @@ export default function Login() {
                     {"Don't have an account? Sign Up"}
                   </Link>
                 </Grid>
-              </Grid>
+              </Grid> */}
               <Copyright />
             </Box>
           </Box>

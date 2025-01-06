@@ -74,6 +74,11 @@ export default function FullWidthTextareaField({
         onChange={handleChange}
         value={value}
       />
+      {Validate && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          กรุณากรอกข้อมูล
+        </p>
+      )}
       {validateTextLable && (
         <label htmlFor="" className={`fs-7 py-1 sarabun-regular-lable-validate`}>
           {validateTextLable}

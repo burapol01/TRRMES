@@ -4,7 +4,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Stack, Typography, IconButton, Box } from "@mui/material";
+import { Stack, Typography, IconButton, Box, createTheme, useMediaQuery, ThemeProvider } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 type Types = "success" | "error" | "warning" | "info";
@@ -31,6 +31,9 @@ const MassengmodalProvider: React.FC = () => {
   );
   const [open, setOpen] = React.useState(false);
 
+  const theme = createTheme(); // สร้าง theme
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm")); // ใช้ theme สำหรับ useMediaQuery
+
   React.useEffect(() => {
     Massengmodal = {
       createModal: (
@@ -54,22 +57,29 @@ const MassengmodalProvider: React.FC = () => {
   };
 
   return (
+    <ThemeProvider theme={theme}> {/* ครอบ MassengmodalProvider ด้วย ThemeProvider */}
     <Dialog
       open={open}
       onClose={handleClose}
+      fullWidth={isSmallScreen}
+      maxWidth={isSmallScreen ? "xs" : "sm"}
       sx={{
         zIndex: (theme) => theme.zIndex.modal + 10,
+        "& .MuiDialog-paper": {
+          width: isSmallScreen ? "90%" : "25%",
+          maxWidth: "600px",
+        },
       }}
     >
       <DialogTitle>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h6">
             {types.charAt(0).toUpperCase() + types.slice(1)}
-          </Typography>    
+          </Typography>
 
         </Stack>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ p: 4 }}>
         <Stack direction="column" alignItems="center" spacing={3}>
           {types === "success" && <img src="media/alertMasseng/icons8-success.gif" alt="success" />}
           {types === "error" && <img src="media/alertMasseng/icons8-error.gif" alt="error" />}
@@ -107,6 +117,7 @@ const MassengmodalProvider: React.FC = () => {
         </Box>
       </DialogActions>
     </Dialog>
+    </ThemeProvider>
   );
 };
 

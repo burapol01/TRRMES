@@ -10,7 +10,7 @@ const AuthProvider = ({ children }:any) => {
         if (!localStorage) {
             return
         }
-        const lsValue = await localStorage.getItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY)
+        const lsValue = await sessionStorage.getItem(import.meta.env.VITE_APP_AUTH_LOCAL_STORAGE_KEY)
         if (!lsValue) {
             return
         }

@@ -3,8 +3,17 @@ import FullWidthTextField from "../../../components/MUI/FullWidthTextField";
 import AutocompleteComboBox from "../../../components/MUI/AutocompleteComboBox";
 import FullWidthTextareaField from "../../../components/MUI/FullWidthTextareaField";
 import debounce from 'lodash/debounce';
-import { setValueMas } from "../../../../libs/setvaluecallback"
+import { setValueList, setValueMas } from "../../../../libs/setvaluecallback"
 import TimeSheetBody from "./TimeSheetBody";
+import StyleImageList from "../../../components/MUI/StandardImageList";
+// Import CSS styles
+import "../../../app/service_time_sheet/css/choose_file.css";
+import { createFilterOptions } from "@mui/material";
+import moment from "moment";
+import { _POST } from "../../../service";
+import BasicTable from "../../../components/MUI/BasicTable";
+import { Table_Pending_headCells } from "../../../../libs/columnname";
+import { dateFormatTimeEN } from "../../../../libs/datacontrol";
 
 interface ServiceTimeSheetBodyProps {
   onDataChange?: (data: any) => void;
@@ -13,12 +22,13 @@ interface ServiceTimeSheetBodyProps {
     requestDate: string;
     requestId?: string;
     reqUser?: string;
-    headUser?: string;
+    appReqUser?: string;
     costCenterId?: string;
     costCenterCode?: string;
     costCenterName?: string;
     status?: string;
     site?: string;
+    siteId?: string;
     countRevision?: string;
     serviceCenterId?: string;
     jobType?: string;
@@ -26,8 +36,12 @@ interface ServiceTimeSheetBodyProps {
     description?: string;
     fixedAssetId?: string;
     fixedAssetDescription?: string;
+    rejectSubmitReason?: string,
+    rejectStartReason?: string,
+    requestAttachFileList?: any[];
   };
   options?: {
+    costCenter: any[];
     serviceCenter: any[];
     jobType: any[];
     budgetCode: any[];
@@ -48,16 +62,21 @@ export default function ServiceTimeSheetBody({
   disableOnly,
   actions
 }: ServiceTimeSheetBodyProps) {
+  const [optionServiceCenter, setOptionServiceCenter] = useState<any>(options?.serviceCenter || []);
+  const [optionBudgetCode, setOptionBudgetCode] = useState<any>(options?.budgetCode || []);
+  const [optionFixedAssetCode, setOptionFixedAssetCode] = useState<any>(options?.fixedAssetCode || []);
+  const [optionRevision, setOptionRevision] = useState<any>(options?.revision || []);
   const [requestNo, setRequestNo] = useState(defaultValues?.requestNo || "");
   const [requestDate, setRequestDate] = useState(defaultValues?.requestDate || "");
   const [requestId, setRequestId] = useState(defaultValues?.requestId || "");
   const [reqUser, setEmployee] = useState(defaultValues?.reqUser || "");
-  const [headUser, setheadUser] = useState(defaultValues?.headUser || "");
+  const [appReqUser, setheadUser] = useState(defaultValues?.appReqUser || "");
   const [costCenterId, setCostCenterId] = useState(defaultValues?.costCenterId || "");
-  const [costCenterCode, setCostCenter] = useState(defaultValues?.costCenterCode || "");
+  const [costCenterCode, setCostCenterCode] = useState(defaultValues?.costCenterCode || "");
   const [costCenterName, setCostCenterName] = useState(defaultValues?.costCenterName || "");
   const [status, setStatus] = useState(defaultValues?.status || "Draft");
   const [serviceCenterId, setServiceCenterId] = useState(defaultValues?.serviceCenterId || "");
+  const [costCenter, setCostCenter] = useState<any>(null);
   const [serviceCenter, setServiceCenter] = useState<any>(null);
   const [serviceName, setServiceName] = useState("");
   const [site, setSite] = useState(defaultValues?.site || "");
@@ -67,8 +86,13 @@ export default function ServiceTimeSheetBody({
   const [fixedAssetCode, setFixedAssetCode] = useState<any>(null);
   const [fixedAssetDescription, setFixedAssetDescription] = useState("");
   const [countRevision, setCountRevision] = useState(defaultValues?.countRevision || "1");
-  const [revisionCurrent, setRevision] = useState<any>(null);
+  const [revisionCurrent, setRevisionCurrent] = useState<any>(null);
   const [timeSheetData, settimeSheetData] = useState<any>(null); // State to store draft data  
+
+  const [rejectSubmitReason, setRejectSubmitReason] = useState(defaultValues?.rejectSubmitReason || "");
+  const [rejectStartReason, setRejectStartReason] = useState(defaultValues?.rejectStartReason || "");
+
+  const [dataListPending, setDataListPending] = useState<any[]>([]);
 
   const handleDataChange = (data: any) => {
     settimeSheetData(data); // Store draft data
@@ -88,12 +112,13 @@ export default function ServiceTimeSheetBody({
       requestNo,
       requestDate,
       reqUser,
-      headUser,
+      appReqUser,
       costCenterId,
       costCenterCode,
       costCenterName,
       status,
       serviceCenterId,
+      costCenter,
       serviceCenter,
       serviceName,
       site,
@@ -104,26 +129,43 @@ export default function ServiceTimeSheetBody({
       fixedAssetDescription,
       countRevision,
       revisionCurrent,
-      timeSheetData
+      timeSheetData,
+      imageList // เพิ่ม imageList เข้าไปใน data
     };
     // Call debounced function
     debouncedOnDataChange(data);
   }, [
-    requestId, requestNo, requestDate, reqUser, headUser, costCenterId, costCenterCode, costCenterName,
-    status, serviceCenterId, serviceCenter, serviceName, site, jobType, budgetCode, description,
+    requestId, requestNo, requestDate, reqUser, appReqUser, costCenterId, costCenterCode, costCenterName,
+    status, serviceCenterId, costCenter, serviceCenter, serviceName, site, jobType, budgetCode, description,
     fixedAssetCode, fixedAssetDescription,
     countRevision, revisionCurrent, timeSheetData, onDataChange,
   ]);
 
   React.useEffect(() => {
+
     if (actions != "Create") {
 
+      // console.log(defaultValues?.siteId, 'siteId')
+      // console.log(options?.costCenter, 'dd')
+      // console.log(defaultValues?.costCenterId, 'costCenterId')
+
+      if (defaultValues?.costCenterId != "") {
+        const mapCostCenterData = setValueMas(options?.costCenter, defaultValues?.costCenterId, 'costCenterId')
+        console.log(mapCostCenterData, 'mapCostCenterData')
+        setCostCenter(mapCostCenterData)
+      }
 
       if (defaultValues?.serviceCenterId != "") {
         const mapCostCenterData = setValueMas(options?.serviceCenter, defaultValues?.serviceCenterId, 'serviceCenterId')
-       // console.log(mapCostCenterData, 'mapCostCenterData')
+        // console.log(mapCostCenterData, 'mapCostCenterData')
         setServiceCenter(mapCostCenterData)
         setServiceName(mapCostCenterData?.serviceCenterName)
+      }
+
+      if (defaultValues?.jobType != "") {
+        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
+        //console.log(mapJobTypeData, 'mapJobTypeData')
+        setJobType(mapJobTypeData)
       }
 
       if (defaultValues?.budgetCode != "") {
@@ -131,12 +173,6 @@ export default function ServiceTimeSheetBody({
         //console.log(mapBudgetData, 'mapBudgetData')
         setBudgetCode(mapBudgetData)
 
-      }
-
-      if (defaultValues?.jobType != "") {
-        const mapJobTypeData = setValueMas(options?.jobType, defaultValues?.jobType, 'lov_code')
-        //console.log(mapJobTypeData, 'mapJobTypeData')
-        setJobType(mapJobTypeData)
 
       }
 
@@ -152,42 +188,229 @@ export default function ServiceTimeSheetBody({
         setDescription(defaultValues?.description || "")
 
       }
-      console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
+
       if (defaultValues?.fixedAssetId != "") {
         const mapfixedAssetData = setValueMas(options?.fixedAssetCode, defaultValues?.fixedAssetId, 'assetCodeId')
-        console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
+        //console.log(defaultValues?.fixedAssetId, 'mapfixedAssetData')
         setFixedAssetCode(mapfixedAssetData)
-        setFixedAssetDescription(mapfixedAssetData.assetDescription)
+        //setFixedAssetDescription(mapfixedAssetData?.assetDescription)
 
       }
 
-      if (defaultValues?.headUser != "") {
-        //console.log(defaultValues?.headUser, 'headUser')
-        setheadUser(defaultValues?.headUser || "");
+      if (defaultValues?.appReqUser != "") {
+        //console.log(defaultValues?.appReqUser, 'appReqUser')
+        setheadUser(defaultValues?.appReqUser || "");
       }
-
-      console.log(defaultValues?.requestId, 'requestId')
-      console.log(options?.revision, 'revision')
-       if (defaultValues?.requestId != "") {
-        
-         const mapRevisionData = setValueMas(options?.revision, defaultValues?.requestId, 'reqId')
-      console.log(mapRevisionData, 'mapRevisionData')
-        setRevision(mapRevisionData)
-        console.log(revisionCurrent,"revisionCurrent");
-
-       }
 
     }
 
 
-  }, [defaultValues])
+  }, [ options?.fixedAssetCode])
+
+  //เปลี่ยนเป็นเรียกครั้งเดียว ในการ ดึงข้อมูล Revision มาแสดง
+  React.useMemo(() => {
+    if (defaultValues?.requestId !== "") {
+      console.log(actions, 'actions');
+      console.log(options?.revision, 'revision');
+      console.log(defaultValues?.requestId, 'requestId');
+
+      // รับค่า data จาก setValueList
+      const data: any[] = setValueList(options?.revision, defaultValues?.requestId, 'reqId') || []; // ใช้ || [] เพื่อให้ค่าเป็นอาเรย์ว่างถ้าเป็น undefined
+
+      console.log(data, 'mapRevisionData');
+
+      // ตรวจสอบความยาวของ data
+      if (data.length > 0) {
+        setOptionRevision(data);
+        setRevisionCurrent(data[0]);
+        console.log(revisionCurrent, "revisionCurrent");
+      } else {
+        setOptionRevision([]);
+      }
+
+      return data; // คืนค่า data
+    }
+    return []; // คืนค่าอาเรย์ว่างถ้า requestId ไม่ถูกตั้งค่า
+  }, []); // กำหนด dependencies
+
+
+
+
+  //AutocompleteComboBox ===================================================================================================================
+  //ตัวกรองข้อมูลแค่แสดง 200 แต่สามารถค้นหาได้ทั้งหมด
+  const OPTIONS_LIMIT = 100;
+  const defaultFilterOptions = createFilterOptions();
+
+  const filterOptions = (options: any[], state: any) => {
+    return defaultFilterOptions(options, state).slice(0, OPTIONS_LIMIT);
+  };
+
+  //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
+  React.useEffect(() => {
+
+    const filteredData = options?.budgetCode.filter((item: any) =>
+    // (!costCenter?.costCenterId || item.costCenterId
+    //   .toString()
+    //   .includes(costCenter?.costCenterId)) && //โน้ตไว้ถ้าเกิดผูก Cost Center ให้ ปลดคอมเม้้นท์ออก
+    (!jobType?.lov_code || item.jobType
+      .toString()
+      .includes(jobType?.lov_code))
+
+    );
+    //console.log(filteredData, 'filteredData');
+    //ใส่ useState ใหม่ 
+    setOptionBudgetCode(filteredData);
+
+    const filterFixedAssetCode = options?.fixedAssetCode.filter((item: any) =>
+    (!costCenter?.costCenterId || item.costCenterId
+      .toString()
+      .includes(costCenter?.costCenterId || costCenter))
+    );
+
+    //ใส่ useState ใหม่ 
+    setOptionFixedAssetCode(filterFixedAssetCode)
+    //console.log(filterFixedAssetCode, 'filterFixedAssetCode');
+
+    const filterServiceCenter = options?.serviceCenter.filter((item: any) =>
+    (!costCenter?.siteCode || item.siteCode
+      .toString()
+      .includes(costCenter?.siteCode || costCenter))
+    );
+
+    setOptionServiceCenter(filterServiceCenter);
+
+  }, [actions, reqUser, costCenter, jobType])
+  //AutocompleteComboBox ===================================================================================================================
+
+  // States สำหรับจัดการไฟล์รูปภาพและตัวอย่าง
+  //=========================================== การ Upload File ==========================================
+  interface ImageItem {
+    file: File | null; // เก็บข้อมูลไฟล์
+    name: string;      // ชื่อไฟล์
+    type: string | null;      // ประเภทไฟล์
+    url: string;       // URL สำหรับแสดง Preview
+    flagDeleteFile?: boolean; // Flag สำหรับระบุว่ารูปนี้ถูกลบหรือไม่
+    flagNewFile?: boolean;    // Flag สำหรับระบุว่ารูปนี้เป็นรูปใหม่
+  }
+  // Image Upload handling
+  const [imageList, setImageList] = React.useState<ImageItem[]>([]);// กำหนดประเภทของ state เป็น ImageItem[]
+  const [imageListView, setImageListView] = useState<ImageItem[]>([]); // เก็บข้อมูลสำหรับการแสดงผล
+
+
+  // การอัปโหลดไฟล์
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const uploadedFiles: ImageItem[] = files.map((file) => {
+      const url = URL.createObjectURL(file); // สร้าง URL สำหรับไฟล์เพื่อแสดงผล
+      return {
+        file: file,
+        name: file.name,
+        type: file.type,
+        url: url,
+        flagNewFile: true,  // รูปนี้เป็นรูปใหม่
+        flagDeleteFile: false // รูปนี้ยังไม่ได้ถูกลบ
+      };
+    });
+
+    setImageList((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตไฟล์ใน imageList
+    setImageListView((prevList) => [...prevList, ...uploadedFiles]); // อัปเดตการแสดงผลไฟล์
+  };
+
+  // ฟังก์ชันจัดการการลบภาพ
+  const handleRemoveImage = (url: string) => {
+    setImageList((prevList) =>
+      prevList.map((image) =>
+        image.url === url ? { ...image, flagDeleteFile: true } : image
+      )
+    ); // ตั้งค่า flagDeleteFile เป็น true ใน imageList
+
+    // ลบภาพจากการแสดงผลใน imageListView
+    setImageListView((prevList) =>
+      prevList.filter((image) => image.url !== url)); // ลบภาพจากการแสดงผลใน imageListView
+
+
+
+  };
+
+  // โหลดไฟล์ที่มีอยู่แล้ว
+  useEffect(() => {
+    // ล้างค่า imageList และ imageListView ทุกครั้งก่อนที่จะโหลดไฟล์ใหม่
+    setImageList([]);
+    setImageListView([]);
+    const requestAttachFileList = defaultValues?.requestAttachFileList || []; // กำหนดค่าเริ่มต้นเป็นอาเรย์ว่าง
+    console.log(requestAttachFileList, 'requestAttachFileList');
+
+    if (requestAttachFileList.length > 0) {
+      const existingFiles = requestAttachFileList.map((file: any) => ({
+        requestAttachFileId: file.id,
+        reqId: file.req_id,
+        reqSysFilename: file.req_sys_filename,
+        filePatch: file.file_patch,
+        file: null,
+        name: file.req_user_filename,
+        type: null,
+        url: `${import.meta.env.VITE_APP_TRR_API_URL_SHOWUPLOAD}${import.meta.env.VITE_APP_APPLICATION_CODE}/${import.meta.env.VITE_PROD_SITE}`  + file.file_patch,
+        flagNewFile: false, // รูปที่มีอยู่แล้ว
+        flagDeleteFile: false // ยังไม่ได้ถูกลบ
+      }));
+      console.log(existingFiles, 'existingFilesexistingFiles');
+
+      setImageList(existingFiles); // เก็บข้อมูลไฟล์ใน imageList
+      setImageListView(existingFiles); // แสดงผลไฟล์
+    }
+  }, [defaultValues?.requestAttachFileList, actions]);
+
+
+  //================================================================================================
+  const managePendingGet = async () => {
+    console.log('Call : managePendingGet', moment().format('HH:mm:ss:SSS'));
+
+    const payload = {
+      req_id : requestId 
+    };
+
+    try {
+      const response = await _POST(payload, "/api_trr_mes/PendingManage/Manage_Pending_Get");
+
+      if (response && response.status === "success") {
+        console.log('Manage_Pending_Get successfully:', response);
+
+        // ตรวจสอบว่า response.data เป็น array หรือไม่
+        if (Array.isArray(response.data)) {
+          response.data.forEach((item: any, index: number) => {
+
+            // ใช้ index + 1 เพื่อให้ลำดับเริ่มต้นที่ 1
+            item.no = index + 1;
+            item.pending_s_date = dateFormatTimeEN(item.pending_s_date, "DD/MM/YYYY HH:mm:ss");
+            item.pending_e_date = dateFormatTimeEN(item.pending_e_date, "DD/MM/YYYY HH:mm:ss");
+            item.unpending_by = item.unpending_by === null ? "-" : item.unpending_by
+            item.unpending_date = item.unpending_date === null ? "-" : dateFormatTimeEN(item.unpending_date, "DD/MM/YYYY HH:mm:ss");
+          });
+        }
+
+
+        setDataListPending(response.data);
+      } else {
+        console.error('Failed to Manage_Pending_Get:', response);
+      }
+    } catch (error) {
+      console.error('Error Manage_Pending_Get:', error);
+    }
+  };
+
+
+  useEffect(() => {
+
+    managePendingGet();
+  }, [requestId]);
+
 
   return (
     <div>
       <div className="row justify-start">
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Request No."}
+            labelName={"เลขที่ใบคำขอ"}
             value={requestNo}
             onChange={(value) => setRequestNo(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -197,7 +420,7 @@ export default function ServiceTimeSheetBody({
         {actions !== "Create" && (
           <div className="col-md-3 mb-2">
             <FullWidthTextField
-              labelName={"Date"}
+              labelName={"วันที่สร้างใบคำขอ"}
               value={requestDate}
               onChange={(value) => setRequestDate(value)}
               disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
@@ -210,20 +433,39 @@ export default function ServiceTimeSheetBody({
 
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Employee"}
+            labelName={"พนักงาน"}
             value={reqUser}
             onChange={(value) => setEmployee(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
           />
         </div>
         <div className="col-md-3 mb-2">
-          <FullWidthTextField
-            labelName={"Cost center"}
+          <AutocompleteComboBox
+            required={"required"}
+            labelName={"Cost Center"}
+            column="costCentersCodeAndName"
+            value={costCenter}
+            disabled={disableOnly}
+            setvalue={(data) => {
+              setCostCenter(data);
+              setSite(data?.siteCode || "");
+
+              setServiceCenter(null)
+              setServiceName("")
+              setJobType(null)
+              setBudgetCode(null)
+              setFixedAssetCode(null)
+              //setFixedAssetDescription("")
+            }}
+            options={options?.costCenter || []}
+          />
+          {/* <FullWidthTextField
+            labelName={"Cost Center"}
             value={costCenterName + " [" + costCenterCode + "]"}
             onChange={(value) => setCostCenter(value)}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
 
-          />
+          /> */}
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
@@ -235,7 +477,7 @@ export default function ServiceTimeSheetBody({
         </div>
         <div className="col-md-3 mb-2">
           <FullWidthTextField
-            labelName={"Status"}
+            labelName={"สถานะ"}
             value={status}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setStatus(value)}
@@ -252,68 +494,97 @@ export default function ServiceTimeSheetBody({
         </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            required={"required"}
             labelName={"Service Center"}
             column="serviceCentersCodeAndName"
             value={serviceCenter}
             disabled={disableOnly}
             setvalue={(data) => {
               setServiceCenter(data);
-              setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
+              //setServiceName(data?.serviceCenterName || ""); // Clear serviceName if data is null
             }}
-            options={options?.serviceCenter || []}
+            options={optionServiceCenter || []}
           />
         </div>
-        <div className="col-md-3 mb-2">
+        {/* <div className="col-md-3 mb-2">
           <FullWidthTextField
             labelName={"Service Name"}
             value={serviceName}
             disabled={actions === "Create" || actions === "Update" ? true : disableOnly}
             onChange={(value) => setServiceName(value)}
           />
-        </div>
-        <div className="col-md-3 mb-2">
+        </div> */}
+        <div className="col-md-2 mb-2">
           <AutocompleteComboBox
-            // required={true}
-            labelName={"Budget Code"}
-            column="budgetCode"
-            value={budgetCode}
-            setvalue={setBudgetCode}
-            disabled={disableOnly}
-            options={options?.budgetCode || []}
-          />
-        </div>
-        <div className="col-md-3 mb-2">
-          <AutocompleteComboBox
-            // required={true}
-            labelName={"Jobtype"}
+            required={"required"}
+            labelName={"ประเภทงาน"}
             column="lov_name"
             value={jobType}
-            setvalue={setJobType}
+            setvalue={(data) => {
+              //console.log(data, "job");
+              setJobType(data)
+              setBudgetCode(null)
+            }}
             disabled={disableOnly}
             options={options?.jobType || []}
           />
         </div>
+        <div className="col-md-10 mb-2">
+          <AutocompleteComboBox
+            filterOptions={filterOptions}
+            required={"required"}
+            labelName={"Budget Code"}
+            column="budgetCodeAndJobType"
+            value={budgetCode}
+            setvalue={setBudgetCode}
+            disabled={disableOnly}
+            options={optionBudgetCode} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
+          //options={options?.budgetCode}
+          />
+        </div>
       </div>
       <div className="row justify-start">
-        <div className="col-md-3 mb-2">
+        <div className="col-md-12 mb-2">
           <AutocompleteComboBox
-            // required={true}
+            filterOptions={filterOptions}
+            //required={"required"}
             labelName={"Fixed Asset Code"}
-            column="assetCode"
+            column="assetCodeAndDescription"
             value={fixedAssetCode}
             disabled={disableOnly}
             setvalue={(data) => {
               // console.log(data,'data');              
               setFixedAssetCode(data);
-              setFixedAssetDescription(data?.assetDescription || "");
+              //setFixedAssetDescription(data?.assetDescription || "");
             }}
+            //options={optionFixedAssetCode || []} //ตัวนี้คือผูกความสัมพันธ์กับ Cost Center
             options={options?.fixedAssetCode || []}
           />
         </div>
-        <div className="col-md-9 mb-2">
+
+
+        <div className="gallery-container">
+          {/* เงื่อนไขในการแสดงปุ่มเลือกไฟล์ */}
+          {imageListView.length === 0 ? (
+            <div className="no-image-container">
+              <p style={{ fontSize: '24px', color: '#999' }}>No Image</p>
+            </div>
+          ) : (
+            <StyleImageList
+              itemData={imageListView.map((image) => ({
+                img: image.url,
+                title: image.name,
+              }))}
+              onRemoveImage={handleRemoveImage}
+              actions={"Reade"}
+            />
+          )}
+        </div>
+
+
+        {/* <div className="col-md-9 mb-2">
           <FullWidthTextareaField
             labelName={"Fixed Asset Description"}
             value={fixedAssetDescription}
@@ -321,18 +592,47 @@ export default function ServiceTimeSheetBody({
             multiline={false}
             onChange={(value) => setFixedAssetDescription(value)}
           />
-        </div>
+        </div> */}
       </div>
       <div className="row justify-start">
         <div className="col-md-12 mb-2">
           <FullWidthTextareaField
-            labelName={"Description"}
+            labelName={"รายละเอียด"}
             value={description}
             disabled={disableOnly}
             multiline={true}
             onChange={(value) => setDescription(value)}
           />
         </div>
+        {/* ช่อง เหตุผล Reject ================================================ */}
+        {rejectSubmitReason !== "" && (
+          <div className="row justify-start">
+            <div className="col-md-12 mb-2">
+              <FullWidthTextareaField
+                labelName={"เหตุผลปฎิเสธการส่งข้อมูล"}
+                value={rejectSubmitReason}
+                disabled={disableOnly}
+                multiline={true}
+                onChange={(value) => setRejectSubmitReason(value)}
+              />
+            </div>
+          </div>
+        )}
+        {rejectStartReason !== "" && (
+          <div className="row justify-start">
+            <div className="col-md-12 mb-2">
+              <FullWidthTextareaField
+                labelName={"เหตุผลในการปฎิเสธเริ่มงาน"}
+                value={rejectStartReason}
+                disabled={disableOnly}
+                multiline={true}
+                onChange={(value) => setRejectStartReason(value)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ช่อง เหตุผล Reject ==================================================*/}
         {actions != "AcceptJob" && (
           <>
             <div className="col-md-3 mb-2">
@@ -340,10 +640,10 @@ export default function ServiceTimeSheetBody({
                 labelName={"Revision"}
                 column="revisionNo"
                 value={revisionCurrent}
-                setvalue={setRevision}
+                setvalue={setRevisionCurrent}
                 disabled={actions === "Reade" ? false : disableOnly}
-                options={options?.revision || []}
-                orchange={(value) => setRevision(value)} // แก้ไขจาก orchange เป็น onChange
+                options={optionRevision || []}
+                orchange={(value) => setRevisionCurrent(value)} // แก้ไขจาก orchange เป็น onChange
               />
             </div>
 
@@ -351,12 +651,26 @@ export default function ServiceTimeSheetBody({
               <TimeSheetBody
                 onDataChange={handleDataChange}
                 options={options}
+                serviceCenter={serviceCenter}
                 revisionCurrent={revisionCurrent}
+                siteId={defaultValues?.siteId}
                 actions={actions}
 
               />
             </div>
           </>)}
+      </div>
+      <div className={`table-container ${actions === "Reade" ? 'disabled' : ''}`}>
+        {dataListPending && dataListPending.length > 0 ? (
+          <BasicTable
+            columns={Table_Pending_headCells}
+            rows={dataListPending}
+            actions={actions}
+            labelHead={"รายการรอดำเนินการ"}
+          />
+        ) : (
+          <p></p> // หรือไม่แสดงข้อความเลย
+        )}
       </div>
     </div>
   );

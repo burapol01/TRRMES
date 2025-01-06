@@ -1,6 +1,6 @@
 import { Stack } from '@mui/material';
 import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { checkIsActive, checkIsMunuPermis, checkMenuPermisction, checkMenuPermisctionList } from './helpers/RouterHelpers';
 import { useDispatch, useSelector } from 'react-redux';
 import { Menu } from '../../../../types/user';
@@ -13,11 +13,12 @@ interface SideberMenuItem {
     title: string;
     icon?: string;
     dataMenu?: Menu[];
+    index: number;
 }
 type Btnclick = {
     menu_url: string;
 };
-export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dataMenu }: SideberMenuItem) {
+export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dataMenu, index }: SideberMenuItem) {
     const dispatch = useDispatch();
     const { pathname } = useLocation();
     const user_menu_func = useSelector((state: any) => state?.user_menu_func);
@@ -40,8 +41,8 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
             const menu = await checkMenuPermisction(isMenuPermis)
             dispatch(addRoleMenuFunction(null));
             dispatch(addRoleMenuFunction(menu));
-            // console.log(menuList, 'menuList');
-            // console.log(menu, 'menu');
+            // console.log(menu,'isMenuPermis');
+            
         }
     }
 
@@ -51,48 +52,25 @@ export default function SideberMenuItem({ typeMenu, isOpen, to, title, icon, dat
 
     if (typeMenu == "main") {
         return (
-            <li
-                className={`text-gray-300 text-sm flex items-center gap-x-4 cursor-pointer p-2 hover:bg-gray-200 rounded-md  mr-5 mt-2 ${isActive && `bg-blue-200`}
-                }`}
-                onClick={() => handleClick(to)}
-            >
-                <Stack direction={"row"} spacing={1} justifyItems={"center"}>
-                    <span className="text-2xl block float-left">
-                        {/* {el.icon} */}
-                        <i className={`${icon} fs-3`}></i>
-                    </span>
-                    <div className={`${isOpen ? `block`:`hidden`} mt-1`}>
-                        <label
-                            className={`w-40 text-base font-medium flex-1 absolute}`}
-                        >
-                            {title}
-                        </label>
-                    </div>
-                </Stack>
-            </li>
+            <div onClick={() => handleClick(to)} className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 hover:scale-110 rounded-md ${isActive && `bg-blue-200`}`}>
+                <div><i className={`${icon} fs-2`} /></div>
+                <label
+                    style={{ transitionDelay: `${index + 1}00ms` }}
+                    className={`whitespace-pre duration-500 text-lg ${!isOpen && "opacity-0 translate-x-28 overflow-hidden"}`}
+                >
+                    {title}
+                </label>
+            </div>
         )
     }
     if (typeMenu == "sub") {
         return (
-            <li
-                className={`text-gray-300 text-sm flex items-center gap-x-4 cursor-pointer p-1 px-10 hover:bg-gray-200 rounded-md mr-5 mt-2 ${isActive && `bg-blue-200`}
-                    }`}
-                onClick={() => handleClick(to)}
-            >
-                <Stack direction={"row"} spacing={1}>
-                    <span className="text-2xl block float-left">
-                        {/* {el.icon} */}
-                        <i className={`${icon} fs-3`}></i>
-                    </span>
-                    <div>
-                        <label
-                            className={`w-40 text-base font-medium flex-1 absolute pt-1 sarabun-regular`}
-                        >
-                            {title}
-                        </label>
-                    </div>
-                </Stack>
-            </li>
+            <div onClick={() => handleClick(to)} className={`flex items-center text-sm gap-3.5 font-medium p-2 my-2 hover:bg-blue-100 rounded-md ${isActive && `bg-blue-200`}`}>
+                <div><i className={`${icon} fs-2`} /></div>
+                <label className="text-lg">
+                    {title}
+                </label>
+            </div>
         )
     }
 }

@@ -3,8 +3,10 @@ import Autocomplete from "@mui/material/Autocomplete";
 import { grey } from "@mui/material/colors";
 
 interface AutocompleteComboBox {
+  filterOptions?: any;
   value?: any; // เปลี่ยนเป็น any เพื่อรองรับ object
   labelName: string;
+  description?: string;  // เพิ่ม prop สำหรับคำอธิบาย
   required?: string;
   disabled?: boolean;
   readonly?: boolean;
@@ -14,13 +16,14 @@ interface AutocompleteComboBox {
   options?: any[];
   setvalue?: (value: any) => void;
   Validate?: boolean;
+  ValidateDuplicate?: boolean;
 }
 
 export default function AutocompleteComboBox(props: AutocompleteComboBox) {
-  const { value, labelName, required, setvalue, options = [], column, disabled, readonly } = props;
+  const { value, labelName, required, setvalue, options = [], column, disabled, readonly, ValidateDuplicate, filterOptions } = props;
 
   const handleOnChange = (e: any, newValue: any) => {
-    console.log(newValue);
+    //console.log(newValue);
     if (newValue === null) {
       // ถ้าค่าที่เลือกเป็น null (เมื่อกดปุ่มเคลียร์)
       setvalue && setvalue(null);
@@ -36,28 +39,29 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
         {labelName}
       </label>
       <Autocomplete
+        filterOptions={filterOptions}
         sx={{
 
           width: "100%"
         }}
         disablePortal
-        value={value}
+        value={value? value : null}
         id="combo-box-demo"
         options={options ? options : []}
         getOptionLabel={(option) => option[`${column}`]}
-        renderOption={(props, option) =>{ 
-          //console.log(option); // Debugging
+        renderOption={(props, option) => {
+          //console.log(option[`${column}`],'dsdsds'); // Debugging
           return (
-          <li {...props} key={`${option[`${column}`]}-${option?.id}`}>
-            {option[`${column}`]} 
-          </li>)
+            <li {...props} key={`${option[`${column}`]}`}>
+              {option[`${column}`]}
+            </li>)
         }}
-        
-        
+
+
         onChange={handleOnChange}
         disabled={disabled}
         readOnly={readonly}
-        isOptionEqualToValue={(option, value) => option?.id === value?.id} // เปรียบเทียบ option กับ value โดยใช้ id
+        isOptionEqualToValue={(option, value) => option?.value === value?.value} // เปรียบเทียบ option กับ value โดยใช้ id
         renderInput={(params) => (
           <TextField
             {...params}
@@ -85,6 +89,21 @@ export default function AutocompleteComboBox(props: AutocompleteComboBox) {
           />
         )}
       />
+      {props.description && (
+        <p style={{ color: "gray", fontSize: "0.875rem", marginTop: "4px" }}>
+          {props.description}
+        </p>
+      )}
+      {props.Validate && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          กรุณาเลือกข้อมูล
+        </p>
+      )}
+      {props.ValidateDuplicate && (
+        <p style={{ color: "#d50000", fontSize: "0.875rem", marginTop: "4px" }}>
+          Service Center ห้ามเลือกซ้ำกับ Cost Center
+        </p>
+      )}
     </>
   );
 }
