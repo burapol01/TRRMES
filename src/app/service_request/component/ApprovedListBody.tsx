@@ -83,13 +83,29 @@ export default function ApprovedListBody({
     const [actionType, setActionType] = useState<string | null>(null); // Corrected type
     //Test
 
+    
+
+
+    // function dropdown ของ cost center
+    const handleCostCenterChange = (event: any, newValue: any) => {
+        if (newValue) {
+            setCostCenter(newValue);
+            setCostCenterId(newValue.costCenterId);
+            setCostCenterCode(newValue.costCenterCode);
+            setCostCenterName(newValue.costCenterName);
+        }
+    };
+
     // function สำหรับ filter จากการ search
     const OPTIONS_LIMIT = 100;
     const defaultFilterOptions = createFilterOptions();
     
     const filterOptions = (options: any[], state: any) => {
         return defaultFilterOptions(options, state).slice(0, OPTIONS_LIMIT);
-      };
+    };
+
+
+    
 
     // ค้นหาข้อมูล
     const handleSearch = () => {
@@ -204,7 +220,7 @@ export default function ApprovedListBody({
                 <div className="col-md-3 mb-2">
                     <FullWidthTextField
                     labelName={"Cost Center"}
-                    value={requestNo}
+                    value={costCenterCode}
                     onChange={(value) => setRequestNo(value)}
                     />
                 </div>
