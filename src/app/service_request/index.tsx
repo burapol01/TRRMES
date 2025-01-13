@@ -71,8 +71,14 @@ const defaultVal = {
 }
 
 export default function ServiceRequest() {
+
+
   const dispatch = useDispatch()
-  const { isValidate, setIsValidate, isDuplicate, setIsDuplicate } = useListServiceRequest()
+  const { isValidate, 
+    setIsValidate, 
+    isDuplicate, 
+    setIsDuplicate,
+  } = useListServiceRequest()
   const [requestNo, setRequestNo] = useState("");
   const menuFuncList = useSelector((state: any) => state?.menuFuncList);
   const [status, setStatus] = useState("");
@@ -203,7 +209,7 @@ export default function ServiceRequest() {
   //วิธี กรองข้อมูลแบบ เชื่อมความสัมพันธ์ =====================================================================================
   // ฟังก์ชัน useMemo สำหรับกรอง Cost Center
   const filteredUniqueCostCenters = React.useMemo(() => {
-    //console.log(dataList, 'dataList');
+    console.log(dataList, 'dataList');
 
     const filterCostCenter = optionsSearch?.costCenter.filter((item: any) =>
       dataList.some((dataItem: any) =>
@@ -359,7 +365,7 @@ export default function ServiceRequest() {
       const response = await _POST(dataset, "/api_trr_mes/MasterData/Cost_Center_Get");
 
       if (response && response.status === "success") {
-        //console.log('Cost_Center_Get', response)
+        console.log('Cost_Center_Get', response)
         const costCenters = response.data.map((costCenter: any) => ({
           costCenterId: costCenter.id,
           userAd: costCenter.user_ad,
@@ -1974,10 +1980,15 @@ export default function ServiceRequest() {
           handleClose={handleClose}
           handlefunction={serviceRequestDraftAdd}
           colorBotton="success"
-          actions={"Test"}
+          actions={"Draft"}
           element={
             <ApprovedListBody
-
+            onDataChange={handleDataChange}
+                options={options}
+                defaultValues={defaultValues}
+                optionCostCenter={optionCostCenter}
+                dataList={dataList}
+                optionServiceCenter={optionServiceCenter}
             />
           }
         />
