@@ -15,6 +15,7 @@ import CostCenter from "../../master/cost_center";
 import EnhancedTable from "../../../components/MUI/DataTables";
 import { Request_headCells } from "../../../../libs/columnname";
 import { useSelector } from "react-redux";
+import ConfirmModalDialog from "../../../components/MUI/Comfirmmodal";
 
 interface OptionsState {
   costCenterForCreate: any[];
@@ -96,18 +97,26 @@ interface ApprovedListBodyProps {
   actions?: string;
   optionCostCenter?: any[];
   optionServiceCenter?: any[];
+  optionFixedAssetCodes?: any[];
+  optionRequestStatus?: any[];
+  optionJobType?: any[];
   dataList?: any[];
 }
 
 export default function ApprovedListBody({
   optionCostCenter,
   optionServiceCenter,
+  optionFixedAssetCodes,
+  optionRequestStatus,
+  
   onDataChange,
   defaultValues,
   dataList,
   disableOnly,
   actions,
 }: ApprovedListBodyProps) {
+  const [selectedRequestStatus, setSelectedRequestStatus] = useState<any>(null);
+  const [selectedAssetCode, setSelectedAssetCode] = useState<any>(null);
   const [selectedJobType, setSelectedJobType] = useState<any>(null);
   const currentUser = useSelector((state: any) => state?.user?.user);
   const [options, setOptions] = useState<OptionsState>(initialOptions);
@@ -164,9 +173,7 @@ export default function ApprovedListBody({
 
   useEffect(() => {
     console.log(
-      "Call: ✨[1] Search fetch Master Data",
-      moment().format("HH:mm:ss:SSS")
-    );
+      "Call: ✨[1] Search fetch Master Data", moment().format("HH:mm:ss:SSS"));
     const fetchData = async () => {
       await Promise.all([
         searchFetchRequestStatus(), // เรียกใช้ฟังก์ชั่นเพื่อดึงข้อมูล Status จาก LOV
@@ -425,7 +432,7 @@ export default function ApprovedListBody({
           <div className="col-md-3 mb-2">
             <AutocompleteComboBox
               //filterOptions={filterOptions}
-              required={"required"}
+              required={""}
               labelName={"Cost Center"}
               column="costCentersCodeAndName"
               value={costCenter}
@@ -454,17 +461,23 @@ export default function ApprovedListBody({
             />
           </div>
           <div className="col-md-3 mb-2">
-            <FullWidthTextField
+            <AutocompleteComboBox
+              //filterOptions={filterOptions}
+              value={selectedAssetCode}
               labelName={"Fixed Asset Code"}
-              value={fixedAssetCode}
-              onChange={(value) => setRequestNo(value)}
+              options={optionFixedAssetCodes}
+              column="assetCodeAndDescription"
+              setvalue={handleAutocompleteChange(setSelectedAssetCode)}
             />
           </div>
           <div className="col-md-3 mb-2">
-            <FullWidthTextField
+            <AutocompleteComboBox
+              value={selectedRequestStatus}
               labelName={"สถานะ"}
-              value={status}
-              onChange={(value) => setRequestNo(value)}
+              // options={optionsSearch?.requestStatus}
+              options={optionRequestStatus}
+              column="labelRequestStatus"
+              setvalue={handleAutocompleteChange(setSelectedRequestStatus)}
             />
           </div>
         </div>

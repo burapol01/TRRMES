@@ -1989,6 +1989,9 @@ export default function ServiceRequest() {
                 optionCostCenter={optionCostCenter}
                 dataList={dataList}
                 optionServiceCenter={optionServiceCenter}
+                optionFixedAssetCodes={optionFixedAssetCodes}
+                optionRequestStatus={optionRequestStatus}
+                optionJobType={optionsSearch.jobType}
             />
           }
         />
