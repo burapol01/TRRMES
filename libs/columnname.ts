@@ -134,6 +134,136 @@ export const Request_headCells = [
     // }
 ];
 
+export const RequestApprovedListAll_headCells = [
+ 
+    {
+        columnName: 'req_no',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'เลขที่ใบคำขอ',
+        colWidth: 185
+    },
+    {
+        columnName: 'req_status_label',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'สถานะ',
+        colWidth: 150
+    },
+    {
+        columnName: 'req_date',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่สร้างใบคำขอ',
+        colWidth: 200
+    },
+    {
+        columnName: 'cost_center_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Cost Center',
+        colWidth: 300
+    },
+    {
+        columnName: 'service_center_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Service Center',
+        colWidth: 300
+    },
+    {
+        columnName: 'job_type_name',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ประเภทงาน',
+        colWidth: 100
+    },
+    {
+        columnName: 'fixed_asset_label',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'Fixed Asset Description',
+        colWidth: 300
+    },
+    {
+        columnName: 'description',
+        numeric: 'left',
+        disablePadding: true,
+        label: 'รายละเอียด',
+        colWidth: 300
+    },
+    {
+        columnName: 'total_work_hours',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'ชั่วโมงการทำงานรวม',
+        colWidth: 150
+    },
+    {
+        columnName: 'req_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'คนที่สร้างคำขอ',
+        colWidth: 150
+    },
+    {
+        columnName: 'app_user',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'คนที่อนุมัติ',
+        colWidth: 150
+    },
+    {
+        columnName: 'count_revision',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'Current Revision',
+        colWidth: 150
+    },
+    {
+        columnName: 'status_update',
+        numeric: 'center',
+        disablePadding: true,
+        label: 'วันที่อัพเดทสถานะล่าสุด',
+        colWidth: 200
+    },
+    // {
+    //     columnName: 'create_by',
+    //     numeric: 'center',
+    //     disablePadding: true,
+    //     label: 'สร้างโดย',
+    //     colWidth: 300
+    // },
+    // {
+    //     columnName: 'create_date',
+    //     numeric: 'center',
+    //     disablePadding: true,
+    //     label: 'วันที่สร้าง',
+    //     colWidth: 300
+    // },
+    // {
+    //     columnName: 'update_by',
+    //     numeric: 'center',
+    //     disablePadding: true,
+    //     label: 'อัพเดตโดย',
+    //     colWidth: 300
+    // },
+    // {
+    //     columnName: 'update_date',
+    //     numeric: 'center',
+    //     disablePadding: true,
+    //     label: 'วันที่อัพเดต',
+    //     colWidth: 300
+    // },
+    // {
+    //     columnName: 'record_status',
+    //     numeric: 'center',
+    //     disablePadding: true,
+    //     label: 'สถานะ',
+    //     colWidth: 300
+    // }
+];
+
 export const Time_Sheet_headCells = [
 
     {

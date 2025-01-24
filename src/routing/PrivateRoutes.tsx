@@ -11,7 +11,7 @@ import CostCenterPage from '../app/master/cost_center/CostCenterPage';
 import BudgetPage from '../app/master/budget/BudgetPage';
 import SitePage from '../app/master/site/SitePage';
 import ServiceCostPage from '../app/service_cost/service_cost_page';
-import FixedAssetPage from '../app/master/fixed_Asset/FixedAssetPage';
+import FixedAssetPage from '../app/master/fixed_asset/FixedAssetPage';
 export default function PrivateRoutes() {
     // const [urlName, setUrlName] = React.useState<string>("0")
     // const getUrl = async () => {

@@ -74,9 +74,9 @@ export default function ServiceRequest() {
 
 
   const dispatch = useDispatch()
-  const { isValidate, 
-    setIsValidate, 
-    isDuplicate, 
+  const { isValidate,
+    setIsValidate,
+    isDuplicate,
     setIsDuplicate,
   } = useListServiceRequest()
   const [requestNo, setRequestNo] = useState("");
@@ -129,6 +129,7 @@ export default function ServiceRequest() {
   const roleName = currentUser?.role_name;
   const roleId = currentUser?.role_id;
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
+  const showButtonApproveListAll = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "ApproveListAll");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
   const employeeDomain = currentUser?.employee_domain;
   const screenName = 'Service Request';
@@ -143,7 +144,8 @@ export default function ServiceRequest() {
 
   //สำหรับ Validate 
 
-  //console.log(showButton,'showButton');
+  // console.log(showButtonApproveListAll,'showButtonApproveListAll');
+  // console.log(roleName, 'row')
 
 
   // useEffect ที่ใช้ดึงข้อมูล initial data เมื่อ component ถูกสร้างครั้งแรก
@@ -1620,6 +1622,80 @@ export default function ServiceRequest() {
     });
   };
 
+  //AddApprove ไปลง Database
+  const serviceRequestApprovedListAll = async () => {
+    console.log('Call : serviceRequestApprovedListAll', draftData?.dataSelect, moment().format('HH:mm:ss:SSS'));
+    if (draftData?.dataSelect.length === 0) {
+      Massengmodal.createModal(
+        <div className="text-center p-4">
+          <p className="text-xl font-semibold mb-2 text-green-600">ไม่พบข้อมูลรายการอนุมัติ</p>
+        </div>,
+        'error',
+        () => {
+          dispatch(endLoadScreen());
+          handleClose();
+        }
+      );
+      return;
+
+    }
+
+    updateSessionStorageCurrentAccess('event_name', 'ApprovedListAll/Change_StatusListAll');
+
+    confirmModal.createModal("ยืนยันที่จะบันทึกหรือไม่ ?", "info", async () => {
+      if (draftData?.dataSelect?.length > 0) {
+        console.log("Approved Data:", draftData);
+
+        // ✅ ปรับ draftData ให้เป็น Array
+        const approvedListAllData = draftData.dataSelect.map((item: any) => ({
+          id: item.id,
+          new_status: "Approved",
+          app_user: item.app_user
+
+        }));
+
+        // สร้างข้อมูลที่จะส่ง
+        const payload = {
+          ChangeStatusListAllModel: approvedListAllData,
+          currentAccessModel: getCurrentAccessObject(employeeUsername, employeeDomain, screenName)
+        };
+
+        console.log("Approved Data payload:", payload);
+
+        dispatch(startLoadScreen());
+
+        setTimeout(async () => {
+          try {
+            // ✅ ส่งข้อมูลเป็น Array ของ Object
+            const response = await _POST(payload, "/api_trr_mes/ChangeStatus/Change_Status_List_All");
+
+            if (response && response.status === "success") {
+              console.log('Approved ALL successfully:', response);
+
+              Massengmodal.createModal(
+                <div className="text-center p-4">
+                  <p className="text-xl font-semibold mb-2 text-green-600">Success</p>
+                </div>,
+                'success',
+                () => {
+                  dispatch(endLoadScreen());
+                  handleClose();
+                }
+              );
+            } else {
+              console.error('Failed to Approve:', response);
+              dispatch(endLoadScreen());
+            }
+          } catch (error) {
+            console.error('Error Approve:', error);
+            dispatch(endLoadScreen());
+          }
+        }, 0);
+      }
+    });
+  };
+
+
   //Add SubmitReject ไปลง Database
   const serviceRequestSubmitReject = async () => {
     console.log('Call : serviceRequestSubmitReject', draftData, moment().format('HH:mm:ss:SSS'));
@@ -1947,7 +2023,7 @@ export default function ServiceRequest() {
             tableName={"บันทึกขอใช้บริการ"}
             handleonClick_1={handleClickAdd}
 
-            buttonLabal_2={showButton ? "อนุมัติแบบหลายรายการ" : ""} // Show button label only if "Add" is found
+            buttonLabal_2={showButtonApproveListAll ? "อนุมัติแบบหลายรายการ" : ""} // Show button label only if "Add" is found
             buttonColor_2="info"
             handleonClick_2={handleClickApprovedList}
             roleName={currentUser?.role_name}
@@ -1978,17 +2054,16 @@ export default function ServiceRequest() {
           openBottonHidden={true}
           titlename={'อนุมัติแบบหลายรายการ'}
           handleClose={handleClose}
-          handlefunction={serviceRequestDraftAdd}
+          handlefunction={serviceRequestApprovedListAll}
           colorBotton="success"
-          actions={"Draft"}
+          actions={"ApproveListAll"}
           element={
             <ApprovedListBody
-            onDataChange={handleDataChange}
-                options={options}
-                defaultValues={defaultValues}
-                optionCostCenter={optionCostCenter}
-                dataList={dataList}
-                optionServiceCenter={optionServiceCenter}
+              onDataChange={handleDataChange}
+              options={optionsSearch}
+              optionCostCenter={optionCostCenter}
+              dataList={dataList}
+              optionServiceCenter={optionServiceCenter}
             />
           }
         />
