@@ -371,7 +371,7 @@ export default function EnhancedTable({
                 />
               </div>
             )}
-            {buttonLabal_2 && buttonColor_2 && handleonClick_2 && roleName == "Request Approver" && (
+            {buttonLabal_2 && buttonColor_2 && handleonClick_2 && (roleName == "Request Approver" || roleName == "Technician" || roleName == "IT Administrator") && (
               <div className="flex pl-2">
                 <FullWidthButton
                   iconAdd={true}
@@ -491,18 +491,18 @@ export default function EnhancedTable({
                     </TableRow>
                   );
                 })}
-                {Array.isArray(visibleRows) && visibleRows.length == 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={headCells.length}
-                  sx={{ width: "100%" }}
-                  align="center"
-                  className="border border-gray-500/10"
-                >
-                  <label className="fs-4 fw-bold text-gray-600">{`ไม่พบรายการ`}</label>
-                </TableCell>
-              </TableRow>
-            )}
+              {Array.isArray(visibleRows) && visibleRows.length == 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={headCells.length}
+                    sx={{ width: "100%" }}
+                    align="center"
+                    className="border border-gray-500/10"
+                  >
+                    <label className="fs-4 fw-bold text-gray-600">{`ไม่พบรายการ`}</label>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
