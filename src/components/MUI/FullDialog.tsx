@@ -48,7 +48,7 @@ const actionConfig = {
     rejectButton: { label: "ไม่อนุมัติ", show: true },
     cancelButton: { show: true },
   },
-  ApproveListAll: {
+  ApproveList: {
     mainButton: { label: "อนุมัติ", show: true},
     rejectButton: { label: "ไม่อนุมัติ", show: false },
     cancelButton: { show: true },

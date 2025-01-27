@@ -129,7 +129,7 @@ export default function ServiceRequest() {
   const roleName = currentUser?.role_name;
   const roleId = currentUser?.role_id;
   const showButton = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "Add");
-  const showButtonApproveListAll = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "ApproveListAll");
+  const showButtonApproveList = (menuFuncList || []).some((menuFunc: any) => menuFunc.func_name === "ApproveList");
   const isValidationEnabled = import.meta.env.VITE_APP_ENABLE_VALIDATION === 'true'; // ตรวจสอบว่าเปิดการตรวจสอบหรือไม่
   const employeeDomain = currentUser?.employee_domain;
   const screenName = 'Service Request';
@@ -144,7 +144,7 @@ export default function ServiceRequest() {
 
   //สำหรับ Validate 
 
-  // console.log(showButtonApproveListAll,'showButtonApproveListAll');
+  // console.log(showButtonApproveList,'showButtonApproveList');
   // console.log(roleName, 'row')
 
 
@@ -2023,7 +2023,7 @@ export default function ServiceRequest() {
             tableName={"บันทึกขอใช้บริการ"}
             handleonClick_1={handleClickAdd}
 
-            buttonLabal_2={showButtonApproveListAll ? "อนุมัติแบบหลายรายการ" : ""} // Show button label only if "Add" is found
+            buttonLabal_2={showButtonApproveList ? "อนุมัติแบบหลายรายการ" : ""} // Show button label only if "Add" is found
             buttonColor_2="info"
             handleonClick_2={handleClickApprovedList}
             roleName={currentUser?.role_name}
@@ -2056,7 +2056,7 @@ export default function ServiceRequest() {
           handleClose={handleClose}
           handlefunction={serviceRequestApprovedListAll}
           colorBotton="success"
-          actions={"ApproveListAll"}
+          actions={"ApproveList"}
           element={
             <ApprovedListBody
               onDataChange={handleDataChange}
