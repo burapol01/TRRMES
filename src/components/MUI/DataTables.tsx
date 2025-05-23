@@ -371,7 +371,7 @@ export default function EnhancedTable({
                 />
               </div>
             )}
-            {buttonLabal_2 && buttonColor_2 && handleonClick_2 && (roleName == "Request Approver" || roleName == "Technician" || roleName == "IT Administrator") && (
+            {buttonLabal_2 && buttonColor_2 && handleonClick_2 && (roleName == "Request Approver" || roleName == "Technician" || roleName == "IT Administrator" || roleName == "Accounting Request Approver") && (
               <div className="flex pl-2">
                 <FullWidthButton
                   iconAdd={true}

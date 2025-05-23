@@ -26,6 +26,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import './login.css'
 import MobileDetect from 'mobile-detect';
+import { fetchIpAddress } from "../../libs/datacontrol";
+import { Dataset } from "@mui/icons-material";
 
 function Copyright() {
   return (
@@ -58,12 +60,12 @@ export default function Login() {
     event.preventDefault();
   };
 
-  const handleSubmit = (event: any) => {
+  const handleSubmit = async (event: any) => {
     dispatch(startLoadScreen());
     const configLogin = import.meta.env.VITE_APP_TRR_API_CONFIG_LOGIN;
     const jsonString = "{" + configLogin + "}";
     const obj = Function("return " + jsonString)();
-    event.preventDefault();
+    event.preventDefault();    
     const data = new FormData(event.currentTarget);
     Login({
       ...obj,
@@ -103,11 +105,11 @@ export default function Login() {
     }
 
     return `${browserName} ${browserVersion}`;
-  }; 
+  };
 
   const getCurrentAccessData = async (response: any) => {
     const publicIP = await fetchPublicIP();
-    const clientIP = "10.100.xx.xxx"; // Replace with backend data if available
+    const clientIP = await fetchIpAddress(); // Replace with backend data if available
     const md = new MobileDetect(window.navigator.userAgent);
     const accessType = md.mobile() ? 'MOBILE' : 'WEB';
     console.log(accessType);
@@ -132,6 +134,7 @@ export default function Login() {
   const Login = async (datasend: any) => {
     try {
       setTimeout(async () => {
+        datasend.client_ip = await fetchIpAddress()
         const reponse = await login_auth_emp_get(datasend);
         if (reponse && reponse.status == "Success") {
           dispatch(addCurrentUser(reponse?.data?.auth_role_profile[0]));

@@ -143,3 +143,39 @@ export const DateToDB = (date: any): string => {
     return ""; // Return an empty string if there is an error during conversion
   }
 };
+
+//ลักไก่ไปก่อน ถ้า Edge จะได้ Client ip ส่วน Chrome จะได้ public ip
+
+export const fetchIpAddress = async (): Promise<string> => {
+  return new Promise((resolve) => {
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+
+    pc.createDataChannel('');
+
+    pc.createOffer()
+      .then(offer => pc.setLocalDescription(offer))
+      .catch(() => resolve(""));
+
+    pc.onicecandidate = (event) => {
+      if (!event || !event.candidate) return;
+
+      const candidate = event.candidate.candidate;
+      console.log(candidate);
+      // Only look for UDP host candidates
+      if (candidate.indexOf('udp') === -1) return;
+      
+      const ipv4Match = candidate.match(/\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b/);
+      if (ipv4Match) {
+        resolve(ipv4Match[0]);
+        pc.close();
+      }
+    };
+
+    setTimeout(() => {
+      resolve("");
+      pc.close();
+    }, 3000);
+  });
+};
