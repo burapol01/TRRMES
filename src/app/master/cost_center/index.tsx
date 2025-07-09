@@ -293,7 +293,7 @@ export default function CostCenter() {
         console.log('Master Cost Center : Master_Cost_Center_Edit', resultData, moment().format('YYYY-MM-DD HH:mm'));
 
         // เรียกใช้งานฟังก์ชัน  Update Current Access Event Name
-        updateSessionStorageCurrentAccess('evernt_name', 'Edit/Master_Cost_Center_Edit');
+        updateSessionStorageCurrentAccess('event_name', 'Edit/Master_Cost_Center_Edit');
 
         // ---------------------------------------------------------------------------------------------------------------
 

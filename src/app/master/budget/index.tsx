@@ -349,7 +349,7 @@ export default function Budget() {
   const BudgetEdit = async () => {
     console.log(' Master Budget : Master_Budget_Edit', moment().format('YYYY-MM-DD HH:mm'));
 
-    updateSessionStorageCurrentAccess('evernt_name', 'Edit/Master_Budget_Edit');
+    updateSessionStorageCurrentAccess('event_name', 'Edit/Master_Budget_Edit');
 
     const dataForValidate = {
       budget_code: budgetCode,
